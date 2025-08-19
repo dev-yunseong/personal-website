@@ -32,12 +32,10 @@ jobs:
           fi
           
           echo "Attempting to create .ssh directory..."
-          mkdir -p ~/.ssh
+          mkdir ~/.ssh
           echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H $DEPLOY_SERVER >> ~/.ssh/known_hosts
-        env:
-          DEPLOY_SERVER: ${{ secrets.SERVER_HOST }}
+          ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
 
       - name: Run deploy script
         env:
