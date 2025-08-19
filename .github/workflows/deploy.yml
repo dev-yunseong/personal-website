@@ -24,6 +24,14 @@ jobs:
 
       - name: Setup SSH
         run: |
+          ls -ld ~/.ssh || echo ".ssh does not exist yet."
+
+          if [ -f ~/.ssh ]; then
+          echo ".ssh exists as a FILE. Removing it."
+          rm -f ~/.ssh
+          fi
+          
+          echo "Attempting to create .ssh directory..."
           mkdir -p ~/.ssh
           echo "${{ secrets.SERVER_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
