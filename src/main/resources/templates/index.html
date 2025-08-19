@@ -2,15 +2,29 @@
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
+
+<th:block layout:fragment="css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown-light.css">
+</th:block>
+
 <head>
     <title>메인 페이지</title>
 </head>
 <body>
 <th:block layout:fragment="content">
-    <div class="p-5 mb-4 bg-light rounded-3">
+    <!-- Jumbotron -->
+    <div class="p-5 mb-4 bg-dark text-white rounded-3 shadow-lg">
         <div class="container-fluid py-5">
-            <h1 class="display-5 fw-bold">메인 페이지</h1>
-            <p class="col-md-8 fs-4">서버가 정상적으로 동작하고 있습니다!</p>
+            <h1 class="display-5 fw-bold">Welcome to my Website</h1>
+        </div>
+    </div>
+
+    <!-- Memo Section -->
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div th:replace="~{fragments/memo_fragment :: memoFragment}"></div>
+            </div>
         </div>
     </div>
 </th:block>

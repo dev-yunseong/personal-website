@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="memoFragment" th:if="${memo != null}" class="card shadow-lg border-0 w-100">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <h5 class="mb-0" th:text="${memo.title}">Memo Title</h5>
+        <a th:href="@{/memo/edit/{id}(id=${memo.id})}" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-pencil-square"></i>
+        </a>
+    </div>
+    <div class="card-body markdown-body">
+        <p class="card-text fs-5" th:utext="${memo.getHtml()}">Memo content goes here.</p>
+    </div>
+</div>
+</body>
+</html>
