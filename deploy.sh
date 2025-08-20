@@ -27,5 +27,8 @@ else
   sleep 5
 fi
 
+export DATABASE_USER=$DATABASE_USER
+export DATABASE_PW=$DATABASE_PW
+
 nohup java -jar $DEPLOY_PATH/$JAR_NAME > $DEPLOY_PATH/app.log 2>&1 &
 EOF

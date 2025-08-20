@@ -6,8 +6,8 @@ spring:
     name: personal-website
   datasource:
     driver-class-name: org.postgresql.Driver
-    username: yunseong
-    password:
+    username: $DATABASE_USER
+    password: $DATABASE_PW
     url: jdbc:postgresql://localhost:5432/website_database
   jpa:
     hibernate:
