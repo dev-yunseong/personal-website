@@ -18,9 +18,9 @@ public class MainController {
     @GetMapping("")
     public String index(Model model) {
         try {
-            Memo memo = memoService.getMemo(0);
+            Memo memo = memoService.getMemo("README");
             model.addAttribute("memo", memo);
-        } catch (IndexOutOfBoundsException e) {
+        } catch (IllegalArgumentException e) {
             model.addAttribute("memo", null);
         }
         return "index";

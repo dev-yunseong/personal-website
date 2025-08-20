@@ -3,7 +3,7 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
 <head>
-    <title>Edit Memo</title>
+    <title>New Memo</title>
 </head>
 <body>
 <div layout:fragment="content">
@@ -11,21 +11,21 @@
         <div class="col-lg-8">
             <div class="card shadow-sm">
                 <div class="card-header">
-                    <h2 class="mb-0">Edit Memo</h2>
+                    <h2 class="mb-0">New Memo</h2>
                 </div>
                 <div class="card-body p-4">
-                    <form th:action="@{/memos/edit/{id}(id=${memo.id})}" method="post">
+                    <form th:action="@{/memos}" method="post">
                         <div class="mb-3">
                             <label for="title" class="form-label">Title</label>
-                            <input type="text" class="form-control" id="title" name="title" th:value="${memo.name}">
+                            <input type="text" class="form-control" id="title" name="title">
                         </div>
                         <div class="mb-3">
                             <label for="content" class="form-label">Content</label>
-                            <textarea class="form-control" id="content" name="content" rows="5" th:text="${memo.content}"></textarea>
+                            <textarea class="form-control" id="content" name="content" rows="5"></textarea>
                         </div>
                         <div class="d-flex justify-content-end">
-                            <a href="/" class="btn btn-secondary me-2">Cancel</a>
-                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                            <a href="/blog" class="btn btn-secondary me-2">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Save</button>
                         </div>
                     </form>
                 </div>
