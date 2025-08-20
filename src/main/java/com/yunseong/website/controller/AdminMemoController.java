@@ -25,7 +25,7 @@ public class AdminMemoController {
             @RequestParam String content
     ) {
         memoService.saveMemo(title, content);
-        return "redirect:/memos";
+        return "redirect:/public/memos";
     }
 
     @GetMapping("/edit/{id}")
@@ -38,6 +38,6 @@ public class AdminMemoController {
     @PostMapping("/edit/{id}")
     public String editMemo(@PathVariable("id") long id, @RequestParam String title, @RequestParam String content) {
         memoService.updateMemo(id, title, content);
-        return "redirect:/memos";
+        return "redirect:/public/memos";
     }
 }
