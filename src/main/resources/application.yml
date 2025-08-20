@@ -4,3 +4,16 @@ server:
 spring:
   application:
     name: personal-website
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    username: yunseong
+    password:
+    url: jdbc:postgresql://localhost:5432/website_database
+  jpa:
+    hibernate:
+      ddl-auto: none
+      show-sql: true
+      properties:
+        hibernate:
+          format_sql: true
+          highlight_sql: true
