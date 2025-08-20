@@ -34,6 +34,8 @@ jobs:
 
       - name: Run deploy script
         env:
+          APPLICATION_USER: ${{ secrets.APPLICATION_USER }}
+          APPLICATION_PW: ${{ secrets.APPLICATION_PW }}
           DATABASE_USER: ${{ secrets.DATABASE_USER }}
           DATABASE_PW: ${{ secrets.DATABASE_PW }}
           DEPLOY_USER: ${{ secrets.SERVER_USER }}
