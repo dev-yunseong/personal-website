@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
-<a th:href="@{/memos/{id}(id=${memo.id})}" th:fragment="memoCard(memo)" class="card mb-3 text-decoration-none text-dark shadow-sm">
+<a th:href="@{/public/memos/{id}(id=${memo.id})}" th:fragment="memoCard(memo)" class="card mb-3 text-decoration-none text-dark shadow-sm">
     <div class="card-body">
         <h5 class="card-title" th:text="${memo.getTitle()}">Memo Title</h5>
         <p th:text="${memo.getPath()}">/path/to</p>

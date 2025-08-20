@@ -7,21 +7,12 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @Controller
-@RequestMapping("/memos")
+@RequestMapping("/admin/memos")
 @RequiredArgsConstructor
-public class MemoController {
+public class AdminMemoController {
 
     private final MemoService memoService;
-
-    @GetMapping
-    public String blog(Model model) {
-        List<Memo> memos = memoService.getMemos();
-        model.addAttribute("memos", memos);
-        return "blog";
-    }
 
     @GetMapping("/new")
     public String newMemoForm() {
@@ -35,15 +26,6 @@ public class MemoController {
     ) {
         memoService.saveMemo(title, content);
         return "redirect:/memos";
-    }
-
-    @GetMapping("/{memoId}")
-    public String showMemo(
-            @PathVariable Long memoId,
-            Model model) {
-        Memo memo = memoService.getMemo(memoId);
-        model.addAttribute("memo", memo);
-        return "memo/view";
     }
 
     @GetMapping("/edit/{id}")

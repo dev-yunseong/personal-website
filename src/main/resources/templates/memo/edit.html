@@ -14,7 +14,7 @@
                     <h2 class="mb-0">Edit Memo</h2>
                 </div>
                 <div class="card-body p-4">
-                    <form th:action="@{/memos/edit/{id}(id=${memo.id})}" method="post">
+                    <form th:action="@{/admin/memos/edit/{id}(id=${memo.id})}" method="post">
                         <div class="mb-3">
                             <label for="title" class="form-label">Title</label>
                             <input type="text" class="form-control" id="title" name="title" th:value="${memo.name}">

@@ -10,7 +10,7 @@
 <th:block layout:fragment="content">
     <div class="container">
         <h1>Blog</h1>
-        <a href="/memos/new" class="btn btn-primary mb-3">Write a new memo</a>
+        <a href="/admin/memos/new" class="btn btn-primary mb-3">Write a new memo</a>
         <div>
             <div th:each="memo : ${memos}">
                 <div  th:replace="~{fragments/memo_card_fragment :: memoCard(memo=${memo})}">
