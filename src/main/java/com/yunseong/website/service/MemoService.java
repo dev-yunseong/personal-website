@@ -4,10 +4,12 @@ import com.yunseong.website.domain.Memo;
 import com.yunseong.website.repository.MemoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class MemoService {
 
@@ -19,15 +21,18 @@ public class MemoService {
         return memo.getId();
     }
 
+    @Transactional(readOnly = true)
     public Memo getMemo(String name) {
         return memoRepository.findByName(name)
                 .orElseThrow(() -> new IllegalArgumentException("Memo Not Found"));
     }
 
+    @Transactional(readOnly = true)
     public List<Memo> getMemos() {
         return memoRepository.findAll();
     }
 
+    @Transactional(readOnly = true)
     public Memo getMemo(long memoId) {
         return memoRepository.findById(memoId)
                 .orElseThrow(() -> new IllegalArgumentException("Memo Not Found"));
