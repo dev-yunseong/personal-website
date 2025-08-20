@@ -15,7 +15,6 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
 @Entity
 @Table(name = "memos")
@@ -40,7 +39,32 @@ public class Memo {
         return HtmlRenderer.builder().build().render(node);
     }
 
+    public String getTitle() {
+        if (name == null || name.isEmpty()) return "";
+        String[] parts = name.split("/");
+        return parts[parts.length - 1];
+    }
+
+    public String getPath() {
+        if (name == null || name.isEmpty()) return "";
+        int lastSlash = name.lastIndexOf("/");
+        if (lastSlash == -1) return "/";
+        return name.substring(0, lastSlash + 1);
+    }
+
     public Memo(String name, String content) {
         this(null, name, content, null, null);
+    }
+
+    public Memo(Long id, String name, String content, LocalDateTime createdAt, LocalDateTime updatedAt) {
+        this.id = id;
+        if (!name.startsWith("/")) {
+            this.name = String.format("/%s", name);
+        } else {
+            this.name = name;
+        }
+        this.content = content;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
     }
 }

@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
-<a th:href="@{/memos/{id}(id=${memo.id})}" th:fragment="memoCard(memo)" class="card mb-3 text-decoration-none text-dark">
+<a th:href="@{/memos/{id}(id=${memo.id})}" th:fragment="memoCard(memo)" class="card mb-3 text-decoration-none text-dark shadow-sm">
     <div class="card-body">
-        <h5 class="card-title" th:text="${memo.name}">Memo Title</h5>
+        <h5 class="card-title" th:text="${memo.getTitle()}">Memo Title</h5>
+        <p th:text="${memo.getPath()}">/path/to</p>
         <p class="card-text">
             <small class="text-muted" th:text="${#temporals.format(memo.updatedAt, 'yyyy-MM-dd HH:mm')}">Last updated 3 mins ago</small>
         </p>

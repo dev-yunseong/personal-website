@@ -18,7 +18,7 @@ public class MainController {
     @GetMapping("")
     public String index(Model model) {
         try {
-            Memo memo = memoService.getMemo("README");
+            Memo memo = memoService.getMemo("/README");
             model.addAttribute("memo", memo);
         } catch (IllegalArgumentException e) {
             model.addAttribute("memo", null);
