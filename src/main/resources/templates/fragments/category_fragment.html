@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="categoryList(categories, selectedCategory)">
+    <div class="card">
+        <div class="card-header">
+            Categories
+        </div>
+        <div class="list-group list-group-flush">
+            <a th:href="@{/public/memos}" class="list-group-item list-group-item-action" th:classappend="${selectedCategory == null} ? 'active' : ''">
+                All
+            </a>
+            <a th:each="category : ${categories}"
+               th:href="@{/public/memos(category=${category})}"
+               class="list-group-item list-group-item-action"
+               th:classappend="${#strings.equals(selectedCategory, category)} ? 'active' : ''">
+                <span th:text="${category}"></span>
+            </a>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -11,10 +11,15 @@
     <div class="container">
         <h1>Blog</h1>
         <a href="/admin/memos/new" class="btn btn-primary mb-3">Write a new memo</a>
-        <div>
-            <div th:each="memo : ${memos}">
-                <div  th:replace="~{fragments/memo_card_fragment :: memoCard(memo=${memo})}">
+        <div class="row">
+            <div class="col-md-9">
+                <div th:each="memo : ${memos}">
+                    <div  th:replace="~{fragments/memo_card_fragment :: memoCard(memo=${memo})}">
+                    </div>
                 </div>
+            </div>
+            <div class="col-md-3">
+                <div th:replace="~{fragments/category_fragment :: categoryList(categories=${categories}, selectedCategory=${selectedCategory})}"></div>
             </div>
         </div>
     </div>

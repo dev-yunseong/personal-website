@@ -1,6 +1,7 @@
 package com.yunseong.website.controller;
 
 import com.yunseong.website.domain.Memo;
+import com.yunseong.website.service.CategoryService;
 import com.yunseong.website.service.MemoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -15,11 +16,20 @@ import java.util.List;
 public class PublicMemoController {
 
     private final MemoService memoService;
+    private final CategoryService categoryService;
 
     @GetMapping
-    public String blog(Model model) {
-        List<Memo> memos = memoService.getMemos();
+    public String blog(Model model, @RequestParam(required = false) String category) {
+        List<Memo> memos;
+        if (category != null && !category.isEmpty()) {
+            memos = memoService.getMemos(category);
+        } else {
+            memos = memoService.getMemos();
+        }
+        List<String> categories = categoryService.getCategories();
         model.addAttribute("memos", memos);
+        model.addAttribute("categories", categories);
+        model.addAttribute("selectedCategory", category);
         return "blog";
     }
 
