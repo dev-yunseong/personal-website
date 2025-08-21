@@ -15,7 +15,8 @@ public class AdminMemoController {
     private final MemoService memoService;
 
     @GetMapping("/new")
-    public String newMemoForm() {
+    public String newMemoForm(@RequestParam String category, Model model) {
+        model.addAttribute("category", category);
         return "memo/new";
     }
 

@@ -10,7 +10,7 @@
 <th:block layout:fragment="content">
     <div class="container">
         <h1>Blog</h1>
-        <a href="/admin/memos/new" class="btn btn-primary mb-3">Write a new memo</a>
+        <a th:href="@{/admin/memos/new(category=${selectedCategory})}" class="btn btn-primary mb-3">Write a new memo</a>
         <div class="row">
             <div class="col-md-9">
                 <div th:each="memo : ${memos}">

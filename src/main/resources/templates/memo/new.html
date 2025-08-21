@@ -17,7 +17,7 @@
                     <form th:action="@{/admin/memos}" method="post">
                         <div class="mb-3">
                             <label for="title" class="form-label">Title</label>
-                            <input type="text" class="form-control" id="title" name="title">
+                            <input type="text" class="form-control" id="title" name="title" th:value="${category}">
                         </div>
                         <div class="mb-3">
                             <label for="content" class="form-label">Content</label>
