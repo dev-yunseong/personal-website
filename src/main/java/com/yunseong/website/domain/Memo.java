@@ -50,8 +50,8 @@ public class Memo {
     public String getPath() {
         if (name == null || name.isEmpty()) return "";
         int lastSlash = name.lastIndexOf("/");
-        if (lastSlash == -1) return "/";
-        return name.substring(0, lastSlash + 1);
+        if (lastSlash <= 0) return "/";
+        return name.substring(0, lastSlash);
     }
 
     public Memo(String name, String content) {
