@@ -33,6 +33,14 @@ public class MemoService {
     }
 
     @Transactional(readOnly = true)
+    public List<Memo> getMemos(String category) {
+        if (!category.endsWith("/")) {
+            category = String.format("%s/", category);
+        }
+        return memoRepository.findAllByNameStartingWith(category);
+    }
+
+    @Transactional(readOnly = true)
     public Memo getMemo(long memoId) {
         return memoRepository.findById(memoId)
                 .orElseThrow(() -> new IllegalArgumentException("Memo Not Found"));
