@@ -3,10 +3,10 @@ package com.yunseong.website.service;
 import com.yunseong.website.domain.Memo;
 import com.yunseong.website.repository.MemoRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @Transactional
@@ -28,16 +28,16 @@ public class MemoService {
     }
 
     @Transactional(readOnly = true)
-    public List<Memo> getMemos() {
-        return memoRepository.findAll();
+    public Page<Memo> getMemos(Pageable pageable) {
+        return memoRepository.findAll(pageable);
     }
 
     @Transactional(readOnly = true)
-    public List<Memo> getMemos(String category) {
+    public Page<Memo> getMemos(String category, Pageable pageable) {
         if (!category.endsWith("/")) {
             category = String.format("%s/", category);
         }
-        return memoRepository.findAllByNameStartingWith(category);
+        return memoRepository.findAllByNameStartingWith(category, pageable);
     }
 
     @Transactional(readOnly = true)
