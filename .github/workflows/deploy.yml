@@ -37,5 +37,6 @@ jobs:
           DATABASE_USER: ${{ secrets.DATABASE_USER }}
           DATABASE_PW: ${{ secrets.DATABASE_PW }}
           DEPLOY_USER: ${{ secrets.SERVER_USER }}
+          DEPLOY_PW: ${{ secrets.SERVER_PW }}
           DEPLOY_SERVER: ${{ secrets.SERVER_HOST }}
         run: bash deploy.sh
