@@ -44,6 +44,10 @@ public class Memo {
     public String getTitle() {
         if (name == null || name.isEmpty()) return "";
         String[] parts = name.split("/");
+
+        if (parts.length == 0) {
+            return "";
+        }
         return parts[parts.length - 1];
     }
 
