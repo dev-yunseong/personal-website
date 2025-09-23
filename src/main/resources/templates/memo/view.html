@@ -13,14 +13,23 @@
 
 <body>
 <th:block layout:fragment="content">
-    <!-- Memo Section -->
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-lg-12">
-                <div th:replace="~{fragments/memo_fragment :: memoFragment}"></div>
-            </div>
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-12">
+        <!-- Memo Section -->
+        <div th:replace="~{fragments/memo_fragment :: memoFragment}"></div>
+
+        <br/><br/>
+
+        <!-- Memos Section -->
+        <div th:each="memo : ${memos.content}">
+          <div  th:replace="~{fragments/memo_card_fragment :: memoCard(memo=${memo})}">
+          </div>
         </div>
+        <div th:replace="~{fragments/page_navi_fragment :: pageNavi(memos=${memos}, selectedCategory=${selectedCategory})}"></div>
+      </div>
     </div>
+  </div>
 </th:block>
 </body>
 </html>

@@ -17,28 +17,7 @@
                     <div  th:replace="~{fragments/memo_card_fragment :: memoCard(memo=${memo})}">
                     </div>
                 </div>
-                <div th:if="${memos.totalPages > 0}" class="pagination"
-                     th:with="pageNumber=${memos.number},
-                                pageSize=${memos.size},
-                                totalPages=${memos.totalPages}">
-                    <nav aria-label="Page navigation">
-                        <ul class="pagination">
-                            <li class="page-item" th:classappend="${memos.first} ? 'disabled'">
-                                <a class="page-link" th:href="@{/public/memos(page=${pageNumber - 1}, size=${pageSize}, category=${selectedCategory})}" aria-label="Previous">
-                                    <span aria-hidden="true">&laquo;</span>
-                                </a>
-                            </li>
-                            <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}" th:classappend="${i == pageNumber} ? 'active'">
-                                <a class="page-link" th:href="@{/public/memos(page=${i}, size=${pageSize}, category=${selectedCategory})}" th:text="${i + 1}"></a>
-                            </li>
-                            <li class="page-item" th:classappend="${memos.last} ? 'disabled'">
-                                <a class="page-link" th:href="@{/public/memos(page=${pageNumber + 1}, size=${pageSize}, category=${selectedCategory})}" aria-label="Next">
-                                    <span aria-hidden="true">&raquo;</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </nav>
-                </div>
+                <div th:replace="~{fragments/page_navi_fragment :: pageNavi(memos=${memos}, selectedCategory=${selectedCategory})}"></div>
             </div>
             <div class="col-md-3">
                 <div th:replace="~{fragments/category_fragment :: categoryList(categories=${categories}, selectedCategory=${selectedCategory})}"></div>

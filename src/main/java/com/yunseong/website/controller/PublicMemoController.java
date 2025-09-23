@@ -42,9 +42,12 @@ public class PublicMemoController {
     @GetMapping("/{memoId}")
     public String showMemo(
             @PathVariable Long memoId,
-            Model model) {
+            Model model,
+            Pageable pageable) {
         Memo memo = memoService.getMemo(memoId);
         model.addAttribute("memo", memo);
+        Page<Memo> memos = memoService.getMemos(memo.getName(),pageable);
+        model.addAttribute("memos", memos);
         return "memo/view";
     }
 }
