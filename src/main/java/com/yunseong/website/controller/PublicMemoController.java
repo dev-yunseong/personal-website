@@ -6,6 +6,8 @@ import com.yunseong.website.service.MemoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.SortDefault;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -24,7 +26,7 @@ public class PublicMemoController {
     public String blog(
             Model model,
             @RequestParam(required = false) String category,
-            Pageable pageable
+            @SortDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         Page<Memo> memos;
         if (category != null && !category.isEmpty()) {
@@ -43,7 +45,7 @@ public class PublicMemoController {
     public String showMemo(
             @PathVariable Long memoId,
             Model model,
-            Pageable pageable) {
+            @SortDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         Memo memo = memoService.getMemo(memoId);
         model.addAttribute("memo", memo);
         Page<Memo> memos = memoService.getMemos(memo.getName(),pageable);
