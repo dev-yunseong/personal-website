@@ -17,6 +17,7 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests((requests) -> requests
                         .requestMatchers(
                                 "/",
+                                "/favicon.ico",
                                 "/public/**")
                         .permitAll()
                         .anyRequest().authenticated()
