@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
-@RequestMapping("/games")
+@RequestMapping("/public/games")
 @RequiredArgsConstructor
 public class GameController {
     
@@ -22,7 +22,7 @@ public class GameController {
     @GetMapping("")
     public String listGames(Model model) {
         model.addAttribute("games", gameProjectService.getAllGameProjects());
-        return "games-list";
+        return "game/list";
     }
     
     @GetMapping("/{gameId}")
@@ -37,6 +37,6 @@ public class GameController {
             model.addAttribute("memo", null);
         }
         
-        return "games";
+        return "game/play";
     }
 }
