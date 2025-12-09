@@ -18,6 +18,14 @@ public class InMemoryGameProjectRepository implements GameProjectRepository {
             "/project/word-online"
         );
         gameProjects.put(wordOnline.getId(), wordOnline);
+        
+        // Add more test games if needed
+        GameProject dudoji = new GameProject(
+            "dudoji",
+            "https://dudoji.yunseong.shop:36073",
+            "/project/dudoji"
+        );
+        gameProjects.put(dudoji.getId(), dudoji);
     }
     
     @Override

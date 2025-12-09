@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<head>
+    <title>Games</title>
+    <style>
+        .game-card {
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+
+<body>
+<th:block layout:fragment="content">
+    <div class="container">
+        <h1 class="my-4">Games</h1>
+        <p class="lead">Choose a game to play</p>
+        
+        <div class="row">
+            <div class="col-md-4 mb-4" th:each="game : ${games}">
+                <a th:href="@{/games/{id}(id=${game.id})}" class="text-decoration-none">
+                    <div class="card game-card h-100 shadow">
+                        <div class="card-body">
+                            <h5 class="card-title" th:text="${game.getTitle()}">Game Title</h5>
+                            <p class="card-text text-muted" th:text="${game.gameUrl}">Game URL</p>
+                            <span class="badge bg-primary">Play Now</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+        
+        <div th:if="${games.isEmpty()}" class="alert alert-info" role="alert">
+            No games available at the moment.
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

@@ -19,6 +19,12 @@ public class GameController {
     private final GameProjectService gameProjectService;
     private final MemoService memoService;
     
+    @GetMapping("")
+    public String listGames(Model model) {
+        model.addAttribute("games", gameProjectService.getAllGameProjects());
+        return "games-list";
+    }
+    
     @GetMapping("/{gameId}")
     public String showGame(@PathVariable String gameId, Model model) {
         GameProject gameProject = gameProjectService.getGameProject(gameId);
