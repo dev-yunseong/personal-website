@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<th:block layout:fragment="css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown-light.css">
+    <style>
+        .game-iframe-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
+            height: 0;
+            overflow: hidden;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+        .game-iframe-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+    </style>
+</th:block>
+
+<head>
+    <title th:text="${gameProject != null ? gameProject.getTitle() : 'Game'}">Game</title>
+</head>
+
+<body>
+<th:block layout:fragment="content">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-12">
+                <!-- Game Title -->
+                <h1 class="my-4" th:text="${gameProject.getTitle()}">Game Title</h1>
+                
+                <!-- Game iframe Section -->
+                <div class="game-iframe-container" th:if="${gameProject != null}">
+                    <iframe th:src="${gameProject.gameUrl}" 
+                            allowfullscreen
+                            title="Game">
+                    </iframe>
+                </div>
+                
+                <!-- Project Description Section -->
+                <div th:replace="~{fragments/memo_fragment :: memoFragment}"></div>
+            </div>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>
