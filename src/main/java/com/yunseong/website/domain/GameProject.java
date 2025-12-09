@@ -18,9 +18,12 @@ public class GameProject {
         if (blogName == null || blogName.isEmpty()) return "";
         String[] parts = blogName.split("/");
         
-        if (parts.length == 0) {
-            return "";
+        // Find the last non-empty part
+        for (int i = parts.length - 1; i >= 0; i--) {
+            if (!parts[i].isEmpty()) {
+                return parts[i];
+            }
         }
-        return parts[parts.length - 1];
+        return "";
     }
 }
