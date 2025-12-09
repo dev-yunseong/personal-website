@@ -33,7 +33,8 @@ class GameProjectServiceTest {
     @BeforeEach
     void setUp() {
         testMemo = new Memo("/project/word-online", "Word Online Game");
-        testGameProject = new GameProject(1L, "https://word-online.yunseong.dev", testMemo);
+        testGameProject = new GameProject("https://word-online.yunseong.dev", testMemo);
+        testGameProject.setId(1L);
     }
 
     @Test
