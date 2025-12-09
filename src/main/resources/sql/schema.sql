@@ -9,3 +9,10 @@ CREATE TABLE memos (
 ALTER TABLE memos
 ADD CONSTRAINT uq_memos_name UNIQUE (name);
 
+CREATE TABLE game_projects (
+    id BIGSERIAL PRIMARY KEY,
+    game_url VARCHAR(512) NOT NULL,
+    memo_id BIGINT,
+    CONSTRAINT fk_game_projects_memo FOREIGN KEY (memo_id) REFERENCES memos(id) ON DELETE CASCADE
+);
+

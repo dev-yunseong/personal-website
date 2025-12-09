@@ -1,11 +1,7 @@
 package com.yunseong.website.repository;
 
 import com.yunseong.website.domain.GameProject;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.List;
-import java.util.Optional;
-
-public interface GameProjectRepository {
-    Optional<GameProject> findById(String id);
-    List<GameProject> findAll();
+public interface GameProjectRepository extends JpaRepository<GameProject, Long> {
 }

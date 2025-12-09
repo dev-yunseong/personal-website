@@ -1,5 +1,6 @@
 package com.yunseong.website.domain;
 
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,21 +10,27 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
+@Table(name = "game_projects")
 public class GameProject {
-    private String id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    @Column(name = "game_url")
     private String gameUrl;
-    private String blogName;
+    
+    @ManyToOne
+    @JoinColumn(name = "memo_id")
+    private Memo memo;
+    
+    public GameProject(String gameUrl, Memo memo) {
+        this.gameUrl = gameUrl;
+        this.memo = memo;
+    }
     
     public String getTitle() {
-        if (blogName == null || blogName.isEmpty()) return "";
-        String[] parts = blogName.split("/");
-        
-        // Find the last non-empty part
-        for (int i = parts.length - 1; i >= 0; i--) {
-            if (!parts[i].isEmpty()) {
-                return parts[i];
-            }
-        }
-        return "";
+        if (memo == null) return "";
+        return memo.getTitle();
     }
 }
