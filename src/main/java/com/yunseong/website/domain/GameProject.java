@@ -20,9 +20,6 @@ public class GameProject {
     @Column(name = "game_url")
     private String gameUrl;
     
-    @Column(name = "favicon_url")
-    private String faviconUrl;
-    
     @ManyToOne
     @JoinColumn(name = "memo_id")
     private Memo memo;

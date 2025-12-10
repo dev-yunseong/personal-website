@@ -4,111 +4,12 @@
       layout:decorate="~{layout}">
 
 <th:block layout:fragment="script">
-    <script>
-        function isFullscreen() {
-            return !!(document.fullscreenElement || document.webkitFullscreenElement || 
-                     document.mozFullScreenElement || document.msFullscreenElement);
-        }
-        
-        function toggleFullscreen() {
-            const container = document.getElementById('gameContainer');
-            
-            if (!isFullscreen()) {
-                // Enter fullscreen
-                if (container.requestFullscreen) {
-                    container.requestFullscreen();
-                } else if (container.webkitRequestFullscreen) {
-                    container.webkitRequestFullscreen();
-                } else if (container.mozRequestFullScreen) {
-                    container.mozRequestFullScreen();
-                } else if (container.msRequestFullscreen) {
-                    container.msRequestFullscreen();
-                }
-            } else {
-                // Exit fullscreen
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                } else if (document.webkitExitFullscreen) {
-                    document.webkitExitFullscreen();
-                } else if (document.mozCancelFullScreen) {
-                    document.mozCancelFullScreen();
-                } else if (document.msExitFullscreen) {
-                    document.msExitFullscreen();
-                }
-            }
-        }
-        
-        // Update button text when entering/exiting fullscreen
-        document.addEventListener('fullscreenchange', updateFullscreenButton);
-        document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
-        document.addEventListener('mozfullscreenchange', updateFullscreenButton);
-        document.addEventListener('MSFullscreenChange', updateFullscreenButton);
-        
-        function updateFullscreenButton() {
-            const fullscreenBtn = document.getElementById('fullscreenBtn');
-            if (isFullscreen()) {
-                fullscreenBtn.innerHTML = '<i class="bi bi-fullscreen-exit"></i> 전체 화면 종료';
-            } else {
-                fullscreenBtn.innerHTML = '<i class="bi bi-arrows-fullscreen"></i> 전체 화면';
-            }
-        }
-    </script>
+    <th:block th:replace="~{fragments/game_player_fragment :: gamePlayerScript}"></th:block>
 </th:block>
 
 <th:block layout:fragment="css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown-light.css">
-    <style>
-        .game-iframe-container {
-            position: relative;
-            width: 100%;
-            padding-bottom: 56.25%; /* 16:9 Aspect Ratio */
-            height: 0;
-            overflow: hidden;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin-bottom: 2rem;
-        }
-        .game-iframe-container iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            border: 0;
-        }
-        .fullscreen-btn {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            z-index: 10;
-            background-color: rgba(0, 0, 0, 0.6);
-            color: white;
-            border: none;
-            border-radius: 4px;
-            padding: 8px 12px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        .fullscreen-btn:hover {
-            background-color: rgba(0, 0, 0, 0.8);
-        }
-        .game-iframe-container:fullscreen {
-            padding-bottom: 0;
-            height: 100vh;
-        }
-        .game-iframe-container:-webkit-full-screen {
-            padding-bottom: 0;
-            height: 100vh;
-        }
-        .game-iframe-container:-moz-full-screen {
-            padding-bottom: 0;
-            height: 100vh;
-        }
-        .game-iframe-container:-ms-fullscreen {
-            padding-bottom: 0;
-            height: 100vh;
-        }
-    </style>
+    <th:block th:replace="~{fragments/game_player_fragment :: gamePlayerCss}"></th:block>
 </th:block>
 
 <head>
@@ -124,15 +25,7 @@
                 <h1 class="my-4" th:text="${gameProject.getTitle()}">Game Title</h1>
                 
                 <!-- Game iframe Section -->
-                <div class="game-iframe-container" id="gameContainer" th:if="${gameProject != null}">
-                    <iframe th:src="${gameProject.gameUrl}" 
-                            allowfullscreen
-                            title="Game">
-                    </iframe>
-                    <button class="fullscreen-btn" id="fullscreenBtn" onclick="toggleFullscreen()">
-                        <i class="bi bi-arrows-fullscreen"></i> 전체 화면
-                    </button>
-                </div>
+                <div th:replace="~{fragments/game_player_fragment :: gamePlayer(gameUrl=${gameProject.gameUrl})}"></div>
                 
                 <!-- Project Description Section -->
                 <div th:replace="~{fragments/memo_fragment :: memoFragment}"></div>

@@ -14,11 +14,15 @@
             transform: translateY(-5px);
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
         }
-        .game-favicon {
+        .game-thumbnail {
             width: 32px;
             height: 32px;
             margin-right: 10px;
             object-fit: contain;
+            display: none;
+        }
+        .game-thumbnail.loaded {
+            display: block;
         }
         .game-title-container {
             display: flex;
@@ -39,10 +43,11 @@
                     <div class="card game-card h-100 shadow">
                         <div class="card-body">
                             <div class="game-title-container">
-                                <img th:if="${game.faviconUrl != null && !game.faviconUrl.isEmpty()}" 
-                                     th:src="${game.faviconUrl}" 
-                                     class="game-favicon" 
-                                     alt="Game Icon">
+                                <img th:src="${game.gameUrl + '/thumbnail.png'}" 
+                                     class="game-thumbnail" 
+                                     th:alt="${game.getTitle()}"
+                                     onerror="this.style.display='none'"
+                                     onload="this.classList.add('loaded')">
                                 <h5 class="card-title mb-0" th:text="${game.getTitle()}">Game Title</h5>
                             </div>
                             <p class="card-text text-muted mt-2" th:text="${game.gameUrl}">Game URL</p>
