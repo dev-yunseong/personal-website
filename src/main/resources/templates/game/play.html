@@ -5,12 +5,15 @@
 
 <th:block layout:fragment="script">
     <script>
+        function isFullscreen() {
+            return !!(document.fullscreenElement || document.webkitFullscreenElement || 
+                     document.mozFullScreenElement || document.msFullscreenElement);
+        }
+        
         function toggleFullscreen() {
             const container = document.getElementById('gameContainer');
-            const fullscreenBtn = document.getElementById('fullscreenBtn');
             
-            if (!document.fullscreenElement && !document.webkitFullscreenElement && 
-                !document.mozFullScreenElement && !document.msFullscreenElement) {
+            if (!isFullscreen()) {
                 // Enter fullscreen
                 if (container.requestFullscreen) {
                     container.requestFullscreen();
@@ -43,8 +46,7 @@
         
         function updateFullscreenButton() {
             const fullscreenBtn = document.getElementById('fullscreenBtn');
-            if (document.fullscreenElement || document.webkitFullscreenElement || 
-                document.mozFullScreenElement || document.msFullscreenElement) {
+            if (isFullscreen()) {
                 fullscreenBtn.innerHTML = '<i class="bi bi-fullscreen-exit"></i> 전체 화면 종료';
             } else {
                 fullscreenBtn.innerHTML = '<i class="bi bi-arrows-fullscreen"></i> 전체 화면';
