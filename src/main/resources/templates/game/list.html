@@ -14,6 +14,16 @@
             transform: translateY(-5px);
             box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
         }
+        .game-favicon {
+            width: 32px;
+            height: 32px;
+            margin-right: 10px;
+            object-fit: contain;
+        }
+        .game-title-container {
+            display: flex;
+            align-items: center;
+        }
     </style>
 </head>
 
@@ -28,8 +38,14 @@
                 <a th:href="@{/public/games/{id}(id=${game.id})}" class="text-decoration-none">
                     <div class="card game-card h-100 shadow">
                         <div class="card-body">
-                            <h5 class="card-title" th:text="${game.getTitle()}">Game Title</h5>
-                            <p class="card-text text-muted" th:text="${game.gameUrl}">Game URL</p>
+                            <div class="game-title-container">
+                                <img th:if="${game.faviconUrl != null && !game.faviconUrl.isEmpty()}" 
+                                     th:src="${game.faviconUrl}" 
+                                     class="game-favicon" 
+                                     alt="Game Icon">
+                                <h5 class="card-title mb-0" th:text="${game.getTitle()}">Game Title</h5>
+                            </div>
+                            <p class="card-text text-muted mt-2" th:text="${game.gameUrl}">Game URL</p>
                             <span class="badge bg-primary">Play Now</span>
                         </div>
                     </div>

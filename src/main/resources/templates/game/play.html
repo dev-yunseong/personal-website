@@ -3,6 +3,56 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}">
 
+<th:block layout:fragment="script">
+    <script>
+        function toggleFullscreen() {
+            const container = document.getElementById('gameContainer');
+            const fullscreenBtn = document.getElementById('fullscreenBtn');
+            
+            if (!document.fullscreenElement && !document.webkitFullscreenElement && 
+                !document.mozFullScreenElement && !document.msFullscreenElement) {
+                // Enter fullscreen
+                if (container.requestFullscreen) {
+                    container.requestFullscreen();
+                } else if (container.webkitRequestFullscreen) {
+                    container.webkitRequestFullscreen();
+                } else if (container.mozRequestFullScreen) {
+                    container.mozRequestFullScreen();
+                } else if (container.msRequestFullscreen) {
+                    container.msRequestFullscreen();
+                }
+            } else {
+                // Exit fullscreen
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+            }
+        }
+        
+        // Update button text when entering/exiting fullscreen
+        document.addEventListener('fullscreenchange', updateFullscreenButton);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
+        document.addEventListener('mozfullscreenchange', updateFullscreenButton);
+        document.addEventListener('MSFullscreenChange', updateFullscreenButton);
+        
+        function updateFullscreenButton() {
+            const fullscreenBtn = document.getElementById('fullscreenBtn');
+            if (document.fullscreenElement || document.webkitFullscreenElement || 
+                document.mozFullScreenElement || document.msFullscreenElement) {
+                fullscreenBtn.innerHTML = '<i class="bi bi-fullscreen-exit"></i> 전체 화면 종료';
+            } else {
+                fullscreenBtn.innerHTML = '<i class="bi bi-arrows-fullscreen"></i> 전체 화면';
+            }
+        }
+    </script>
+</th:block>
+
 <th:block layout:fragment="css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown-light.css">
     <style>
@@ -24,6 +74,38 @@
             height: 100%;
             border: 0;
         }
+        .fullscreen-btn {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            z-index: 10;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .fullscreen-btn:hover {
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+        .game-iframe-container:fullscreen {
+            padding-bottom: 0;
+            height: 100vh;
+        }
+        .game-iframe-container:-webkit-full-screen {
+            padding-bottom: 0;
+            height: 100vh;
+        }
+        .game-iframe-container:-moz-full-screen {
+            padding-bottom: 0;
+            height: 100vh;
+        }
+        .game-iframe-container:-ms-fullscreen {
+            padding-bottom: 0;
+            height: 100vh;
+        }
     </style>
 </th:block>
 
@@ -40,11 +122,14 @@
                 <h1 class="my-4" th:text="${gameProject.getTitle()}">Game Title</h1>
                 
                 <!-- Game iframe Section -->
-                <div class="game-iframe-container" th:if="${gameProject != null}">
+                <div class="game-iframe-container" id="gameContainer" th:if="${gameProject != null}">
                     <iframe th:src="${gameProject.gameUrl}" 
                             allowfullscreen
                             title="Game">
                     </iframe>
+                    <button class="fullscreen-btn" id="fullscreenBtn" onclick="toggleFullscreen()">
+                        <i class="bi bi-arrows-fullscreen"></i> 전체 화면
+                    </button>
                 </div>
                 
                 <!-- Project Description Section -->
