@@ -19,6 +19,7 @@ public class WebSecurityConfig {
                                 "/",
                                 "/google59d6c60daa0cb654.html",
                                 "/favicon.ico",
+                                "/sitemap.xml",
                                 "/public/**")
                         .permitAll()
                         .anyRequest().authenticated()
