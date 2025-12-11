@@ -1,0 +1,67 @@
+<div th:fragment="parser">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <script type="module">
+    /*<![CDATA[*/
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+
+    (async () => {
+      console.log("렌더링 스크립트 진입");
+
+      // --- [파트 A] 수학 공식 (KaTeX) ---
+      // 라이브러리가 로드될 때까지 잠시 대기
+      const checkKaTeX = setInterval(() => {
+        if (window.renderMathInElement) {
+          clearInterval(checkKaTeX);
+
+          const target = document.getElementById('markdown-content');
+          // 타겟이 실제로 존재하는지 확인 후 실행
+          if (target) {
+            renderMathInElement(target, {
+              delimiters: [
+                {left: '$$', right: '$$', display: true},
+                {left: '$', right: '$', display: false}
+              ],
+              throwOnError: false
+            });
+            console.log("KaTeX(수학) 렌더링 완료");
+          } else {
+            console.error("KaTeX 타겟(#markdown-content)을 찾을 수 없습니다.");
+          }
+        }
+      }, 100);
+
+
+      // --- [파트 B] 다이어그램 (Mermaid) ---
+      mermaid.initialize({ startOnLoad: false });
+
+      const codeBlocks = document.querySelectorAll('code.language-mermaid');
+      console.log("Mermaid 블록 발견:", codeBlocks.length);
+
+      if (codeBlocks.length > 0) {
+        codeBlocks.forEach((code) => {
+          const content = code.textContent;
+          const div = document.createElement('div');
+          div.className = 'mermaid';
+          div.textContent = content;
+
+          if (code.parentElement && code.parentElement.tagName === 'PRE') {
+            code.parentElement.replaceWith(div);
+          } else {
+            code.replaceWith(div);
+          }
+        });
+
+        try {
+          await mermaid.run({ querySelector: '.mermaid' });
+          console.log("Mermaid 렌더링 완료");
+        } catch (e) {
+          console.error("Mermaid 에러:", e);
+        }
+      }
+    })();
+    /*]]>*/
+  </script>
+</div>

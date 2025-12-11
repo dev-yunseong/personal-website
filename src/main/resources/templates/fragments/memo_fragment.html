@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <body>
 <div th:fragment="memoFragment" th:if="${memo != null}" class="card shadow-lg border-0 w-100">
 
@@ -9,9 +10,12 @@
             <i class="bi bi-pencil-square"></i>
         </a>
     </div>
-    <div class="card-body markdown-body">
+    <div class="card-body markdown-body" id="markdown-content">
         <p class="card-text fs-5" th:utext="${memo.getHtml()}">Memo content goes here.</p>
     </div>
+
+  <div th:replace="~{fragments/mermaid_katex_parser.html :: parser}"></div>
+
 </div>
 </body>
 </html>
