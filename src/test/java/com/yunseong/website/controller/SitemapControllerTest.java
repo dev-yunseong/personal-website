@@ -97,7 +97,7 @@ class SitemapControllerTest {
         String result = sitemapController.sitemap(request);
 
         // Then
-        assertTrue(result.equals(expectedSitemap));
+        assertEquals(expectedSitemap, result);
         verify(sitemapService).generateSitemap("http://localhost:8080");
     }
 }

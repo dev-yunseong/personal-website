@@ -164,19 +164,20 @@ class SitemapServiceTest {
 
     @Test
     void generateSitemap_EscapesSpecialCharacters() {
-        // Given
-        Memo memoWithSpecialChars = new Memo(3L, "/blog/post&test<>", "Content", 
-            LocalDateTime.now(), LocalDateTime.now());
+        // Given - Create a base URL with special characters that need escaping
         when(memoService.getMemos(any(Pageable.class)))
-            .thenReturn(new PageImpl<>(Arrays.asList(memoWithSpecialChars)));
+            .thenReturn(new PageImpl<>(Arrays.asList()));
         when(gameProjectService.getAllGameProjects())
             .thenReturn(Arrays.asList());
 
-        // When
-        String sitemap = sitemapService.generateSitemap("https://example.com");
+        // When - Generate sitemap with a URL containing ampersand
+        String sitemap = sitemapService.generateSitemap("https://example.com?param=1&other=2");
 
-        // Then
-        // XML special characters should be escaped
-        assertFalse(sitemap.contains("&") && !sitemap.contains("&amp;") && !sitemap.contains("&lt;"));
+        // Then - Verify ampersands in the URL are escaped
+        assertTrue(sitemap.contains("https://example.com?param=1&amp;other=2"), 
+            "Ampersands in URLs should be escaped to &amp;");
+        // Verify the basic XML structure is also properly formed
+        assertTrue(sitemap.contains("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"));
+        assertTrue(sitemap.contains("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">"));
     }
 }
