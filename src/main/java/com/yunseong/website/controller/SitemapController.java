@@ -17,7 +17,7 @@ public class SitemapController {
     @GetMapping(value = "/sitemap.xml", produces = MediaType.APPLICATION_XML_VALUE)
     @ResponseBody
     public String sitemap(HttpServletRequest request) {
-        String scheme = "https";//request.getScheme();
+        String scheme = request.getScheme();
         String serverName = request.getServerName();
         int serverPort = request.getServerPort();
         
