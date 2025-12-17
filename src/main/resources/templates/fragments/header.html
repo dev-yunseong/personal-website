@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <div th:fragment="css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown-light.css">
 </div>
@@ -21,6 +22,11 @@
                     </li>
                     <li class="nav-item">
                         <a class="nav-link active" aria-current="page" href="/public/games">Games</a>
+                    </li>
+                    <li class="nav-item ms-auto" sec:authorize="isAuthenticated()">
+                        <a class="nav-link active" aria-current="page" href="/admin/console">
+                            <i class="bi bi-speedometer2"></i> Console
+                        </a>
                     </li>
                 </ul>
             </div>
