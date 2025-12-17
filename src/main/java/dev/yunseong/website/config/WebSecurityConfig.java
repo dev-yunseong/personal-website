@@ -16,14 +16,10 @@ public class WebSecurityConfig {
         http
                 .authorizeHttpRequests((requests) -> requests
                         .requestMatchers(
-                                "/",
-                                "/robots.txt",
-                                "/google59d6c60daa0cb654.html",
-                                "/favicon.ico",
-                                "/sitemap.xml",
-                                "/public/**")
-                        .permitAll()
-                        .anyRequest().authenticated()
+                                "/admin/**",
+                                "/api/admin/**")
+                        .authenticated()
+                        .anyRequest().permitAll()
                 )
                 .formLogin(withDefaults());;
 

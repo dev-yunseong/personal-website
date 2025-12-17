@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<head>
+    <title>Error</title>
+</head>
+<body>
+<th:block layout:fragment="content">
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow-lg border-0">
+                    <div class="card-body text-center py-5">
+                        <div class="mb-4">
+                            <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 5rem;"></i>
+                        </div>
+                        
+                        <h1 class="display-4 fw-bold text-dark mb-3" th:text="${statusCode != null ? statusCode : 'Error'}">Error</h1>
+                        
+                        <h2 class="h3 mb-4 text-secondary" th:text="${statusMessage != null ? statusMessage : 'Error'}">Error</h2>
+                        
+                        <div class="mt-5">
+                            <a href="/" class="btn btn-dark btn-lg px-5 py-3">
+                                <i class="bi bi-house-fill me-2"></i>
+                                Go to Home
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>
