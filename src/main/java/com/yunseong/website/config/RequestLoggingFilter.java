@@ -1,7 +1,9 @@
 package com.yunseong.website.config;
 
+import com.yunseong.website.service.RequestStatisticsService;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
@@ -11,7 +13,10 @@ import java.util.Objects;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class RequestLoggingFilter implements Filter {
+    private final RequestStatisticsService requestStatisticsService;
+
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
         if (servletRequest instanceof HttpServletRequest httpRequest) {
@@ -32,6 +37,11 @@ public class RequestLoggingFilter implements Filter {
                         httpRequest.getRequestURI(),
                         duration
                 );
+
+                // Record statistics for /public/ URLs
+                String referer = httpRequest.getHeader(HttpHeaders.REFERER);
+                String userAgent = httpRequest.getHeader(HttpHeaders.USER_AGENT);
+                requestStatisticsService.recordRequest(httpRequest.getRequestURI(), httpRequest.getMethod(), referer, userAgent);
             }
         } else {
             log.warn("Received a non-HTTP request. Skipping request logging.");
