@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<head>
+    <title>Admin Console</title>
+</head>
+
+<body>
+<th:block layout:fragment="content">
+    <div class="container mt-4">
+        <h1 class="mb-4">Admin Console</h1>
+        <p class="text-muted">Request statistics for the last 7 days</p>
+
+        <!-- Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Requests</h5>
+                        <p class="card-text display-4" th:text="${totalRequests}">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Unique Pages</h5>
+                        <p class="card-text display-4" th:text="${topUris.size()}">0</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Data Points</h5>
+                        <p class="card-text display-4" th:text="${statistics.size()}">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Pages -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Top Pages by Request Count</h5>
+            </div>
+            <div class="card-body">
+                <div th:if="${topUris.isEmpty()}" class="alert alert-info">
+                    No request data available yet. Statistics will appear after requests to /public/** endpoints are made.
+                </div>
+                <div th:unless="${topUris.isEmpty()}">
+                    <table class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>URI</th>
+                            <th>Total Requests</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="entry : ${topUris}">
+                            <td th:text="${entry.key}"></td>
+                            <td th:text="${entry.value}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Statistics -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Request History</h5>
+            </div>
+            <div class="card-body">
+                <div th:if="${statistics.isEmpty()}" class="alert alert-info">
+                    No request statistics available yet. Statistics are saved every 5 minutes.
+                </div>
+                <div th:unless="${statistics.isEmpty()}">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Method</th>
+                            <th>URI</th>
+                            <th>Request Count</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="stat : ${statistics}">
+                            <td th:text="${#temporals.format(stat.createdAt, 'yyyy-MM-dd HH:mm:ss')}"></td>
+                            <td>
+                                <span class="badge bg-primary" th:text="${stat.method}"></span>
+                            </td>
+                            <td th:text="${stat.uri}"></td>
+                            <td th:text="${stat.requestCount}"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

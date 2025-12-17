@@ -16,3 +16,14 @@ CREATE TABLE game_projects (
     CONSTRAINT fk_game_projects_memo FOREIGN KEY (memo_id) REFERENCES memos(id) ON DELETE CASCADE
 );
 
+CREATE TABLE request_statistics (
+    id BIGSERIAL PRIMARY KEY,
+    uri VARCHAR(512) NOT NULL,
+    method VARCHAR(10) NOT NULL,
+    request_count BIGINT NOT NULL,
+    created_at TIMESTAMP
+);
+
+CREATE INDEX idx_request_statistics_created_at ON request_statistics(created_at);
+CREATE INDEX idx_request_statistics_uri ON request_statistics(uri);
+
