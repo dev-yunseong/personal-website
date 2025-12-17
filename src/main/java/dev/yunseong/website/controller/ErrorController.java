@@ -15,10 +15,10 @@ public class ErrorController implements org.springframework.boot.web.servlet.err
 
         if (status != null) {
             Integer statusCode = Integer.valueOf(status.toString());
-            String errorMessage = getStatusMessage(statusCode);
+            String statusMessage = getStatusMessage(statusCode);
             
             model.addAttribute("statusCode", statusCode);
-            model.addAttribute("errorMessage", errorMessage);
+            model.addAttribute("statusMessage", statusMessage);
         }
 
         return "error";

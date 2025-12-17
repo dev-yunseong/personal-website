@@ -35,7 +35,7 @@ class ErrorControllerTest {
         // Then
         assertEquals("error", viewName);
         verify(model).addAttribute("statusCode", 404);
-        verify(model).addAttribute("errorMessage", "Not Found");
+        verify(model).addAttribute("statusMessage", "Not Found");
     }
 
     @Test
@@ -49,7 +49,7 @@ class ErrorControllerTest {
         // Then
         assertEquals("error", viewName);
         verify(model).addAttribute("statusCode", 500);
-        verify(model).addAttribute("errorMessage", "Internal Server Error");
+        verify(model).addAttribute("statusMessage", "Internal Server Error");
     }
 
     @Test
@@ -63,7 +63,7 @@ class ErrorControllerTest {
         // Then
         assertEquals("error", viewName);
         verify(model).addAttribute("statusCode", 403);
-        verify(model).addAttribute("errorMessage", "Forbidden");
+        verify(model).addAttribute("statusMessage", "Forbidden");
     }
 
     @Test
@@ -77,7 +77,7 @@ class ErrorControllerTest {
         // Then
         assertEquals("error", viewName);
         verify(model).addAttribute("statusCode", 400);
-        verify(model).addAttribute("errorMessage", "Bad Request");
+        verify(model).addAttribute("statusMessage", "Bad Request");
     }
 
     @Test
@@ -91,7 +91,7 @@ class ErrorControllerTest {
         // Then
         assertEquals("error", viewName);
         verify(model).addAttribute("statusCode", 418);
-        verify(model).addAttribute("errorMessage", "Error");
+        verify(model).addAttribute("statusMessage", "Error");
     }
 
     @Test
@@ -105,6 +105,6 @@ class ErrorControllerTest {
         // Then
         assertEquals("error", viewName);
         verify(model, never()).addAttribute(eq("statusCode"), any());
-        verify(model, never()).addAttribute(eq("errorMessage"), any());
+        verify(model, never()).addAttribute(eq("statusMessage"), any());
     }
 }
