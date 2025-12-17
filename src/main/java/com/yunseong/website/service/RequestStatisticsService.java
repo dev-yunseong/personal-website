@@ -9,9 +9,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -21,30 +23,30 @@ public class RequestStatisticsService {
     private final RequestStatisticsRepository requestStatisticsRepository;
     
     // In-memory storage for request statistics
-    private final List<RequestStatistics> requestList = new java.util.concurrent.CopyOnWriteArrayList<>();
+    private final Queue<RequestStatistics> requestQueue = new ConcurrentLinkedDeque<>();
 
     public void recordRequest(String uri, String method, String referer, String userAgent) {
         // Only track requests starting with /public/
         if (uri != null && uri.startsWith("/public/")) {
             RequestStatistics stats = new RequestStatistics(uri, method, referer, userAgent);
-            requestList.add(stats);
-            log.debug("Recorded request: {} {} (total in memory: {})", method, uri, requestList.size());
+            requestQueue.add(stats);
+            log.debug("Recorded request: {} {} (total in memory: {})", method, uri, requestQueue.size());
         }
     }
 
     @Scheduled(fixedRate = 300000) // 5 minutes = 300000 milliseconds
     @Transactional
     public void persistStatistics() {
-        if (requestList.isEmpty()) {
+        if (requestQueue.isEmpty()) {
             log.debug("No statistics to persist");
             return;
         }
 
-        log.info("Persisting {} request statistics to database", requestList.size());
+        log.info("Persisting {} request statistics to database", requestQueue.size());
         
         // Create a snapshot of current statistics and clear the list
-        List<RequestStatistics> snapshot = new java.util.ArrayList<>(requestList);
-        requestList.clear();
+        List<RequestStatistics> snapshot = new ArrayList<>(requestQueue);
+        requestQueue.clear();
 
         // Persist to database
         requestStatisticsRepository.saveAll(snapshot);
