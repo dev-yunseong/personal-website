@@ -36,9 +36,9 @@ class RequestStatisticsServiceTest {
     @Test
     void recordRequest_WithPublicUrl_RecordsStatistics() {
         // When
-        requestStatisticsService.recordRequest("/public/memos/1", "GET");
-        requestStatisticsService.recordRequest("/public/memos/1", "GET");
-        requestStatisticsService.recordRequest("/public/memos/2", "GET");
+        requestStatisticsService.recordRequest("/public/memos/1", "GET", "https://example.com", "Mozilla/5.0");
+        requestStatisticsService.recordRequest("/public/memos/1", "GET", "https://example.com", "Mozilla/5.0");
+        requestStatisticsService.recordRequest("/public/memos/2", "GET", null, "Chrome/91.0");
 
         // Then - verify by persisting
         requestStatisticsService.persistStatistics();
@@ -53,8 +53,8 @@ class RequestStatisticsServiceTest {
     @Test
     void recordRequest_WithNonPublicUrl_DoesNotRecordStatistics() {
         // When
-        requestStatisticsService.recordRequest("/admin/console", "GET");
-        requestStatisticsService.recordRequest("/", "GET");
+        requestStatisticsService.recordRequest("/admin/console", "GET", null, null);
+        requestStatisticsService.recordRequest("/", "GET", null, null);
 
         // Then - verify by persisting
         requestStatisticsService.persistStatistics();
@@ -65,7 +65,7 @@ class RequestStatisticsServiceTest {
     @Test
     void recordRequest_WithNullUri_DoesNotThrowException() {
         // When/Then
-        assertDoesNotThrow(() -> requestStatisticsService.recordRequest(null, "GET"));
+        assertDoesNotThrow(() -> requestStatisticsService.recordRequest(null, "GET", null, null));
     }
 
     @Test
@@ -80,9 +80,9 @@ class RequestStatisticsServiceTest {
     @Test
     void persistStatistics_SavesCorrectData() {
         // Given
-        requestStatisticsService.recordRequest("/public/memos/1", "GET");
-        requestStatisticsService.recordRequest("/public/memos/1", "GET");
-        requestStatisticsService.recordRequest("/public/memos/1", "GET");
+        requestStatisticsService.recordRequest("/public/memos/1", "GET", "https://referer.com", "Mozilla/5.0");
+        requestStatisticsService.recordRequest("/public/memos/1", "GET", "https://another-referer.com", "Chrome/91.0");
+        requestStatisticsService.recordRequest("/public/memos/1", "GET", "https://last-referer.com", "Safari/14.0");
 
         // When
         requestStatisticsService.persistStatistics();
@@ -95,6 +95,8 @@ class RequestStatisticsServiceTest {
         assertEquals("/public/memos/1", saved.getUri());
         assertEquals("GET", saved.getMethod());
         assertEquals(3L, saved.getRequestCount());
+        assertEquals("https://last-referer.com", saved.getReferer()); // Most recent referer
+        assertEquals("Safari/14.0", saved.getUserAgent()); // Most recent user-agent
     }
 
     @Test

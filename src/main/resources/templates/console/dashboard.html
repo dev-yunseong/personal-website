@@ -85,7 +85,9 @@
                             <th>Timestamp</th>
                             <th>Method</th>
                             <th>URI</th>
-                            <th>Request Count</th>
+                            <th>Count</th>
+                            <th>Referer</th>
+                            <th>User Agent</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -96,6 +98,12 @@
                             </td>
                             <td th:text="${stat.uri}"></td>
                             <td th:text="${stat.requestCount}"></td>
+                            <td>
+                                <small class="text-muted" th:text="${stat.referer != null ? stat.referer : '-'}"></small>
+                            </td>
+                            <td>
+                                <small class="text-muted" th:text="${stat.userAgent != null ? #strings.abbreviate(stat.userAgent, 50) : '-'}"></small>
+                            </td>
                         </tr>
                         </tbody>
                     </table>
