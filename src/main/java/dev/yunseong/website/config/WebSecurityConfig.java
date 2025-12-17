@@ -15,15 +15,9 @@ public class WebSecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests((requests) -> requests
-                        .requestMatchers(
-                                "/",
-                                "/robots.txt",
-                                "/google59d6c60daa0cb654.html",
-                                "/favicon.ico",
-                                "/sitemap.xml",
-                                "/public/**")
-                        .permitAll()
-                        .anyRequest().authenticated()
+                        .requestMatchers("/admin/**")
+                        .authenticated()
+                        .anyRequest().permitAll()
                 )
                 .formLogin(withDefaults());;
 
