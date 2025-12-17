@@ -5,6 +5,8 @@ server:
 spring:
   application:
     name: personal-website
+  config:
+    import: optional:file:.env[.properties]
   datasource:
     driver-class-name: org.postgresql.Driver
     username: ${DATABASE_USER}
