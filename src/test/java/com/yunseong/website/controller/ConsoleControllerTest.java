@@ -30,8 +30,8 @@ class ConsoleControllerTest {
     void console_ReturnsConsoleView() {
         // Given
         List<RequestStatistics> stats = Arrays.asList(
-                new RequestStatistics("/public/memos/1", "GET", 5L),
-                new RequestStatistics("/public/memos/2", "GET", 3L)
+                new RequestStatistics("/public/memos/1", "GET", "https://google.com", "Mozilla/5.0"),
+                new RequestStatistics("/public/memos/2", "GET", null, "Chrome/91.0")
         );
         Map<String, Long> topUris = new LinkedHashMap<>();
         topUris.put("/public/memos/1", 10L);

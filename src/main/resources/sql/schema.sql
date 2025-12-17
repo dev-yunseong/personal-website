@@ -20,7 +20,6 @@ CREATE TABLE request_statistics (
     id BIGSERIAL PRIMARY KEY,
     uri VARCHAR(512) NOT NULL,
     method VARCHAR(10) NOT NULL,
-    request_count BIGINT NOT NULL,
     referer VARCHAR(1024),
     user_agent VARCHAR(512),
     created_at TIMESTAMP

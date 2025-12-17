@@ -24,9 +24,6 @@ public class RequestStatistics {
     @Column(nullable = false)
     private String method;
 
-    @Column(name = "request_count", nullable = false)
-    private Long requestCount;
-
     @Column(length = 1024)
     private String referer;
 
@@ -37,16 +34,9 @@ public class RequestStatistics {
     @CreationTimestamp
     private LocalDateTime createdAt;
 
-    public RequestStatistics(String uri, String method, Long requestCount) {
+    public RequestStatistics(String uri, String method, String referer, String userAgent) {
         this.uri = uri;
         this.method = method;
-        this.requestCount = requestCount;
-    }
-
-    public RequestStatistics(String uri, String method, Long requestCount, String referer, String userAgent) {
-        this.uri = uri;
-        this.method = method;
-        this.requestCount = requestCount;
         this.referer = referer;
         this.userAgent = userAgent;
     }

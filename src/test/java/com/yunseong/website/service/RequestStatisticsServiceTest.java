@@ -43,11 +43,11 @@ class RequestStatisticsServiceTest {
         // Then - verify by persisting
         requestStatisticsService.persistStatistics();
         
-        ArgumentCaptor<RequestStatistics> captor = ArgumentCaptor.forClass(RequestStatistics.class);
-        verify(requestStatisticsRepository, times(2)).save(captor.capture());
+        ArgumentCaptor<List<RequestStatistics>> captor = ArgumentCaptor.forClass(List.class);
+        verify(requestStatisticsRepository, times(1)).saveAll(captor.capture());
         
-        List<RequestStatistics> savedStats = captor.getAllValues();
-        assertEquals(2, savedStats.size());
+        List<RequestStatistics> savedStats = captor.getValue();
+        assertEquals(3, savedStats.size());
     }
 
     @Test
@@ -59,7 +59,7 @@ class RequestStatisticsServiceTest {
         // Then - verify by persisting
         requestStatisticsService.persistStatistics();
         
-        verify(requestStatisticsRepository, never()).save(any());
+        verify(requestStatisticsRepository, never()).saveAll(any());
     }
 
     @Test
@@ -74,7 +74,7 @@ class RequestStatisticsServiceTest {
         requestStatisticsService.persistStatistics();
 
         // Then
-        verify(requestStatisticsRepository, never()).save(any());
+        verify(requestStatisticsRepository, never()).saveAll(any());
     }
 
     @Test
@@ -88,23 +88,32 @@ class RequestStatisticsServiceTest {
         requestStatisticsService.persistStatistics();
 
         // Then
-        ArgumentCaptor<RequestStatistics> captor = ArgumentCaptor.forClass(RequestStatistics.class);
-        verify(requestStatisticsRepository, times(1)).save(captor.capture());
+        ArgumentCaptor<List<RequestStatistics>> captor = ArgumentCaptor.forClass(List.class);
+        verify(requestStatisticsRepository, times(1)).saveAll(captor.capture());
         
-        RequestStatistics saved = captor.getValue();
-        assertEquals("/public/memos/1", saved.getUri());
-        assertEquals("GET", saved.getMethod());
-        assertEquals(3L, saved.getRequestCount());
-        assertEquals("https://last-referer.com", saved.getReferer()); // Most recent referer
-        assertEquals("Safari/14.0", saved.getUserAgent()); // Most recent user-agent
+        List<RequestStatistics> savedStats = captor.getValue();
+        assertEquals(3, savedStats.size());
+        
+        // Verify all three requests are saved individually
+        assertEquals("/public/memos/1", savedStats.get(0).getUri());
+        assertEquals("GET", savedStats.get(0).getMethod());
+        assertEquals("https://referer.com", savedStats.get(0).getReferer());
+        assertEquals("Mozilla/5.0", savedStats.get(0).getUserAgent());
+        
+        assertEquals("/public/memos/1", savedStats.get(1).getUri());
+        assertEquals("https://another-referer.com", savedStats.get(1).getReferer());
+        assertEquals("Chrome/91.0", savedStats.get(1).getUserAgent());
+        
+        assertEquals("/public/memos/1", savedStats.get(2).getUri());
+        assertEquals("https://last-referer.com", savedStats.get(2).getReferer());
+        assertEquals("Safari/14.0", savedStats.get(2).getUserAgent());
     }
 
     @Test
     void getStatisticsForLastDays_ReturnsStatistics() {
         // Given
-        LocalDateTime now = LocalDateTime.now();
-        RequestStatistics stat1 = new RequestStatistics("/public/memos/1", "GET", 5L);
-        RequestStatistics stat2 = new RequestStatistics("/public/memos/2", "GET", 3L);
+        RequestStatistics stat1 = new RequestStatistics("/public/memos/1", "GET", null, "Mozilla/5.0");
+        RequestStatistics stat2 = new RequestStatistics("/public/memos/2", "GET", null, "Chrome/91.0");
         List<RequestStatistics> mockStats = Arrays.asList(stat1, stat2);
         
         when(requestStatisticsRepository.findByCreatedAtAfter(any(LocalDateTime.class)))
@@ -142,8 +151,8 @@ class RequestStatisticsServiceTest {
     @Test
     void getTotalRequestsForLastDays_ReturnsTotal() {
         // Given
-        RequestStatistics stat1 = new RequestStatistics("/public/memos/1", "GET", 5L);
-        RequestStatistics stat2 = new RequestStatistics("/public/memos/2", "GET", 3L);
+        RequestStatistics stat1 = new RequestStatistics("/public/memos/1", "GET", null, "Mozilla/5.0");
+        RequestStatistics stat2 = new RequestStatistics("/public/memos/2", "GET", null, "Chrome/91.0");
         List<RequestStatistics> mockStats = Arrays.asList(stat1, stat2);
         
         when(requestStatisticsRepository.findByCreatedAtAfter(any(LocalDateTime.class)))
@@ -153,6 +162,6 @@ class RequestStatisticsServiceTest {
         long total = requestStatisticsService.getTotalRequestsForLastDays(7);
 
         // Then
-        assertEquals(8L, total);
+        assertEquals(2L, total); // Now returns count of records, not sum of request_count
     }
 }

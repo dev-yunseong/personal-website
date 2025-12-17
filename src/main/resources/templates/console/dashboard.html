@@ -85,7 +85,6 @@
                             <th>Timestamp</th>
                             <th>Method</th>
                             <th>URI</th>
-                            <th>Count</th>
                             <th>Referer</th>
                             <th>User Agent</th>
                         </tr>
@@ -97,7 +96,6 @@
                                 <span class="badge bg-primary" th:text="${stat.method}"></span>
                             </td>
                             <td th:text="${stat.uri}"></td>
-                            <td th:text="${stat.requestCount}"></td>
                             <td>
                                 <small class="text-muted" th:text="${stat.referer != null ? stat.referer : '-'}"></small>
                             </td>

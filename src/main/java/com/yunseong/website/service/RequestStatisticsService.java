@@ -21,57 +21,33 @@ public class RequestStatisticsService {
     private final RequestStatisticsRepository requestStatisticsRepository;
     
     // In-memory storage for request statistics
-    private final Map<String, RequestData> requestDataMap = new ConcurrentHashMap<>();
+    private final List<RequestStatistics> requestList = new java.util.concurrent.CopyOnWriteArrayList<>();
 
     public void recordRequest(String uri, String method, String referer, String userAgent) {
         // Only track requests starting with /public/
         if (uri != null && uri.startsWith("/public/")) {
-            String key = method + ":" + uri;
-            requestDataMap.compute(key, (k, data) -> {
-                if (data == null) {
-                    data = new RequestData();
-                }
-                data.count++;
-                data.referer = referer; // Store the most recent referer
-                data.userAgent = userAgent; // Store the most recent user-agent
-                return data;
-            });
-            log.debug("Recorded request: {} (total: {})", key, requestDataMap.get(key).count);
+            RequestStatistics stats = new RequestStatistics(uri, method, referer, userAgent);
+            requestList.add(stats);
+            log.debug("Recorded request: {} {} (total in memory: {})", method, uri, requestList.size());
         }
-    }
-
-    private static class RequestData {
-        long count = 0;
-        String referer;
-        String userAgent;
     }
 
     @Scheduled(fixedRate = 300000) // 5 minutes = 300000 milliseconds
     @Transactional
     public void persistStatistics() {
-        if (requestDataMap.isEmpty()) {
+        if (requestList.isEmpty()) {
             log.debug("No statistics to persist");
             return;
         }
 
-        log.info("Persisting {} request statistics to database", requestDataMap.size());
+        log.info("Persisting {} request statistics to database", requestList.size());
         
-        // Create a snapshot of current statistics and clear the map
-        Map<String, RequestData> snapshot = new ConcurrentHashMap<>(requestDataMap);
-        requestDataMap.clear();
+        // Create a snapshot of current statistics and clear the list
+        List<RequestStatistics> snapshot = new java.util.ArrayList<>(requestList);
+        requestList.clear();
 
         // Persist to database
-        for (Map.Entry<String, RequestData> entry : snapshot.entrySet()) {
-            String[] parts = entry.getKey().split(":", 2);
-            if (parts.length == 2) {
-                String method = parts[0];
-                String uri = parts[1];
-                RequestData data = entry.getValue();
-                
-                RequestStatistics stats = new RequestStatistics(uri, method, data.count, data.referer, data.userAgent);
-                requestStatisticsRepository.save(stats);
-            }
-        }
+        requestStatisticsRepository.saveAll(snapshot);
 
         log.info("Successfully persisted {} statistics", snapshot.size());
     }
@@ -99,6 +75,6 @@ public class RequestStatisticsService {
     public long getTotalRequestsForLastDays(int days) {
         LocalDateTime startDate = LocalDateTime.now().minusDays(days);
         List<RequestStatistics> stats = requestStatisticsRepository.findByCreatedAtAfter(startDate);
-        return stats.stream().mapToLong(RequestStatistics::getRequestCount).sum();
+        return stats.size();
     }
 }

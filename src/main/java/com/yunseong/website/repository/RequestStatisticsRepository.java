@@ -14,6 +14,6 @@ public interface RequestStatisticsRepository extends JpaRepository<RequestStatis
     @Query("SELECT r FROM RequestStatistics r WHERE r.createdAt >= :startDate ORDER BY r.createdAt DESC")
     List<RequestStatistics> findByCreatedAtAfter(@Param("startDate") LocalDateTime startDate);
 
-    @Query("SELECT r.uri, SUM(r.requestCount) as totalCount FROM RequestStatistics r WHERE r.createdAt >= :startDate GROUP BY r.uri ORDER BY totalCount DESC")
+    @Query("SELECT r.uri, COUNT(r) as totalCount FROM RequestStatistics r WHERE r.createdAt >= :startDate GROUP BY r.uri ORDER BY totalCount DESC")
     List<Object[]> findTopUrisByRequestCount(@Param("startDate") LocalDateTime startDate);
 }
