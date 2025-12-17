@@ -12,37 +12,28 @@ public class ErrorController implements org.springframework.boot.web.servlet.err
     @RequestMapping("/error")
     public String handleError(HttpServletRequest request, Model model) {
         Object status = request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE);
-        Object message = request.getAttribute(RequestDispatcher.ERROR_MESSAGE);
-        Object exception = request.getAttribute(RequestDispatcher.ERROR_EXCEPTION);
 
-        String errorMessage = "An unexpected error occurred";
         if (status != null) {
             Integer statusCode = Integer.valueOf(status.toString());
+            String errorMessage = getStatusMessage(statusCode);
             
-            switch (statusCode) {
-                case 404:
-                    errorMessage = "Page not found";
-                    break;
-                case 403:
-                    errorMessage = "Access forbidden";
-                    break;
-                case 500:
-                    errorMessage = "Internal server error";
-                    break;
-                case 400:
-                    errorMessage = "Bad request";
-                    break;
-                default:
-                    errorMessage = "Error occurred (Status: " + statusCode + ")";
-            }
             model.addAttribute("statusCode", statusCode);
+            model.addAttribute("errorMessage", errorMessage);
         }
 
-        if (message != null && !message.toString().isEmpty()) {
-            model.addAttribute("errorDetails", message.toString());
-        }
-
-        model.addAttribute("errorMessage", errorMessage);
         return "error";
+    }
+
+    private String getStatusMessage(int statusCode) {
+        return switch (statusCode) {
+            case 400 -> "Bad Request";
+            case 401 -> "Unauthorized";
+            case 403 -> "Forbidden";
+            case 404 -> "Not Found";
+            case 500 -> "Internal Server Error";
+            case 502 -> "Bad Gateway";
+            case 503 -> "Service Unavailable";
+            default -> "Error";
+        };
     }
 }

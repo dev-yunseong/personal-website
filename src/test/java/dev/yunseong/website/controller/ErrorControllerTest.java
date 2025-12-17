@@ -2,7 +2,6 @@ package dev.yunseong.website.controller;
 
 import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.http.HttpServletRequest;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -36,7 +35,7 @@ class ErrorControllerTest {
         // Then
         assertEquals("error", viewName);
         verify(model).addAttribute("statusCode", 404);
-        verify(model).addAttribute("errorMessage", "Page not found");
+        verify(model).addAttribute("errorMessage", "Not Found");
     }
 
     @Test
@@ -50,7 +49,7 @@ class ErrorControllerTest {
         // Then
         assertEquals("error", viewName);
         verify(model).addAttribute("statusCode", 500);
-        verify(model).addAttribute("errorMessage", "Internal server error");
+        verify(model).addAttribute("errorMessage", "Internal Server Error");
     }
 
     @Test
@@ -64,7 +63,7 @@ class ErrorControllerTest {
         // Then
         assertEquals("error", viewName);
         verify(model).addAttribute("statusCode", 403);
-        verify(model).addAttribute("errorMessage", "Access forbidden");
+        verify(model).addAttribute("errorMessage", "Forbidden");
     }
 
     @Test
@@ -78,21 +77,21 @@ class ErrorControllerTest {
         // Then
         assertEquals("error", viewName);
         verify(model).addAttribute("statusCode", 400);
-        verify(model).addAttribute("errorMessage", "Bad request");
+        verify(model).addAttribute("errorMessage", "Bad Request");
     }
 
     @Test
     void handleError_ReturnsDefaultMessageForUnknownStatus() {
         // Given
-        when(request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE)).thenReturn(502);
+        when(request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE)).thenReturn(418);
 
         // When
         String viewName = errorController.handleError(request, model);
 
         // Then
         assertEquals("error", viewName);
-        verify(model).addAttribute("statusCode", 502);
-        verify(model).addAttribute("errorMessage", "Error occurred (Status: 502)");
+        verify(model).addAttribute("statusCode", 418);
+        verify(model).addAttribute("errorMessage", "Error");
     }
 
     @Test
@@ -105,49 +104,7 @@ class ErrorControllerTest {
 
         // Then
         assertEquals("error", viewName);
-        verify(model).addAttribute("errorMessage", "An unexpected error occurred");
         verify(model, never()).addAttribute(eq("statusCode"), any());
-    }
-
-    @Test
-    void handleError_IncludesErrorDetailsWhenAvailable() {
-        // Given
-        when(request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE)).thenReturn(500);
-        when(request.getAttribute(RequestDispatcher.ERROR_MESSAGE)).thenReturn("Database connection failed");
-
-        // When
-        String viewName = errorController.handleError(request, model);
-
-        // Then
-        assertEquals("error", viewName);
-        verify(model).addAttribute("errorDetails", "Database connection failed");
-    }
-
-    @Test
-    void handleError_DoesNotIncludeErrorDetailsWhenNull() {
-        // Given
-        when(request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE)).thenReturn(404);
-        when(request.getAttribute(RequestDispatcher.ERROR_MESSAGE)).thenReturn(null);
-
-        // When
-        String viewName = errorController.handleError(request, model);
-
-        // Then
-        assertEquals("error", viewName);
-        verify(model, never()).addAttribute(eq("errorDetails"), any());
-    }
-
-    @Test
-    void handleError_DoesNotIncludeErrorDetailsWhenEmpty() {
-        // Given
-        when(request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE)).thenReturn(404);
-        when(request.getAttribute(RequestDispatcher.ERROR_MESSAGE)).thenReturn("");
-
-        // When
-        String viewName = errorController.handleError(request, model);
-
-        // Then
-        assertEquals("error", viewName);
-        verify(model, never()).addAttribute(eq("errorDetails"), any());
+        verify(model, never()).addAttribute(eq("errorMessage"), any());
     }
 }
