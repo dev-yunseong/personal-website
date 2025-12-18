@@ -72,6 +72,9 @@
     
     <th:block th:fragment="gamePlayerScript">
         <script>
+            // Bootstrap's sm breakpoint (576px)
+            const MOBILE_BREAKPOINT = 576;
+            
             function isFullscreen() {
                 return !!(document.fullscreenElement || document.webkitFullscreenElement || 
                          document.mozFullScreenElement || document.msFullscreenElement);
@@ -113,7 +116,7 @@
             
             function updateFullscreenButton() {
                 const fullscreenBtn = document.getElementById('fullscreenBtn');
-                const isMobile = window.innerWidth < 576;
+                const isMobile = window.innerWidth < MOBILE_BREAKPOINT;
                 if (isFullscreen()) {
                     fullscreenBtn.innerHTML = isMobile ? '<i class="bi bi-fullscreen-exit"></i>' : '<i class="bi bi-fullscreen-exit"></i> 전체 화면 종료';
                 } else {
