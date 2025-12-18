@@ -33,12 +33,12 @@
 
 <body>
 <th:block layout:fragment="content">
-    <div class="container">
-        <h1 class="my-4">Games</h1>
+    <div class="container px-3 px-md-4">
+        <h1 class="my-3 my-md-4">Games</h1>
         <p class="lead">Choose a game to play</p>
         
         <div class="row">
-            <div class="col-md-4 mb-4" th:each="game : ${games}">
+            <div class="col-12 col-sm-6 col-md-4 mb-4" th:each="game : ${games}">
                 <a th:href="@{/public/games/{id}(id=${game.id})}" class="text-decoration-none">
                     <div class="card game-card h-100 shadow">
                         <div class="card-body">
@@ -50,7 +50,7 @@
                                      onload="this.classList.add('loaded')">
                                 <h5 class="card-title mb-0" th:text="${game.getTitle()}">Game Title</h5>
                             </div>
-                            <p class="card-text text-muted mt-2" th:text="${game.gameUrl}">Game URL</p>
+                            <p class="card-text text-muted mt-2 small" th:text="${game.gameUrl}">Game URL</p>
                             <span class="badge bg-primary">Play Now</span>
                         </div>
                     </div>

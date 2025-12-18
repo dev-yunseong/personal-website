@@ -18,11 +18,11 @@
 
 <body>
 <th:block layout:fragment="content">
-    <div class="container">
+    <div class="container px-3 px-md-4">
         <div class="row justify-content-center">
-            <div class="col-lg-12">
+            <div class="col-12 col-lg-12">
                 <!-- Game Title -->
-                <h1 class="my-4" th:text="${gameProject.getTitle()}">Game Title</h1>
+                <h1 class="my-3 my-md-4" th:text="${gameProject.getTitle()}">Game Title</h1>
                 
                 <!-- Game iframe Section -->
                 <div th:replace="~{fragments/game_player_fragment :: gamePlayer(gameUrl=${gameProject.gameUrl})}"></div>

@@ -33,6 +33,7 @@
                 padding: 8px 12px;
                 cursor: pointer;
                 transition: background-color 0.2s;
+                font-size: 0.875rem;
             }
             .fullscreen-btn:hover {
                 background-color: rgba(0, 0, 0, 0.8);
@@ -52,6 +53,19 @@
             .game-iframe-container:-ms-fullscreen {
                 padding-bottom: 0;
                 height: 100vh;
+            }
+            /* Mobile improvements */
+            @media (max-width: 576px) {
+                .fullscreen-btn {
+                    font-size: 0.75rem;
+                    padding: 6px 10px;
+                    bottom: 5px;
+                    right: 5px;
+                }
+                .game-iframe-container {
+                    border-radius: 4px;
+                    margin-bottom: 1.5rem;
+                }
             }
         </style>
     </th:block>
@@ -99,10 +113,11 @@
             
             function updateFullscreenButton() {
                 const fullscreenBtn = document.getElementById('fullscreenBtn');
+                const isMobile = window.innerWidth < 576;
                 if (isFullscreen()) {
-                    fullscreenBtn.innerHTML = '<i class="bi bi-fullscreen-exit"></i> 전체 화면 종료';
+                    fullscreenBtn.innerHTML = isMobile ? '<i class="bi bi-fullscreen-exit"></i>' : '<i class="bi bi-fullscreen-exit"></i> 전체 화면 종료';
                 } else {
-                    fullscreenBtn.innerHTML = '<i class="bi bi-arrows-fullscreen"></i> 전체 화면';
+                    fullscreenBtn.innerHTML = isMobile ? '<i class="bi bi-arrows-fullscreen"></i>' : '<i class="bi bi-arrows-fullscreen"></i> 전체 화면';
                 }
             }
         </script>
@@ -115,7 +130,7 @@
                 title="Game">
         </iframe>
         <button class="fullscreen-btn" id="fullscreenBtn" onclick="toggleFullscreen()">
-            <i class="bi bi-arrows-fullscreen"></i> 전체 화면
+            <i class="bi bi-arrows-fullscreen"></i><span class="d-none d-sm-inline"> 전체 화면</span>
         </button>
     </div>
 </body>

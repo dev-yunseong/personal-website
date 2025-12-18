@@ -4,14 +4,14 @@
 <body>
 <div th:fragment="memoFragment" th:if="${memo != null}" class="card shadow-lg border-0 w-100">
 
-    <div class="card-header bg-light d-flex justify-content-between align-items-center">
-        <h5 class="card-title" th:text="${memo.name}">Memo Title</h5>
+    <div class="card-header bg-light d-flex justify-content-between align-items-center flex-wrap">
+        <h5 class="card-title mb-2 mb-sm-0 me-2" th:text="${memo.name}">Memo Title</h5>
         <a th:href="@{/admin/memos/edit/{id}(id=${memo.id})}" class="btn btn-sm btn-outline-primary">
             <i class="bi bi-pencil-square"></i>
         </a>
     </div>
-    <div class="card-body markdown-body" id="markdown-content">
-        <p class="card-text fs-5" th:utext="${memo.getHtml()}">Memo content goes here.</p>
+    <div class="card-body markdown-body p-3 p-md-4" id="markdown-content">
+        <p class="card-text fs-6 fs-md-5" th:utext="${memo.getHtml()}">Memo content goes here.</p>
     </div>
 
   <div th:replace="~{fragments/mermaid_katex_parser.html :: parser}"></div>
