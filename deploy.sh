@@ -11,6 +11,7 @@ BUILD_PATH=$(ls $PROJECT_ROOT/build/libs/*.jar)
 JAR_NAME=$(basename $BUILD_PATH)
 
 # Copy To Server
+ssh $DEPLOY_USER@$DEPLOY_SERVER "mkdir -p $DEPLOY_PATH"
 scp $BUILD_PATH $DEPLOY_USER@$DEPLOY_SERVER:$DEPLOY_PATH/app.jar
 
 # Run Application
