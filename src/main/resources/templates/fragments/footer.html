@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<div th:fragment="footer">
+    <footer class="mt-5 bg-dark text-white">
+        <div class="container py-5">
+            <!-- Action Section: Contact -->
+            <div class="row mb-4">
+                <div class="col-12 text-center">
+                    <h5 class="mb-3">
+                        <i class="bi bi-envelope-fill me-2"></i>
+                        Contact
+                    </h5>
+                    <a href="mailto:me@yunseong.dev" class="text-white text-decoration-none fs-5 hover-link">
+                        <i class="bi bi-send-fill me-2"></i>me@yunseong.dev
+                    </a>
+                </div>
+            </div>
+
+            <hr class="border-secondary opacity-50 my-4">
+
+            <!-- Stack Section: Technology -->
+            <div class="row mb-4">
+                <div class="col-12 text-center">
+                    <p class="mb-2 text-muted small">TECH STACK</p>
+                    <p class="mb-0 fs-6">
+                        <i class="bi bi-code-slash me-2"></i>
+                        Built with <span class="text-info fw-semibold">Spring Boot</span> &amp; <span class="text-info fw-semibold">PostgreSQL</span>
+                    </p>
+                </div>
+            </div>
+
+            <hr class="border-secondary opacity-50 my-4">
+
+            <!-- Copyright Section -->
+            <div class="row">
+                <div class="col-12 text-center">
+                    <p class="mb-0 text-muted small">
+                        ⓒ 2025. Yunseong. All rights reserved.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <style>
+        footer {
+            box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        footer .hover-link {
+            transition: all 0.3s ease;
+        }
+
+        footer .hover-link:hover {
+            color: #0dcaf0 !important;
+            transform: translateY(-2px);
+        }
+
+        footer hr {
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+    </style>
+</div>
+
+</html>
