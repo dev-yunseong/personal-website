@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<div th:fragment="footer">
+  <footer class="bg-dark py-5 border-top border-secondary">
+    <div class="container text-center">
+
+      <div class="mb-3">
+        <a href="mailto:me@yunseong.dev" class="text-light text-decoration-none opacity-75 hover-opacity">
+          me@yunseong.dev
+        </a>
+      </div>
+
+      <div class="mb-2">
+        <p class="text-secondary small mb-0">
+          Powered by <span class="text-light opacity-50">Spring Boot</span> &amp; <span class="text-light opacity-50">PostgreSQL</span>
+        </p>
+      </div>
+
+      <div>
+        <p class="text-secondary" style="font-size: 0.75rem; opacity: 0.4;">
+          Yunseong — 2025
+        </p>
+      </div>
+
+    </div>
+  </footer>
+
+  <style>
+
+    footer .hover-opacity {
+      transition: opacity 0.3s ease;
+    }
+    footer .hover-opacity:hover {
+      opacity: 1 !important;
+      color: #0dcaf0 !important;
+    }
+
+    footer.border-top {
+      border-color: rgba(255, 255, 255, 0.1) !important;
+    }
+  </style>
+</div>
+
+</html>
