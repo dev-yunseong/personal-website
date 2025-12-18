@@ -6,7 +6,7 @@
                     pageSize=${memos.size},
                     totalPages=${memos.totalPages}">
         <nav aria-label="Page navigation">
-            <ul class="pagination">
+            <ul class="pagination pagination-sm flex-wrap justify-content-center">
                 <li class="page-item" th:classappend="${memos.first} ? 'disabled'">
                     <a class="page-link" th:href="@{/public/memos(page=${pageNumber - 1}, size=${pageSize}, category=${selectedCategory})}" aria-label="Previous">
                         <span aria-hidden="true">&laquo;</span>

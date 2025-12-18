@@ -8,19 +8,21 @@
 </head>
 <body>
 <th:block layout:fragment="content">
-    <div class="container">
-        <h1>Blog</h1>
+    <div class="container px-3 px-md-4">
+        <h1 class="mb-3">Blog</h1>
         <a th:href="@{/admin/memos/new(category=${selectedCategory})}" class="btn btn-primary mb-3">Write a new memo</a>
         <div class="row">
-            <div class="col-md-9">
+            <!-- Category sidebar - shown at top on mobile -->
+            <div class="col-12 col-md-3 order-md-2 mb-4 mb-md-0">
+                <div th:replace="~{fragments/category_fragment :: categoryList(categories=${categories}, selectedCategory=${selectedCategory})}"></div>
+            </div>
+            <!-- Main content -->
+            <div class="col-12 col-md-9 order-md-1">
                 <div th:each="memo : ${memos.content}">
                     <div  th:replace="~{fragments/memo_card_fragment :: memoCard(memo=${memo})}">
                     </div>
                 </div>
                 <div th:replace="~{fragments/page_navi_fragment :: pageNavi(memos=${memos}, selectedCategory=${selectedCategory})}"></div>
-            </div>
-            <div class="col-md-3">
-                <div th:replace="~{fragments/category_fragment :: categoryList(categories=${categories}, selectedCategory=${selectedCategory})}"></div>
             </div>
         </div>
     </div>
