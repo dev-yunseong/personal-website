@@ -3,12 +3,15 @@ package dev.yunseong.website.controller;
 import dev.yunseong.website.service.S3StorageService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import software.amazon.awssdk.services.s3.S3Client;
 
 import java.io.IOException;
 
@@ -18,11 +21,27 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(FileUploadController.class)
+@SpringBootTest
+@AutoConfigureMockMvc
+@TestPropertySource(properties = {
+    "s3.endpoint=http://localhost:9000",
+    "s3.region=us-east-1",
+    "s3.access-key=test",
+    "s3.secret-key=test",
+    "s3.bucket-name=test-bucket",
+    "spring.datasource.url=jdbc:h2:mem:testdb",
+    "spring.datasource.driver-class-name=org.h2.Driver",
+    "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect",
+    "spring.security.user.name=admin",
+    "spring.security.user.password=admin"
+})
 class FileUploadControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @MockBean
+    private S3Client s3Client;
 
     @MockBean
     private S3StorageService s3StorageService;
