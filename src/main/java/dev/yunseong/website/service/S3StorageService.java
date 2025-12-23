@@ -36,7 +36,7 @@ public class S3StorageService {
             extension = originalFilename.substring(originalFilename.lastIndexOf("."));
         }
 
-        String key = UUID.randomUUID() + extension;
+        String key = UUID.randomUUID().toString() + extension;
 
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
                 .bucket(bucketName)
