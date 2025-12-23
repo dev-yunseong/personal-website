@@ -24,6 +24,12 @@
                             <textarea class="form-control" id="content" name="content" rows="5"></textarea>
                         </div>
                         <div class="mb-3">
+                            <label for="imageUpload" class="form-label">Upload Image</label>
+                            <input type="file" class="form-control" id="imageUpload" accept="image/*">
+                            <div class="form-text">Upload an image to insert into your memo</div>
+                            <div id="uploadStatus" class="mt-2"></div>
+                        </div>
+                        <div class="mb-3">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="isGameProject" name="isGameProject" value="true">
                                 <label class="form-check-label" for="isGameProject">
@@ -49,6 +55,37 @@
                             } else {
                                 gameProjectForm.style.display = 'none';
                             }
+                        });
+
+                        document.getElementById('imageUpload').addEventListener('change', function(e) {
+                            const file = e.target.files[0];
+                            if (!file) return;
+
+                            const formData = new FormData();
+                            formData.append('file', file);
+
+                            const uploadStatus = document.getElementById('uploadStatus');
+                            uploadStatus.innerHTML = '<span class="text-info">Uploading...</span>';
+
+                            fetch('/admin/upload/image', {
+                                method: 'POST',
+                                body: formData
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.error) {
+                                    uploadStatus.innerHTML = '<span class="text-danger">' + data.error + '</span>';
+                                } else {
+                                    const contentTextarea = document.getElementById('content');
+                                    const markdown = data.markdown;
+                                    contentTextarea.value += '\n' + markdown + '\n';
+                                    uploadStatus.innerHTML = '<span class="text-success">Image uploaded and added to content!</span>';
+                                    e.target.value = '';
+                                }
+                            })
+                            .catch(error => {
+                                uploadStatus.innerHTML = '<span class="text-danger">Upload failed: ' + error.message + '</span>';
+                            });
                         });
                     </script>
                 </div>
