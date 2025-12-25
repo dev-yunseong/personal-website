@@ -98,11 +98,11 @@ public class S3StorageService {
         
         // Start with a scale factor and iteratively reduce if necessary
         double scaleFactor = Math.sqrt((double) MAX_FILE_SIZE / originalBytes.length);
-        byte[] resizedBytes = originalBytes;
+        byte[] resizedBytes;
         int attempts = 0;
         int maxAttempts = 10;
 
-        while (resizedBytes.length > MAX_FILE_SIZE && attempts < maxAttempts) {
+        do {
             int newWidth = (int) (originalImage.getWidth() * scaleFactor);
             int newHeight = (int) (originalImage.getHeight() * scaleFactor);
 
@@ -111,7 +111,7 @@ public class S3StorageService {
             if (newHeight < 1) newHeight = 1;
 
             BufferedImage resizedImage = new BufferedImage(newWidth, newHeight, 
-                    originalImage.getType() == 0 ? BufferedImage.TYPE_INT_RGB : originalImage.getType());
+                    originalImage.getType() == BufferedImage.TYPE_CUSTOM ? BufferedImage.TYPE_INT_RGB : originalImage.getType());
             
             Graphics2D graphics = resizedImage.createGraphics();
             graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
@@ -134,7 +134,7 @@ public class S3StorageService {
             // Reduce scale factor for next attempt if still too large
             scaleFactor *= 0.9;
             attempts++;
-        }
+        } while (resizedBytes.length > MAX_FILE_SIZE && attempts < maxAttempts);
 
         return resizedBytes;
     }
@@ -164,7 +164,7 @@ public class S3StorageService {
     }
 
     private String getFormatName(String contentType) {
-        if (contentType == null) {
+        if (contentType == null || !contentType.contains("/")) {
             return "jpeg";
         }
         
