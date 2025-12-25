@@ -28,13 +28,16 @@ class S3StorageServiceTest {
     @Mock
     private S3Client s3Client;
 
+    private ImageResizer imageResizer;
+
     private S3StorageService s3StorageService;
 
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
     @BeforeEach
     void setUp() {
-        s3StorageService = new S3StorageService(s3Client);
+        imageResizer = new ImageResizer();
+        s3StorageService = new S3StorageService(s3Client, imageResizer);
         ReflectionTestUtils.setField(s3StorageService, "bucketName", "test-bucket");
         ReflectionTestUtils.setField(s3StorageService, "endpoint", "http://localhost:9000");
     }
