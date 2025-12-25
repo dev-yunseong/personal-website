@@ -1,0 +1,43 @@
+package dev.yunseong.website.controller;
+
+import dev.yunseong.website.service.S3StorageService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/admin/upload")
+@RequiredArgsConstructor
+public class FileUploadController {
+
+    private final S3StorageService s3StorageService;
+
+    @PostMapping("/image")
+    public ResponseEntity<?> uploadImage(@RequestParam("file") MultipartFile file) {
+        try {
+            if (file.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "File is empty"));
+            }
+
+            String contentType = file.getContentType();
+            if (contentType == null || !contentType.startsWith("image/")) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Only image files are allowed"));
+            }
+
+            String fileUrl = s3StorageService.uploadFile(file);
+
+            Map<String, String> response = new HashMap<>();
+            response.put("url", fileUrl);
+            response.put("markdown", String.format("![%s](%s)", file.getOriginalFilename(), fileUrl));
+
+            return ResponseEntity.ok(response);
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", "Failed to upload file: " + e.getMessage()));
+        }
+    }
+}
