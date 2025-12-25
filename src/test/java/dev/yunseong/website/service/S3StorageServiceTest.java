@@ -194,6 +194,67 @@ class S3StorageServiceTest {
         assertTrue(result.contains("test-bucket"));
     }
 
+    @Test
+    void uploadFile_WithPublicUrl_UsesPublicUrl() throws IOException {
+        // Given
+        ReflectionTestUtils.setField(s3StorageService, "publicUrl", "https://cdn.example.com");
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "test-image.jpg",
+                "image/jpeg",
+                "test content".getBytes()
+        );
+
+        // When
+        String result = s3StorageService.uploadFile(file);
+
+        // Then
+        verify(s3Client).putObject(any(PutObjectRequest.class), any(RequestBody.class));
+        assertTrue(result.startsWith("https://cdn.example.com/test-bucket/"));
+        assertTrue(result.endsWith(".jpg"));
+    }
+
+    @Test
+    void uploadFile_WithPublicUrl_FallsBackToEndpoint() throws IOException {
+        // Given
+        ReflectionTestUtils.setField(s3StorageService, "publicUrl", "");
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "test-image.jpg",
+                "image/jpeg",
+                "test content".getBytes()
+        );
+
+        // When
+        String result = s3StorageService.uploadFile(file);
+
+        // Then
+        verify(s3Client).putObject(any(PutObjectRequest.class), any(RequestBody.class));
+        assertTrue(result.startsWith("http://localhost:9000/test-bucket/"));
+        assertTrue(result.endsWith(".jpg"));
+    }
+
+    @Test
+    void uploadFile_WithoutPublicUrlOrEndpoint_UsesAwsUrl() throws IOException {
+        // Given
+        ReflectionTestUtils.setField(s3StorageService, "publicUrl", "");
+        ReflectionTestUtils.setField(s3StorageService, "endpoint", "");
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "test-image.jpg",
+                "image/jpeg",
+                "test content".getBytes()
+        );
+
+        // When
+        String result = s3StorageService.uploadFile(file);
+
+        // Then
+        verify(s3Client).putObject(any(PutObjectRequest.class), any(RequestBody.class));
+        assertTrue(result.startsWith("https://test-bucket.s3.amazonaws.com/"));
+        assertTrue(result.endsWith(".jpg"));
+    }
+
     /**
      * Helper method to create test images of various sizes
      */

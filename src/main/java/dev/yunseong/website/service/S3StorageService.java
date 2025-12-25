@@ -36,6 +36,9 @@ public class S3StorageService {
     @Value("${s3.endpoint:}")
     private String endpoint;
 
+    @Value("${s3.public-url:}")
+    private String publicUrl;
+
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
 
     public String uploadFile(MultipartFile file) throws IOException {
@@ -76,6 +79,10 @@ public class S3StorageService {
     }
 
     private String generateFileUrl(String key) {
+        // Use public URL if configured, otherwise fall back to endpoint or AWS S3 URL
+        if (publicUrl != null && !publicUrl.isEmpty()) {
+            return String.format("%s/%s/%s", publicUrl, bucketName, key);
+        }
         if (endpoint != null && !endpoint.isEmpty()) {
             return String.format("%s/%s/%s", endpoint, bucketName, key);
         }
