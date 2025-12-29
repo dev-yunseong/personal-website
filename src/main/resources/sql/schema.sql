@@ -53,3 +53,5 @@ CREATE TABLE IF NOT EXISTS rag_documents (
     created_at TIMESTAMP DEFAULT now(),
     updated_at TIMESTAMP DEFAULT now()
 );
+
+CREATE INDEX idx_rag_documents_resource_type_id ON rag_documents(resource_type, resource_id);
