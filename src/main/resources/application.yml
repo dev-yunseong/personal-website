@@ -24,8 +24,7 @@ spring:
         distance-type: COSINE_DISTANCE
         dimensions: 1536
         max-document-batch-size: 10000
-        table-name: rag_documents
-        schema-name: public
+        table-name: vector_store
   jpa:
     hibernate:
       ddl-auto: none

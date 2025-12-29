@@ -33,15 +33,23 @@ CREATE EXTENSION IF NOT EXISTS vector;
 CREATE EXTENSION IF NOT EXISTS hstore;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-CREATE TABLE IF NOT EXISTS rag_documents (
+CREATE TABLE IF NOT EXISTS vector_store (
     id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
     content text,
     metadata json,
-    embedding vector(1536), -- 1536 is the default embedding dimension
+    embedding vector(1536)
 );
 
-ALTER TABLE rag_documents DROP embedding;
-ALTER TABLE rag_documents ADD COLUMN embedding vector(1536);
-ALTER TABLE rag_documents ADD COLUMN updated_at TIMESTAMP DEFAULT now();
+CREATE INDEX ON vector_store USING HNSW (embedding vector_cosine_ops);
 
-CREATE INDEX ON rag_documents USING HNSW (embedding vector_cosine_ops);
+CREATE TABLE IF NOT EXISTS rag_documents (
+    id  BIGSERIAL   PRIMARY KEY,
+
+    resource_type   VARCHAR(10), -- memos
+    resource_id BIGINT,
+
+    content TEXT,
+
+    created_at TIMESTAMP DEFAULT now(),
+    updated_at TIMESTAMP DEFAULT now()
+);
