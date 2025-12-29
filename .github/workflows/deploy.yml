@@ -37,4 +37,5 @@ jobs:
           DATABASE_PW: ${{ secrets.DATABASE_PW }}
           DEPLOY_USER: ${{ secrets.SERVER_USER }}
           DEPLOY_SERVER: ${{ secrets.SERVER_HOST }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: bash deploy.sh
