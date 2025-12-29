@@ -51,7 +51,7 @@ public class EmbeddingService {
     }
 
     private RagDocument mapToRagDocument(long memoId, Document document) {
-        log.info(document.getText());
+        log.debug(document.getText());
         return new RagDocument(
                 ResourceType.MEMO,
                 memoId,
