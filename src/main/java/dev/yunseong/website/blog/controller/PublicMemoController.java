@@ -26,7 +26,7 @@ public class PublicMemoController {
     public String blog(
             Model model,
             @RequestParam(required = false) String category,
-            @SortDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+            @SortDefault(sort = "updatedAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         Page<Memo> memos;
         if (category != null && !category.isEmpty()) {
