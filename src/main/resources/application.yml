@@ -12,6 +12,20 @@ spring:
     username: ${DATABASE_USER}
     password: ${DATABASE_PW}
     url: jdbc:postgresql://localhost:5432/website_database
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      embedding:
+        options:
+          model: text-embedding-3-small
+    vectorstore:
+      pgvector:
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE
+        dimensions: 1536
+        max-document-batch-size: 10000
+        table-name: rag_documents
+        schema-name: public
   jpa:
     hibernate:
       ddl-auto: none

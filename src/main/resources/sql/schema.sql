@@ -28,3 +28,20 @@ CREATE TABLE request_statistics (
 CREATE INDEX idx_request_statistics_created_at ON request_statistics(created_at);
 CREATE INDEX idx_request_statistics_uri ON request_statistics(uri);
 
+-- VECTOR DB
+CREATE EXTENSION IF NOT EXISTS vector;
+CREATE EXTENSION IF NOT EXISTS hstore;
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+CREATE TABLE IF NOT EXISTS rag_documents (
+    id uuid DEFAULT uuid_generate_v4() PRIMARY KEY,
+    content text,
+    metadata json,
+    embedding vector(1536), -- 1536 is the default embedding dimension
+);
+
+ALTER TABLE rag_documents DROP embedding;
+ALTER TABLE rag_documents ADD COLUMN embedding vector(1536);
+ALTER TABLE rag_documents ADD COLUMN updated_at TIMESTAMP DEFAULT now();
+
+CREATE INDEX ON rag_documents USING HNSW (embedding vector_cosine_ops);
