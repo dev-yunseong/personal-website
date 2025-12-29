@@ -1,6 +1,7 @@
 package dev.yunseong.website.ai.service;
 
 import java.util.List;
+import java.util.stream.IntStream;
 
 import org.springframework.ai.document.Document;
 import org.springframework.ai.transformer.splitter.TextSplitter;
@@ -47,7 +48,7 @@ public class EmbeddingService {
         List<RagDocument> savedRagDocuments = ragDocumentRepository.saveAll(ragDocuments);
 
         // Map saved RagDocument IDs back to the corresponding Documents
-        List<Document> documents = java.util.stream.IntStream.range(0, savedRagDocuments.size())
+        List<Document> documents = IntStream.range(0, savedRagDocuments.size())
                 .mapToObj(index -> {
                     RagDocument savedRagDocument = savedRagDocuments.get(index);
                     Document document = docTuples.get(index).getT1();
