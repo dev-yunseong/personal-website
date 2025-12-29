@@ -39,13 +39,22 @@ public class EmbeddingService {
                                     Tuples.of(document, mapToRagDocument(memo.getId(), document)));
                 }).toList();
 
-        List<Document> documents = docTuples.stream().map(docTuple -> {
-            RagDocument savedRagDocument = ragDocumentRepository.save(docTuple.getT2());
-            Document document = docTuple.getT1();
-            document.getMetadata().put("ragDocumentId", savedRagDocument.getId());
-            return document;
-        }).toList();
+        // Extract all RagDocuments and save them in a single batch operation
+        List<RagDocument> ragDocuments = docTuples.stream()
+                .map(Tuple2::getT2)
+                .toList();
 
+        List<RagDocument> savedRagDocuments = ragDocumentRepository.saveAll(ragDocuments);
+
+        // Map saved RagDocument IDs back to the corresponding Documents
+        List<Document> documents = java.util.stream.IntStream.range(0, savedRagDocuments.size())
+                .mapToObj(index -> {
+                    RagDocument savedRagDocument = savedRagDocuments.get(index);
+                    Document document = docTuples.get(index).getT1();
+                    document.getMetadata().put("ragDocumentId", savedRagDocument.getId());
+                    return document;
+                })
+                .toList();
         vectorStore.add(documents);
     }
 
