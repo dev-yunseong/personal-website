@@ -45,7 +45,7 @@ public class PublicMemoController {
     public String showMemo(
             @PathVariable Long memoId,
             Model model,
-            @SortDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+            @SortDefault(sort = "updatedAt", direction = Sort.Direction.DESC) Pageable pageable) {
         Memo memo = memoService.getMemo(memoId);
         model.addAttribute("memo", memo);
         Page<Memo> memos = memoService.getMemos(memo.getName(),pageable);
