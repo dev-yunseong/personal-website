@@ -7,6 +7,7 @@ import org.springframework.ai.document.Document;
 import org.springframework.ai.transformer.splitter.TextSplitter;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import dev.yunseong.website.ai.domain.RagDocument;
 import dev.yunseong.website.ai.domain.ResourceType;
@@ -19,6 +20,7 @@ import reactor.util.function.Tuples;
 
 @Slf4j
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class EmbeddingService {
 
@@ -27,6 +29,7 @@ public class EmbeddingService {
     private final RagDocumentRepository ragDocumentRepository;
     private final VectorStore vectorStore;
 
+    @Transactional(readOnly = true)
     public List<Document> search(String query) {
         return vectorStore.similaritySearch(query);
     }
