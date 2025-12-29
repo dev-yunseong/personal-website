@@ -11,7 +11,6 @@ import dev.yunseong.website.ai.domain.RagDocument;
 import dev.yunseong.website.ai.domain.ResourceType;
 import dev.yunseong.website.ai.repository.RagDocumentRepository;
 import dev.yunseong.website.blog.domain.Memo;
-import dev.yunseong.website.blog.repository.MemoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import reactor.util.function.Tuple2;
