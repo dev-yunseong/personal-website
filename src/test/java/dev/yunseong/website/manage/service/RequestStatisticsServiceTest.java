@@ -37,9 +37,9 @@ class RequestStatisticsServiceTest {
     @Test
     void recordRequest_WithPublicUrl_RecordsStatistics() {
         // When
-        requestStatisticsService.recordRequest("/public/memos/1", "GET", "https://example.com", "Mozilla/5.0");
-        requestStatisticsService.recordRequest("/public/memos/1", "GET", "https://example.com", "Mozilla/5.0");
-        requestStatisticsService.recordRequest("/public/memos/2", "GET", null, "Chrome/91.0");
+        requestStatisticsService.recordRequest("/public/memos/1", "GET", "https://example.com", "Mozilla/5.0", "1.1.1.1");
+        requestStatisticsService.recordRequest("/public/memos/1", "GET", "https://example.com", "Mozilla/5.0", "1.1.1.1");
+        requestStatisticsService.recordRequest("/public/memos/2", "GET", null, "Chrome/91.0", "1.1.1.1");
 
         // Then - verify by persisting
         requestStatisticsService.persistStatistics();
@@ -54,8 +54,8 @@ class RequestStatisticsServiceTest {
     @Test
     void recordRequest_WithNonPublicUrl_DoesNotRecordStatistics() {
         // When
-        requestStatisticsService.recordRequest("/admin/console", "GET", null, null);
-        requestStatisticsService.recordRequest("/", "GET", null, null);
+        requestStatisticsService.recordRequest("/admin/console", "GET", null, null, "1.1.1.1");
+        requestStatisticsService.recordRequest("/", "GET", null, null, "1.1.1.1");
 
         // Then - verify by persisting
         requestStatisticsService.persistStatistics();
@@ -66,7 +66,7 @@ class RequestStatisticsServiceTest {
     @Test
     void recordRequest_WithNullUri_DoesNotThrowException() {
         // When/Then
-        assertDoesNotThrow(() -> requestStatisticsService.recordRequest(null, "GET", null, null));
+        assertDoesNotThrow(() -> requestStatisticsService.recordRequest(null, "GET", null, null, "1.1.1.1"));
     }
 
     @Test
@@ -81,9 +81,9 @@ class RequestStatisticsServiceTest {
     @Test
     void persistStatistics_SavesCorrectData() {
         // Given
-        requestStatisticsService.recordRequest("/public/memos/1", "GET", "https://referer.com", "Mozilla/5.0");
-        requestStatisticsService.recordRequest("/public/memos/1", "GET", "https://another-referer.com", "Chrome/91.0");
-        requestStatisticsService.recordRequest("/public/memos/1", "GET", "https://last-referer.com", "Safari/14.0");
+        requestStatisticsService.recordRequest("/public/memos/1", "GET", "https://referer.com", "Mozilla/5.0", "1.1.1.1");
+        requestStatisticsService.recordRequest("/public/memos/1", "GET", "https://another-referer.com", "Chrome/91.0", "1.1.1.1");
+        requestStatisticsService.recordRequest("/public/memos/1", "GET", "https://last-referer.com", "Safari/14.0", "1.1.1.1");
 
         // When
         requestStatisticsService.persistStatistics();
@@ -113,8 +113,8 @@ class RequestStatisticsServiceTest {
     @Test
     void getStatisticsForLastDays_ReturnsStatistics() {
         // Given
-        RequestStatistics stat1 = new RequestStatistics("/public/memos/1", "GET", null, "Mozilla/5.0");
-        RequestStatistics stat2 = new RequestStatistics("/public/memos/2", "GET", null, "Chrome/91.0");
+        RequestStatistics stat1 = new RequestStatistics("/public/memos/1", "GET", null, "Mozilla/5.0", "1.1.1.1");
+        RequestStatistics stat2 = new RequestStatistics("/public/memos/2", "GET", null, "Chrome/91.0", "1.1.1.1");
         List<RequestStatistics> mockStats = Arrays.asList(stat1, stat2);
         
         when(requestStatisticsRepository.findByCreatedAtAfter(any(LocalDateTime.class)))
@@ -152,8 +152,8 @@ class RequestStatisticsServiceTest {
     @Test
     void getTotalRequestsForLastDays_ReturnsTotal() {
         // Given
-        RequestStatistics stat1 = new RequestStatistics("/public/memos/1", "GET", null, "Mozilla/5.0");
-        RequestStatistics stat2 = new RequestStatistics("/public/memos/2", "GET", null, "Chrome/91.0");
+        RequestStatistics stat1 = new RequestStatistics("/public/memos/1", "GET", null, "Mozilla/5.0", "1.1.1.1");
+        RequestStatistics stat2 = new RequestStatistics("/public/memos/2", "GET", null, "Chrome/91.0", "1.1.1.1");
         List<RequestStatistics> mockStats = Arrays.asList(stat1, stat2);
         
         when(requestStatisticsRepository.findByCreatedAtAfter(any(LocalDateTime.class)))

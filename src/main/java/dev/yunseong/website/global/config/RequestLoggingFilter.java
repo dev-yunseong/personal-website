@@ -41,7 +41,8 @@ public class RequestLoggingFilter implements Filter {
                 // Record statistics for /public/ URLs
                 String referer = httpRequest.getHeader(HttpHeaders.REFERER);
                 String userAgent = httpRequest.getHeader(HttpHeaders.USER_AGENT);
-                requestStatisticsService.recordRequest(httpRequest.getRequestURI(), httpRequest.getMethod(), referer, userAgent);
+                String ipAddress = httpRequest.getRemoteAddr();
+                requestStatisticsService.recordRequest(httpRequest.getRequestURI(), httpRequest.getMethod(), referer, userAgent, ipAddress);
             }
         } else {
             log.warn("Received a non-HTTP request. Skipping request logging.");

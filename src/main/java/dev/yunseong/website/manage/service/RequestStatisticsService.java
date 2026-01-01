@@ -25,10 +25,10 @@ public class RequestStatisticsService {
     // In-memory storage for request statistics
     private final Queue<RequestStatistics> requestQueue = new ConcurrentLinkedDeque<>();
 
-    public void recordRequest(String uri, String method, String referer, String userAgent) {
+    public void recordRequest(String uri, String method, String referer, String userAgent, String ipAddress) {
         // Only track requests starting with /public/
         if (uri != null && uri.startsWith("/public/")) {
-            RequestStatistics stats = new RequestStatistics(uri, method, referer, userAgent);
+            RequestStatistics stats = new RequestStatistics(uri, method, referer, userAgent, ipAddress);
             requestQueue.add(stats);
             log.debug("Recorded request: {} {} (total in memory: {})", method, uri, requestQueue.size());
         }

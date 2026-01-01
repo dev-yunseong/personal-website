@@ -1,6 +1,8 @@
 package dev.yunseong.website.manage.domain;
 
 import jakarta.persistence.*;
+
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -11,6 +13,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "request_statistics")
 public class RequestStatistics {
@@ -30,14 +33,14 @@ public class RequestStatistics {
     @Column(name = "user_agent", length = 512)
     private String userAgent;
 
+    @Column
+    private String ip;
+
     @Column(name = "created_at")
     @CreationTimestamp
     private LocalDateTime createdAt;
 
-    public RequestStatistics(String uri, String method, String referer, String userAgent) {
-        this.uri = uri;
-        this.method = method;
-        this.referer = referer;
-        this.userAgent = userAgent;
+    public RequestStatistics(String uri, String method, String referer, String userAgent, String ipAddress) {
+        this(null, uri, method, referer, userAgent, ipAddress, null);
     }
 }

@@ -55,3 +55,5 @@ CREATE TABLE IF NOT EXISTS rag_documents (
 );
 
 CREATE INDEX idx_rag_documents_resource_type_id ON rag_documents(resource_type, resource_id);
+
+ALTER TABLE request_statistics ADD COLUMN ip VARCHAR(15);
