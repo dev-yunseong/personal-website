@@ -10,8 +10,6 @@ import org.commonmark.node.FencedCodeBlock;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
 import org.commonmark.renderer.html.AttributeProvider;
-import org.commonmark.renderer.html.AttributeProviderContext;
-import org.commonmark.renderer.html.AttributeProviderFactory;
 
 import java.util.Map;
 import org.hibernate.annotations.CreationTimestamp;
@@ -51,26 +49,31 @@ public class Memo {
         Node node = parser.parse(content);
         
         HtmlRenderer renderer = HtmlRenderer.builder()
-            .attributeProviderFactory(new AttributeProviderFactory() {
-                @Override
-                public AttributeProvider create(AttributeProviderContext context) {
-                    return new AttributeProvider() {
-                        @Override
-                        public void setAttributes(Node node, String tagName, Map<String, String> attributes) {
-                            if (node instanceof FencedCodeBlock && "code".equals(tagName)) {
-                                FencedCodeBlock codeBlock = (FencedCodeBlock) node;
-                                String info = codeBlock.getInfo();
-                                if (info != null && !info.isEmpty()) {
-                                    attributes.put("class", "language-" + info);
-                                }
-                            }
-                        }
-                    };
-                }
-            })
+            .attributeProviderFactory(context -> new CodeBlockLanguageAttributeProvider())
             .build();
         
         return renderer.render(node);
+    }
+
+    /**
+     * AttributeProvider that adds language class to fenced code blocks for syntax highlighting.
+     */
+    private static class CodeBlockLanguageAttributeProvider implements AttributeProvider {
+        @Override
+        public void setAttributes(Node node, String tagName, Map<String, String> attributes) {
+            if (node instanceof FencedCodeBlock && "code".equals(tagName)) {
+                FencedCodeBlock codeBlock = (FencedCodeBlock) node;
+                String info = codeBlock.getInfo();
+                if (info != null && !info.isEmpty()) {
+                    // Sanitize the language info to prevent XSS attacks
+                    // Only allow alphanumeric characters, hyphens, and underscores
+                    String sanitizedInfo = info.replaceAll("[^a-zA-Z0-9\\-_]", "");
+                    if (!sanitizedInfo.isEmpty()) {
+                        attributes.put("class", "language-" + sanitizedInfo);
+                    }
+                }
+            }
+        }
     }
 
     public String getTitle() {
