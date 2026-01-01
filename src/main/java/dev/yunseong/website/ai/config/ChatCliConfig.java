@@ -18,7 +18,7 @@ import dev.yunseong.website.ai.tool.DateTimeTools;
 import reactor.core.publisher.Flux;
 
 @Configuration
-@Profile("!test")
+//@Profile("!test")
 public class ChatCliConfig {
 
     @Bean
@@ -27,27 +27,33 @@ public class ChatCliConfig {
         return args -> {
             var scanner = new Scanner(System.in);
 
-            while (true) {
-                System.out.print("\nUSER: ");
-                String input = scanner.nextLine();
+            System.out.print("\nUSER: ");
 
-                if (input.equals("quit")) break;
+            while (scanner.hasNextLine()) {
+                try {
+                    String input = scanner.nextLine();
+                    if (input.equals("quit")) break;
 
-                Flux<String> responseFlux = chatClient.prompt(input)
-                        .advisors(List.of( // LLM 사이에서 intercept 한다.
-                                new SimpleLoggerAdvisor(),
-                                PromptChatMemoryAdvisor.builder(chatMemory).build(), // Chat Memory Advisor
-                                QuestionAnswerAdvisor.builder(vectorStore).build() // RAG Advisor
-                        ))
-                        .system("You are a highly competent Archive Curator. Your primary responsibility is to provide accurate and insightful responses based on the contents of Yunsung's Blog. Ensure that your answers are strictly grounded in the blog's information and maintain a professional, helpful tone in assisting users with their inquiries.")
-                        .tools(new DateTimeTools())
-                        .stream()
-                        .content();
-                System.out.print("ASSISTANT: ");
-                responseFlux.map(chunk -> {
-                    System.out.print(chunk);
-                    return 0;
-                }).then().block();
+                    Flux<String> responseFlux = chatClient.prompt(input)
+                            .advisors(List.of( // LLM 사이에서 intercept 한다.
+                                    new SimpleLoggerAdvisor(),
+                                    PromptChatMemoryAdvisor.builder(chatMemory).build(), // Chat Memory Advisor
+                                    QuestionAnswerAdvisor.builder(vectorStore).build() // RAG Advisor
+                            ))
+                            .system("You are a highly competent Archive Curator. Your primary responsibility is to provide accurate and insightful responses based on the contents of Yunsung's Blog. Ensure that your answers are strictly grounded in the blog's information and maintain a professional, helpful tone in assisting users with their inquiries.")
+                            .tools(new DateTimeTools())
+                            .stream()
+                            .content();
+                    System.out.print("ASSISTANT: ");
+                    responseFlux.map(chunk -> {
+                        System.out.print(chunk);
+                        return 0;
+                    }).then().block();
+
+                    System.out.print("\nUSER: ");
+                } catch (Exception e) {
+                    break;
+                }
             }
 
             scanner.close();
