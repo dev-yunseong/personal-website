@@ -12,11 +12,13 @@ import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 import dev.yunseong.website.ai.tool.DateTimeTools;
 import reactor.core.publisher.Flux;
 
 @Configuration
+@Profile("!test")
 public class ChatCliConfig {
 
     @Bean
