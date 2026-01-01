@@ -6,8 +6,14 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
 import org.commonmark.node.Node;
+import org.commonmark.node.FencedCodeBlock;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
+import org.commonmark.renderer.html.AttributeProvider;
+import org.commonmark.renderer.html.AttributeProviderContext;
+import org.commonmark.renderer.html.AttributeProviderFactory;
+
+import java.util.Map;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -43,7 +49,28 @@ public class Memo {
     public String getHtml() {
         Parser parser = Parser.builder().build();
         Node node = parser.parse(content);
-        return HtmlRenderer.builder().build().render(node);
+        
+        HtmlRenderer renderer = HtmlRenderer.builder()
+            .attributeProviderFactory(new AttributeProviderFactory() {
+                @Override
+                public AttributeProvider create(AttributeProviderContext context) {
+                    return new AttributeProvider() {
+                        @Override
+                        public void setAttributes(Node node, String tagName, Map<String, String> attributes) {
+                            if (node instanceof FencedCodeBlock && "code".equals(tagName)) {
+                                FencedCodeBlock codeBlock = (FencedCodeBlock) node;
+                                String info = codeBlock.getInfo();
+                                if (info != null && !info.isEmpty()) {
+                                    attributes.put("class", "language-" + info);
+                                }
+                            }
+                        }
+                    };
+                }
+            })
+            .build();
+        
+        return renderer.render(node);
     }
 
     public String getTitle() {
