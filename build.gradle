@@ -45,11 +45,12 @@ dependencies {
     testRuntimeOnly 'com.h2database:h2'
 
     // ai
-    implementation platform("org.springframework.ai:spring-ai-bom:1.0.0")
+    implementation platform("org.springframework.ai:spring-ai-bom:1.1.2")
     implementation 'org.springframework.ai:spring-ai-starter-model-openai'
     implementation 'org.springframework.ai:spring-ai-starter-vector-store-pgvector'
     implementation "org.springframework.ai:spring-ai-advisors-vector-store"
     implementation "org.springframework.ai:spring-ai-markdown-document-reader"
+    implementation 'org.springframework.ai:spring-ai-starter-model-chat-memory-repository-jdbc'
 
     // mark down
     implementation 'org.commonmark:commonmark:0.25.1'
