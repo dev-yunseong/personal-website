@@ -6,8 +6,12 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
 import org.commonmark.node.Node;
+import org.commonmark.node.FencedCodeBlock;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
+import org.commonmark.renderer.html.AttributeProvider;
+
+import java.util.Map;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -43,7 +47,33 @@ public class Memo {
     public String getHtml() {
         Parser parser = Parser.builder().build();
         Node node = parser.parse(content);
-        return HtmlRenderer.builder().build().render(node);
+        
+        HtmlRenderer renderer = HtmlRenderer.builder()
+            .attributeProviderFactory(context -> new CodeBlockLanguageAttributeProvider())
+            .build();
+        
+        return renderer.render(node);
+    }
+
+    /**
+     * AttributeProvider that adds language class to fenced code blocks for syntax highlighting.
+     */
+    private static class CodeBlockLanguageAttributeProvider implements AttributeProvider {
+        @Override
+        public void setAttributes(Node node, String tagName, Map<String, String> attributes) {
+            if (node instanceof FencedCodeBlock && "code".equals(tagName)) {
+                FencedCodeBlock codeBlock = (FencedCodeBlock) node;
+                String info = codeBlock.getInfo();
+                if (info != null && !info.isEmpty()) {
+                    // Sanitize the language info to prevent XSS attacks
+                    // Only allow alphanumeric characters, hyphens, and underscores
+                    String sanitizedInfo = info.replaceAll("[^a-zA-Z0-9\\-_]", "");
+                    if (!sanitizedInfo.isEmpty()) {
+                        attributes.put("class", "language-" + sanitizedInfo);
+                    }
+                }
+            }
+        }
     }
 
     public String getTitle() {
