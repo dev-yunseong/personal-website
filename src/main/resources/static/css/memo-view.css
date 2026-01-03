@@ -1,0 +1,55 @@
+/* 1. 코드 블록 컨테이너: 그림자 제거 및 미세 조정 */
+.markdown-body pre {
+  background-color: #f6f8fa !important;
+  border: 1px solid #d0d7de !important;
+  border-radius: 6px !important;
+  padding: 16px !important;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace !important;
+  font-size: 13.6px !important; /* 가독성 좋은 크기 */
+  line-height: 1.6 !important;
+  box-shadow: none !important;  /* 그림자 완전 제거 */
+  text-shadow: none !important; /* 글자 그림자 제거 (Prism 기본값 방지) */
+  position: relative;
+}
+
+/* 2. Prism 기본 효과 강제 제거 */
+code[class*="language-"],
+pre[class*="language-"] {
+  text-shadow: none !important; /* 텍스트 번짐 효과 제거 */
+  box-shadow: none !important;  /* 박스 그림자 제거 */
+  background: none !important;  /* 배경 중복 방지 */
+}
+
+/* 3. 최신 GitHub 라이트 모드 글자색 (Shiki/GitHub 최신 버전 참고) */
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata { color: #8c959f !important; font-style: italic; } /* 주석 */
+
+.token.keyword,
+.token.selector,
+.token.atrule { color: #cf222e !important; font-weight: 600; } /* 키워드 (if, import 등) */
+
+.token.string,
+.token.attr-value { color: #0a3069 !important; } /* 문자열 */
+
+.token.function,
+.token.attr-name { color: #8250df !important; } /* 함수 및 속성명 */
+
+.token.number,
+.token.boolean,
+.token.constant,
+.token.property,
+.token.regex,
+.token.inserted { color: #0550ae !important; } /* 숫자 및 상수 */
+
+.token.class-name,
+.token.type { color: #953800 !important; } /* 클래스명 */
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string { color: #24292f !important; background: none !important; } /* 연산자 */
+
+.token.punctuation { color: #24292f !important; } /* 괄호, 쉼표 등 */
