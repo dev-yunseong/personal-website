@@ -37,6 +37,20 @@ public class PublicMemoController {
         model.addAttribute("memos", memos);
         model.addAttribute("categoryTree", categoryService.getCategoryTree());
         model.addAttribute("selectedCategory", category);
+        
+        // Add metadata for the blog page
+        String pageTitle = category != null && !category.isEmpty() 
+            ? "Blog - " + category + " | Yunseong" 
+            : "Blog | Yunseong";
+        String pageDescription = category != null && !category.isEmpty()
+            ? "Yunseong의 블로그 - " + category + " 카테고리의 게시글을 확인하세요."
+            : "Yunseong의 기술 블로그입니다. 개발 관련 글과 프로젝트를 공유합니다.";
+        
+        model.addAttribute("pageTitle", pageTitle);
+        model.addAttribute("pageDescription", pageDescription);
+        model.addAttribute("pageKeywords", "블로그, 개발, 기술, 프로그래밍, " + (category != null ? category : ""));
+        model.addAttribute("pageUrl", "https://yunseong.dev/public/memos" + (category != null ? "?category=" + category : ""));
+        
         return "blog";
     }
 
@@ -49,6 +63,21 @@ public class PublicMemoController {
         model.addAttribute("memo", memo);
         Page<Memo> memos = memoService.getMemos(memo.getName(),pageable);
         model.addAttribute("memos", memos);
+        
+        // Add metadata for individual memo page
+        String memoTitle = memo.getTitle();
+        String pageTitle = memoTitle + " | Yunseong";
+        
+        // Extract description from content (first 150 characters of plain text)
+        String contentPreview = memo.getContent() != null && memo.getContent().length() > 150 
+            ? memo.getContent().substring(0, 150).replaceAll("[#*_`\\[\\]()]", "") + "..." 
+            : "Yunseong의 블로그 포스트입니다.";
+        
+        model.addAttribute("pageTitle", pageTitle);
+        model.addAttribute("pageDescription", contentPreview);
+        model.addAttribute("pageKeywords", memoTitle + ", " + memo.getPath() + ", 블로그, 개발");
+        model.addAttribute("pageUrl", "https://yunseong.dev/public/memos/" + memoId);
+        
         return "memo/view";
     }
 }

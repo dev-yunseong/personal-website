@@ -15,10 +15,6 @@
     <th:block th:replace="~{fragments/game_player_fragment :: gamePlayerCss}"></th:block>
 </th:block>
 
-<head>
-    <title th:text="${gameProject != null ? gameProject.getTitle() : 'Game'}">Game</title>
-</head>
-
 <body>
 <th:block layout:fragment="content">
     <div class="container px-3 px-md-4">
