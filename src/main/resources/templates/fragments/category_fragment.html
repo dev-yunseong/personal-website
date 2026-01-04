@@ -45,7 +45,7 @@
         <button th:if="${node.hasChildren()}"
                 type="button"
                 class="btn btn-sm btn-link p-0 ms-2 text-decoration-none category-toggle"
-                th:attr="data-bs-target='#collapse-' + ${node.fullPath.replace('/', '-')}"
+                th:attr="data-bs-target='#collapse-' + ${node.safeId}"
                 data-bs-toggle="collapse"
                 aria-expanded="false"
                 onclick="event.preventDefault(); event.stopPropagation();">
@@ -53,7 +53,7 @@
         </button>
     </a>
     <div th:if="${node.hasChildren()}"
-         th:id="'collapse-' + ${node.fullPath.replace('/', '-')}"
+         th:id="'collapse-' + ${node.safeId}"
          class="collapse">
         <div th:each="child : ${node.children}">
             <div th:replace="~{fragments/category_fragment :: categoryNode(node=${child}, selectedCategory=${selectedCategory}, level=${level + 1})}"></div>

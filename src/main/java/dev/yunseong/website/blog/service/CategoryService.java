@@ -39,7 +39,7 @@ public class CategoryService {
             }
 
             // Parse the path into segments
-            String[] segments = path.substring(1).split("/"); // Remove leading "/" and split
+            String[] segments = path.startsWith("/") ? path.substring(1).split("/") : path.split("/"); // Remove leading "/" if present and split
             String currentPath = "";
 
             for (int i = 0; i < segments.length; i++) {

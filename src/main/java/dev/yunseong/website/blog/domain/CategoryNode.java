@@ -28,4 +28,11 @@ public class CategoryNode {
     public boolean hasChildren() {
         return !children.isEmpty();
     }
+
+    /**
+     * Generate a safe HTML ID from the full path by replacing special characters
+     */
+    public String getSafeId() {
+        return fullPath.replaceAll("[^a-zA-Z0-9-]", "-");
+    }
 }
