@@ -1,12 +1,11 @@
 package dev.yunseong.website.blog.service;
 
+import dev.yunseong.website.blog.domain.CategoryNode;
 import dev.yunseong.website.blog.repository.MemoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -20,5 +19,65 @@ public class CategoryService {
                 .forEach(memo ->
                         categories.add(memo.getPath()));
         return categories.stream().sorted().toList();
+    }
+
+    public List<CategoryNode> getCategoryTree() {
+        Set<String> allPaths = new HashSet<>();
+        memoRepository.findAll()
+                .forEach(memo -> allPaths.add(memo.getPath()));
+
+        // Build tree structure
+        Map<String, CategoryNode> nodeMap = new HashMap<>();
+        List<CategoryNode> roots = new ArrayList<>();
+
+        // Sort paths to ensure parents are processed before children
+        List<String> sortedPaths = allPaths.stream().sorted().toList();
+
+        for (String path : sortedPaths) {
+            if (path.equals("/")) {
+                continue; // Skip root path
+            }
+
+            // Parse the path into segments
+            String[] segments = path.substring(1).split("/"); // Remove leading "/" and split
+            String currentPath = "";
+
+            for (int i = 0; i < segments.length; i++) {
+                String segment = segments[i];
+                String parentPath = currentPath;
+                currentPath = currentPath + "/" + segment;
+
+                // Check if node already exists
+                if (!nodeMap.containsKey(currentPath)) {
+                    CategoryNode node = new CategoryNode(segment, currentPath, i + 1);
+                    nodeMap.put(currentPath, node);
+
+                    // Add to parent or roots
+                    if (parentPath.isEmpty()) {
+                        roots.add(node);
+                    } else {
+                        CategoryNode parent = nodeMap.get(parentPath);
+                        if (parent != null) {
+                            parent.addChild(node);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Sort roots and children
+        roots.sort(Comparator.comparing(CategoryNode::getName));
+        sortChildren(roots);
+
+        return roots;
+    }
+
+    private void sortChildren(List<CategoryNode> nodes) {
+        for (CategoryNode node : nodes) {
+            if (node.hasChildren()) {
+                node.getChildren().sort(Comparator.comparing(CategoryNode::getName));
+                sortChildren(node.getChildren());
+            }
+        }
     }
 }

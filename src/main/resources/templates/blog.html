@@ -5,6 +5,7 @@
 
 <head>
     <title>Blog</title>
+    <link rel="stylesheet" th:href="@{/css/category.css}" layout:fragment="css">
 </head>
 <body>
 <th:block layout:fragment="content">
@@ -14,7 +15,7 @@
         <div class="row">
             <!-- Category sidebar - shown at top on mobile -->
             <div class="col-12 col-md-3 order-md-2 mb-4 mb-md-0">
-                <div th:replace="~{fragments/category_fragment :: categoryList(categories=${categories}, selectedCategory=${selectedCategory})}"></div>
+                <div th:replace="~{fragments/category_fragment :: categoryTree(categoryTree=${categoryTree}, selectedCategory=${selectedCategory})}"></div>
             </div>
             <!-- Main content -->
             <div class="col-12 col-md-9 order-md-1">

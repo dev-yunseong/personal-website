@@ -34,9 +34,8 @@ public class PublicMemoController {
         } else {
             memos = memoService.getMemos(pageable);
         }
-        List<String> categories = categoryService.getCategories();
         model.addAttribute("memos", memos);
-        model.addAttribute("categories", categories);
+        model.addAttribute("categoryTree", categoryService.getCategoryTree());
         model.addAttribute("selectedCategory", category);
         return "blog";
     }
