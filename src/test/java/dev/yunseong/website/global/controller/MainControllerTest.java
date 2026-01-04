@@ -10,8 +10,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.ui.Model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -27,7 +25,7 @@ class MainControllerTest {
     private MainController mainController;
 
     @Test
-    void index_SetsMetadataAttributes() {
+    void index_LoadsReadmeMemo() {
         // Given
         Memo memo = new Memo("/README", "Test content");
         when(memoService.getMemo("/README")).thenReturn(memo);
@@ -38,10 +36,6 @@ class MainControllerTest {
         // Then
         assertEquals("index", result);
         verify(model).addAttribute("memo", memo);
-        verify(model).addAttribute("pageTitle", "Yunseong - Personal Website");
-        verify(model).addAttribute("pageDescription", "Yunseong의 개인 웹사이트입니다. 개발, 기술 블로그, 그리고 다양한 프로젝트를 공유합니다.");
-        verify(model).addAttribute("pageKeywords", "개발, 블로그, Yunseong, 프로그래밍, 기술, 웹개발");
-        verify(model).addAttribute("pageUrl", "https://yunseong.dev");
     }
 
     @Test
@@ -55,7 +49,5 @@ class MainControllerTest {
         // Then
         assertEquals("index", result);
         verify(model).addAttribute("memo", null);
-        verify(model).addAttribute(eq("pageTitle"), any());
-        verify(model).addAttribute(eq("pageDescription"), any());
     }
 }

@@ -1,7 +1,12 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout}">
+      layout:decorate="~{layout}"
+      th:with="
+        pageTitle=${selectedCategory != null and !#strings.isEmpty(selectedCategory) ? 'Blog - ' + selectedCategory + ' | Yunseong' : 'Blog | Yunseong'},
+        pageDescription=${selectedCategory != null and !#strings.isEmpty(selectedCategory) ? 'Yunseong의 블로그 - ' + selectedCategory + ' 카테고리의 게시글을 확인하세요.' : 'Yunseong의 기술 블로그입니다. 개발 관련 글과 프로젝트를 공유합니다.'},
+        pageKeywords=${'블로그, 개발, 기술, 프로그래밍' + (selectedCategory != null and !#strings.isEmpty(selectedCategory) ? ', ' + selectedCategory : '')},
+        pageUrl=${'/public/memos' + (selectedCategory != null and !#strings.isEmpty(selectedCategory) ? '?category=' + selectedCategory : '')}">
 
 <th:block layout:fragment="css">
     <link rel="stylesheet" th:href="@{/css/category.css}">

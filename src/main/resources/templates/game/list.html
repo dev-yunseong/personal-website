@@ -1,7 +1,12 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout}">
+      layout:decorate="~{layout}"
+      th:with="
+        pageTitle='Games | Yunseong',
+        pageDescription='Yunseong의 게임 프로젝트 모음입니다. 다양한 게임을 플레이해보세요.',
+        pageKeywords='게임, 게임 프로젝트, 웹 게임, 개발',
+        pageUrl='/public/games'">
 
 <th:block layout:fragment="css">
     <style>

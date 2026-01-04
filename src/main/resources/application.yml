@@ -16,3 +16,6 @@ spring:
     user:
       name: ${APPLICATION_USER}
       password: ${APPLICATION_PW}
+
+app:
+  base-url: ${BASE_URL:https://yunseong.dev}

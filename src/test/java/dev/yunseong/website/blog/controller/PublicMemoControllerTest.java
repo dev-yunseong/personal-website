@@ -15,7 +15,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.ui.Model;
 
 import java.util.Collections;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.*;
@@ -37,7 +36,7 @@ class PublicMemoControllerTest {
     private PublicMemoController publicMemoController;
 
     @Test
-    void blog_SetsMetadataForAllCategories() {
+    void blog_LoadsMemosForAllCategories() {
         // Given
         Pageable pageable = PageRequest.of(0, 10);
         Page<Memo> memos = new PageImpl<>(Collections.emptyList());
@@ -49,13 +48,13 @@ class PublicMemoControllerTest {
 
         // Then
         assertEquals("blog", result);
-        verify(model).addAttribute("pageTitle", "Blog | Yunseong");
-        verify(model).addAttribute(eq("pageDescription"), contains("블로그"));
-        verify(model).addAttribute(eq("pageUrl"), contains("/public/memos"));
+        verify(model).addAttribute("memos", memos);
+        verify(model).addAttribute("categoryTree", Collections.emptyList());
+        verify(model).addAttribute("selectedCategory", null);
     }
 
     @Test
-    void blog_SetsMetadataForSpecificCategory() {
+    void blog_LoadsMemosForSpecificCategory() {
         // Given
         String category = "Java";
         Pageable pageable = PageRequest.of(0, 10);
@@ -68,13 +67,12 @@ class PublicMemoControllerTest {
 
         // Then
         assertEquals("blog", result);
-        verify(model).addAttribute("pageTitle", "Blog - Java | Yunseong");
-        verify(model).addAttribute(eq("pageDescription"), contains("Java"));
-        verify(model).addAttribute(eq("pageUrl"), contains("category=" + category));
+        verify(model).addAttribute("memos", memos);
+        verify(model).addAttribute("selectedCategory", category);
     }
 
     @Test
-    void showMemo_SetsMetadataForMemo() {
+    void showMemo_LoadsMemoAndRelatedMemos() {
         // Given
         Long memoId = 1L;
         Memo memo = new Memo("/Programming/Java", "This is a test content for Java programming");
@@ -90,8 +88,7 @@ class PublicMemoControllerTest {
         // Then
         assertEquals("memo/view", result);
         verify(model).addAttribute("memo", memo);
-        verify(model).addAttribute("pageTitle", "Java | Yunseong");
+        verify(model).addAttribute("memos", memos);
         verify(model).addAttribute(eq("pageDescription"), anyString());
-        verify(model).addAttribute(eq("pageUrl"), contains("/public/memos/" + memoId));
     }
 }
