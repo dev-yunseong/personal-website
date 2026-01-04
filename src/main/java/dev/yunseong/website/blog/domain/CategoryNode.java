@@ -48,6 +48,7 @@ public class CategoryNode {
             return true;
         }
         // Check if selected path is a descendant of this node
+        // Must start with fullPath + "/" to avoid false matches like /blog matching /blogpost
         if (selectedPath.startsWith(fullPath + "/")) {
             return true;
         }
