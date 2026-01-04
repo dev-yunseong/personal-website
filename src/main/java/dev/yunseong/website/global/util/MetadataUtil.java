@@ -23,11 +23,13 @@ public class MetadataUtil {
             return DEFAULT_PREVIEW;
         }
         
-        if (content.length() > CONTENT_PREVIEW_LENGTH) {
-            return content.substring(0, CONTENT_PREVIEW_LENGTH)
-                    .replaceAll(MARKDOWN_CHARS_REGEX, "") + "...";
+        // Remove markdown characters first, then truncate
+        String cleanContent = content.replaceAll(MARKDOWN_CHARS_REGEX, "");
+        
+        if (cleanContent.length() > CONTENT_PREVIEW_LENGTH) {
+            return cleanContent.substring(0, CONTENT_PREVIEW_LENGTH) + "...";
         }
         
-        return content.replaceAll(MARKDOWN_CHARS_REGEX, "");
+        return cleanContent;
     }
 }
