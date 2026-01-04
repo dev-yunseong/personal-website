@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequiredArgsConstructor
 public class GameController {
     
+    private static final String BASE_URL = "https://yunseong.dev";
+    
     private final GameProjectService gameProjectService;
     
     @GetMapping("")
@@ -24,7 +26,7 @@ public class GameController {
         model.addAttribute("pageTitle", "Games | Yunseong");
         model.addAttribute("pageDescription", "Yunseong의 게임 프로젝트 모음입니다. 다양한 게임을 플레이해보세요.");
         model.addAttribute("pageKeywords", "게임, 게임 프로젝트, 웹 게임, 개발");
-        model.addAttribute("pageUrl", "https://yunseong.dev/public/games");
+        model.addAttribute("pageUrl", BASE_URL + "/public/games");
         
         return "game/list";
     }
@@ -40,7 +42,7 @@ public class GameController {
         model.addAttribute("pageTitle", gameTitle + " | Yunseong");
         model.addAttribute("pageDescription", gameTitle + " - Yunseong의 게임 프로젝트입니다.");
         model.addAttribute("pageKeywords", gameTitle + ", 게임, 웹 게임, 프로젝트");
-        model.addAttribute("pageUrl", "https://yunseong.dev/public/games/" + gameId);
+        model.addAttribute("pageUrl", BASE_URL + "/public/games/" + gameId);
         
         return "game/play";
     }

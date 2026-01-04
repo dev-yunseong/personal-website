@@ -19,6 +19,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PublicMemoController {
 
+    private static final int CONTENT_PREVIEW_LENGTH = 150;
+    private static final String MARKDOWN_CHARS_REGEX = "[#*_`\\[\\]()]";
+    private static final String BASE_URL = "https://yunseong.dev";
+
     private final MemoService memoService;
     private final CategoryService categoryService;
 
@@ -48,8 +52,8 @@ public class PublicMemoController {
         
         model.addAttribute("pageTitle", pageTitle);
         model.addAttribute("pageDescription", pageDescription);
-        model.addAttribute("pageKeywords", "블로그, 개발, 기술, 프로그래밍, " + (category != null ? category : ""));
-        model.addAttribute("pageUrl", "https://yunseong.dev/public/memos" + (category != null ? "?category=" + category : ""));
+        model.addAttribute("pageKeywords", "블로그, 개발, 기술, 프로그래밍" + (category != null ? ", " + category : ""));
+        model.addAttribute("pageUrl", BASE_URL + "/public/memos" + (category != null ? "?category=" + category : ""));
         
         return "blog";
     }
@@ -69,14 +73,14 @@ public class PublicMemoController {
         String pageTitle = memoTitle + " | Yunseong";
         
         // Extract description from content (first 150 characters of plain text)
-        String contentPreview = memo.getContent() != null && memo.getContent().length() > 150 
-            ? memo.getContent().substring(0, 150).replaceAll("[#*_`\\[\\]()]", "") + "..." 
+        String contentPreview = memo.getContent() != null && memo.getContent().length() > CONTENT_PREVIEW_LENGTH
+            ? memo.getContent().substring(0, CONTENT_PREVIEW_LENGTH).replaceAll(MARKDOWN_CHARS_REGEX, "") + "..." 
             : "Yunseong의 블로그 포스트입니다.";
         
         model.addAttribute("pageTitle", pageTitle);
         model.addAttribute("pageDescription", contentPreview);
         model.addAttribute("pageKeywords", memoTitle + ", " + memo.getPath() + ", 블로그, 개발");
-        model.addAttribute("pageUrl", "https://yunseong.dev/public/memos/" + memoId);
+        model.addAttribute("pageUrl", BASE_URL + "/public/memos/" + memoId);
         
         return "memo/view";
     }
