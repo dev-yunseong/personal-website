@@ -40,7 +40,8 @@
     <a th:href="@{/public/memos(category=${node.fullPath})}"
        class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
        th:classappend="${#strings.equals(selectedCategory, node.fullPath)} ? 'active' : ''"
-       th:style="${level > 1} ? 'padding-left: ' + (1 + (level - 1) * 1.5) + 'rem;' : ''">
+       th:with="paddingLeft=${1 + (level - 1) * 1.5}"
+       th:style="${level > 1} ? 'padding-left: ' + ${paddingLeft} + 'rem;' : ''">
         <span th:text="${node.name}"></span>
         <button th:if="${node.hasChildren()}"
                 type="button"
