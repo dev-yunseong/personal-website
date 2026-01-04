@@ -27,7 +27,6 @@ public class GameController {
         GameProject gameProject = gameProjectService.getGameProject(gameId);
         model.addAttribute("gameProject", gameProject);
         model.addAttribute("memo", gameProject.getMemo());
-        
         return "game/play";
     }
 }

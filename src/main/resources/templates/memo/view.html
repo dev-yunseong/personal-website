@@ -1,7 +1,11 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout}">
+      layout:decorate="~{layout}"
+      th:with="
+        pageTitle=${memo.title + ' | Yunseong'},
+        pageKeywords=${memo.title + ', ' + memo.path + ', 블로그, 개발'},
+        pageUrl=${'/public/memos/' + memo.id}">
 
 <th:block layout:fragment="css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown-light.css">
@@ -9,10 +13,6 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism-themes/1.9.0/prism-ghcolors.min.css">
   <link rel="stylesheet" th:href="@{/css/memo-view.css}">
 </th:block>
-
-<head>
-    <title th:text="${memo.getTitle()}"> </title>
-</head>
 
 <body>
 <th:block layout:fragment="content">

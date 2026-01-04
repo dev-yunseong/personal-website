@@ -23,6 +23,7 @@ public class MainController {
         } catch (IllegalArgumentException e) {
             model.addAttribute("memo", null);
         }
+        
         return "index";
     }
 }

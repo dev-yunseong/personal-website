@@ -1,7 +1,12 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layout}">
+      layout:decorate="~{layout}"
+      th:with="
+        pageTitle=${gameProject.title + ' | Yunseong'},
+        pageDescription=${gameProject.title + ' - Yunseong의 게임 프로젝트입니다.'},
+        pageKeywords=${gameProject.title + ', 게임, 웹 게임, 프로젝트'},
+        pageUrl=${'/public/games/' + gameProject.id}">
 
 <th:block layout:fragment="script">
     <th:block th:replace="~{fragments/game_player_fragment :: gamePlayerScript}"></th:block>
@@ -14,10 +19,6 @@
     <link rel="stylesheet" th:href="@{/css/memo-view.css}">
     <th:block th:replace="~{fragments/game_player_fragment :: gamePlayerCss}"></th:block>
 </th:block>
-
-<head>
-    <title th:text="${gameProject != null ? gameProject.getTitle() : 'Game'}">Game</title>
-</head>
 
 <body>
 <th:block layout:fragment="content">

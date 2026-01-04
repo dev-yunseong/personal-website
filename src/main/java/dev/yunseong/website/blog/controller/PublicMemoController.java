@@ -3,6 +3,7 @@ package dev.yunseong.website.blog.controller;
 import dev.yunseong.website.blog.domain.Memo;
 import dev.yunseong.website.blog.service.CategoryService;
 import dev.yunseong.website.blog.service.MemoService;
+import dev.yunseong.website.global.util.MetadataUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -37,6 +38,7 @@ public class PublicMemoController {
         model.addAttribute("memos", memos);
         model.addAttribute("categoryTree", categoryService.getCategoryTree());
         model.addAttribute("selectedCategory", category);
+        
         return "blog";
     }
 
@@ -49,6 +51,10 @@ public class PublicMemoController {
         model.addAttribute("memo", memo);
         Page<Memo> memos = memoService.getMemos(memo.getName(),pageable);
         model.addAttribute("memos", memos);
+        
+        // Only set description for memo page, title/keywords handled in template
+        model.addAttribute("pageDescription", MetadataUtil.extractContentPreview(memo.getContent()));
+        
         return "memo/view";
     }
 }
