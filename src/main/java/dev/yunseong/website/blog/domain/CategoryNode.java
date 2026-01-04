@@ -35,4 +35,22 @@ public class CategoryNode {
     public String getSafeId() {
         return fullPath.replaceAll("[^a-zA-Z0-9-]", "-");
     }
+
+    /**
+     * Check if this node or any of its descendants contains the selected category path
+     */
+    public boolean containsPath(String selectedPath) {
+        if (selectedPath == null || selectedPath.isEmpty()) {
+            return false;
+        }
+        // Check if this is the selected node
+        if (selectedPath.equals(fullPath)) {
+            return true;
+        }
+        // Check if selected path is a descendant of this node
+        if (selectedPath.startsWith(fullPath + "/")) {
+            return true;
+        }
+        return false;
+    }
 }
