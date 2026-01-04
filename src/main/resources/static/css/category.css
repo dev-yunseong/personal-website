@@ -1,0 +1,33 @@
+/* Category tree styling */
+.category-toggle {
+    color: inherit;
+    opacity: 0.7;
+}
+
+.category-toggle:hover {
+    opacity: 1;
+}
+
+.category-toggle i {
+    transition: transform 0.3s ease;
+    font-size: 0.875rem;
+}
+
+.category-toggle[aria-expanded="true"] i {
+    transform: rotate(180deg);
+}
+
+/* Smooth collapse transitions */
+.collapse {
+    transition: height 0.3s ease;
+}
+
+/* Nested category items styling */
+.list-group-item {
+    border-left: none;
+    border-right: none;
+}
+
+.list-group-item:first-child {
+    border-top: none;
+}
