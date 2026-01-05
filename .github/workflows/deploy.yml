@@ -34,6 +34,7 @@ jobs:
           APPLICATION_USER: ${{ secrets.APPLICATION_USER }}
           APPLICATION_PW: ${{ secrets.APPLICATION_PW }}
           DATABASE_USER: ${{ secrets.DATABASE_USER }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
           DATABASE_PW: ${{ secrets.DATABASE_PW }}
           DEPLOY_USER: ${{ secrets.SERVER_USER }}
           DEPLOY_SERVER: ${{ secrets.SERVER_HOST }}

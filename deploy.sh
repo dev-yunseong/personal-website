@@ -20,6 +20,7 @@ export XDG_RUNTIME_DIR=/run/user/\$(id -u)
 
 systemctl --user set-environment APPLICATION_USER=$APPLICATION_USER
 systemctl --user set-environment APPLICATION_PW=$APPLICATION_PW
+systemctl --user set-environment DATABASE_URL=$DATABASE_URL
 systemctl --user set-environment DATABASE_USER=$DATABASE_USER
 systemctl --user set-environment DATABASE_PW=$DATABASE_PW
 systemctl --user set-environment OPENAI_API_KEY=$OPENAI_API_KEY
