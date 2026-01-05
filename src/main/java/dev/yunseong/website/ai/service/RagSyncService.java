@@ -55,7 +55,7 @@ public class RagSyncService {
 
     @Transactional(readOnly = true)
     protected LocalDateTime getLastSavedTime() {
-        return ragDocumentRepository.findLastUpdatedAt().orElse(LocalDateTime.MIN);
+        return ragDocumentRepository.findLastUpdatedAt().orElse(LocalDateTime.of(1, 1, 1, 0, 0));
     }
 
     private void deleteByMemos(List<Memo> memos) {
