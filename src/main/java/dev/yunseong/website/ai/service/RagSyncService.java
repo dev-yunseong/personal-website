@@ -35,7 +35,7 @@ public class RagSyncService {
     private final RagDocumentRepository ragDocumentRepository;
     private final VectorStore vectorStore;
 
-    @Scheduled(fixedRate = 30, timeUnit = TimeUnit.SECONDS)
+    @Scheduled(fixedRate = 1, timeUnit = TimeUnit.DAYS)
     public void saveUnsavedMemos() {
         log.info("[RAG Sync] Start saving unsaved memos to vector store.");
         LocalDateTime lastUpdatedTime = getLastSavedTime();
