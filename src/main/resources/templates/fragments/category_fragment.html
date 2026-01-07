@@ -42,7 +42,7 @@
        th:classappend="${#strings.equals(selectedCategory, node.fullPath)} ? 'active' : ''"
        th:with="paddingLeft=${1 + (level - 1) * 1.5}"
        th:style="${level > 1} ? 'padding-left: ' + ${paddingLeft} + 'rem;' : ''">
-        <span th:text="${node.name + '/'}"></span>
+        <span th:text="${node.name}"></span>
         <button th:if="${node.hasChildren()}"
                 type="button"
                 class="btn btn-sm btn-link p-0 ms-2 text-decoration-none category-toggle"
