@@ -18,12 +18,14 @@ public interface MemoRepository extends JpaRepository<Memo, Long> {
         SELECT *
         FROM memos
         WHERE name ~ CONCAT('^', :path, '[^/]+$')
+           OR name = RTRIM(:path, '/')
         ORDER BY created_at DESC
         """,
             countQuery = """
         SELECT count(*)
         FROM memos
         WHERE name ~ CONCAT('^', :path, '[^/]+$')
+           OR name = RTRIM(:path, '/')
         """,
             nativeQuery = true
     )
