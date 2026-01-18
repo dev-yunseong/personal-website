@@ -1,5 +1,6 @@
 package dev.yunseong.website.blog.controller;
 
+import dev.yunseong.website.ai.tool.BlogTools;
 import dev.yunseong.website.blog.service.S3StorageService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +39,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     "spring.security.user.password=admin"
 })
 class FileUploadControllerTest {
+
+    @MockitoBean
+    private BlogTools blogTools;
 
     @Autowired
     private MockMvc mockMvc;
