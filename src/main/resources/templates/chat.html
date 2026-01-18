@@ -50,7 +50,7 @@
     <div class="chat-container mt-4">
         <div class="card">
             <div class="card-header bg-primary text-white">
-                <h1 class="h5 mb-0">Chat with LLM Assistant</h1>
+                <h1 class="h5 mb-0">Chat with Agent</h1>
             </div>
             <div class="card-body chat-box" id="chat-box">
                 <!-- Messages will be appended here -->
@@ -87,7 +87,6 @@
                 let fullResponse = "";
 
                 eventSource.onmessage = function(event) {
-                    console.log("Raw data:", event.data);
                     if (event.data === '[DONE]') {
                         eventSource.close();
                         llmBubble.innerHTML = marked.parse(fullResponse);
@@ -100,7 +99,11 @@
 
                 eventSource.onerror = function(err) {
                     console.error("EventSource failed:", err);
-                    llmBubble.innerHTML += "<br><strong>Error: Connection failed.</strong>";
+                    if (err && err.status === 429) {
+                        llmBubble.innerHTML += "<br><strong>Error: Too many requests. Please try again later.</strong>";
+                    } else {
+                        llmBubble.innerHTML += "<br><strong>Error: Connection failed.</strong>";
+                    }
                     eventSource.close();
                 };
             });
@@ -117,7 +120,7 @@
             function createLlmMessageElement() {
                 const messageElement = document.createElement('div');
                 messageElement.classList.add('message', 'llm-message');
-                messageElement.innerHTML = `<div class="message-bubble markdown-body"><strong>LLM:</strong> </div>`;
+                messageElement.innerHTML = `<div class="message-bubble markdown-body"><strong>Agent:</strong> </div>`;
                 chatBox.appendChild(messageElement);
                 return messageElement;
             }
