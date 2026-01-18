@@ -32,12 +32,20 @@ repositories {
         name = 'Central Portal Snapshots'
         url = 'https://central.sonatype.com/repository/maven-snapshots/'
     }
+    maven {
+        url = uri("https://maven.pkg.github.com/dev-yunseong/api-limit-webflux")
+        credentials {
+            username = project.findProperty('GITHUB_ACTOR') ?: System.getenv("GITHUB_USERNAME")
+            password = project.findProperty('GITHUB_TOKEN') ?: System.getenv("GITHUB_TOKEN")
+        }
+    }
 }
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'nz.net.ultraq.thymeleaf:thymeleaf-layout-dialect:3.4.0'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -66,6 +74,8 @@ dependencies {
 
     // S3 storage
     implementation 'software.amazon.awssdk:s3:2.20.26'
+
+    implementation 'dev.yunseong:api-limit-mvc:0.0.1'
 }
 
 tasks.named('test') {

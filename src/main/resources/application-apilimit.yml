@@ -1,0 +1,10 @@
+api-limit:
+  rules:
+    - path: /api/public/chat
+      limit: 5
+      duration: 1d
+      factor: IP
+    - path: /api/public/chat
+      limit: 5
+      duration: 1d
+      factor: COOKIE

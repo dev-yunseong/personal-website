@@ -12,6 +12,7 @@ spring:
       - ai
       - db
       - s3
+      - apilimit
   security:
     user:
       name: ${APPLICATION_USER}
