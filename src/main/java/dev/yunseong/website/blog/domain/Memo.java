@@ -25,6 +25,7 @@ import java.util.List;
 @Entity
 @Table(name = "memos")
 public class Memo {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -47,11 +48,11 @@ public class Memo {
     public String getHtml() {
         Parser parser = Parser.builder().build();
         Node node = parser.parse(content);
-        
+
         HtmlRenderer renderer = HtmlRenderer.builder()
-            .attributeProviderFactory(context -> new CodeBlockLanguageAttributeProvider())
-            .build();
-        
+                .attributeProviderFactory(context -> new CodeBlockLanguageAttributeProvider())
+                .build();
+
         return renderer.render(node);
     }
 
@@ -59,6 +60,7 @@ public class Memo {
      * AttributeProvider that adds language class to fenced code blocks for syntax highlighting.
      */
     private static class CodeBlockLanguageAttributeProvider implements AttributeProvider {
+
         @Override
         public void setAttributes(Node node, String tagName, Map<String, String> attributes) {
             if (node instanceof FencedCodeBlock && "code".equals(tagName)) {
@@ -77,7 +79,8 @@ public class Memo {
     }
 
     public String getTitle() {
-        if (name == null || name.isEmpty()) return "";
+        if (name == null || name.isEmpty())
+            return "";
         String[] parts = name.split("/");
 
         if (parts.length == 0) {
@@ -87,9 +90,11 @@ public class Memo {
     }
 
     public String getPath() {
-        if (name == null || name.isEmpty()) return "";
+        if (name == null || name.isEmpty())
+            return "";
         int lastSlash = name.lastIndexOf("/");
-        if (lastSlash <= 0) return "/";
+        if (lastSlash <= 0)
+            return "/";
         return name.substring(0, lastSlash);
     }
 
@@ -97,7 +102,8 @@ public class Memo {
         this(null, name, content, null, null);
     }
 
-    public Memo(Long id, String name, String content, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public Memo(Long id, String name, String content, LocalDateTime createdAt,
+            LocalDateTime updatedAt) {
         this.id = id;
         if (!name.startsWith("/")) {
             this.name = String.format("/%s", name);
@@ -107,5 +113,16 @@ public class Memo {
         this.content = content;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("""
+                Memo{
+                    id=%d,
+                    name=%s,
+                    content=%s
+                
+                """, id, name, content);
     }
 }
