@@ -31,7 +31,7 @@ jobs:
 
       - name: Run deploy script
         env:
-          GITHUB_USER: ${{ secrets.GITHUB_USER }}
+          GITHUB_USERNAME: ${{ secrets.GITHUB_USER }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APPLICATION_USER: ${{ secrets.APPLICATION_USER }}
           APPLICATION_PW: ${{ secrets.APPLICATION_PW }}
