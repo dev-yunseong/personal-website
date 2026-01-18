@@ -80,7 +80,7 @@
                 appendMessage('You', message, 'user-message');
                 messageInput.value = '';
 
-                const eventSource = new EventSource(`/api/admin/chat?message=${encodeURIComponent(message)}`);
+                const eventSource = new EventSource(`/api/public/chat?message=${encodeURIComponent(message)}`);
                 
                 let llmMessageContainer = createLlmMessageElement();
                 let llmBubble = llmMessageContainer.querySelector('.message-bubble');

@@ -15,7 +15,7 @@ public class ChatRestController {
 
     private final ChatService chatService;
 
-    @GetMapping(value = "/api/admin/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @GetMapping(value = "/api/public/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public Flux<String> chat(@RequestParam("message") String message) {
         return chatService.getChatResponse(message);
     }
