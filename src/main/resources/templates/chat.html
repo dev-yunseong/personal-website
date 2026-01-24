@@ -5,52 +5,14 @@
 <head>
     <title>Chat with LLM</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
-    <style>
-        .chat-container {
-            max-width: 800px;
-            margin: auto;
-        }
-        .chat-box {
-            height: 50vh;
-            overflow-y: scroll;
-        }
-        .message-bubble {
-            border-radius: 15px;
-            padding: 10px 15px;
-            margin-bottom: 10px;
-            max-width: 80%;
-            display: inline-block;
-            word-wrap: break-word;
-        }
-        .user-message .message-bubble {
-            background-color: #0d6efd;
-            color: white;
-            margin-left: auto;
-        }
-        .llm-message .message-bubble {
-            background-color: #e9ecef;
-            color: #212529;
-        }
-        .message {
-            display: flex;
-        }
-        .user-message {
-           justify-content: flex-end;
-        }
-        .llm-message {
-            justify-content: flex-start;
-        }
-        .markdown-body {
-            background-color: transparent;
-        }
-    </style>
+    <link rel="stylesheet" th:href="@{/css/chat.css}">
 </head>
 <body>
 <div layout:fragment="content">
-    <div class="chat-container mt-4">
+    <div class="chat-container">
         <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h1 class="h5 mb-0">Chat with Agent</h1>
+            <div class="card-header">
+                <h1 class="h5 mb-0">Agent</h1>
             </div>
             <div class="card-body chat-box" id="chat-box">
                 <!-- Messages will be appended here -->
@@ -58,74 +20,13 @@
             <div class="card-footer">
                 <form id="chat-form" class="d-flex">
                     <input type="text" id="message-input" class="form-control" placeholder="Type your message..." autocomplete="off"/>
-                    <button type="submit" class="btn btn-primary ms-2">Send</button>
+                    <button type="submit" class="btn btn-secondary ms-2">Send</button>
                 </form>
             </div>
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const chatBox = document.getElementById('chat-box');
-            const chatForm = document.getElementById('chat-form');
-            const messageInput = document.getElementById('message-input');
-
-            chatForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                const message = messageInput.value;
-                if (message.trim() === '') {
-                    return;
-                }
-
-                appendMessage('You', message, 'user-message');
-                messageInput.value = '';
-
-                const eventSource = new EventSource(`/api/public/chat?message=${encodeURIComponent(message)}`);
-                
-                let llmMessageContainer = createLlmMessageElement();
-                let llmBubble = llmMessageContainer.querySelector('.message-bubble');
-                let fullResponse = "";
-
-                eventSource.onmessage = function(event) {
-                    if (event.data === '[DONE]') {
-                        eventSource.close();
-                        llmBubble.innerHTML = marked.parse(fullResponse);
-                        return;
-                    }
-                    fullResponse += event.data;
-                    llmBubble.innerHTML = fullResponse; // Show raw text while streaming
-                    chatBox.scrollTop = chatBox.scrollHeight;
-                };
-
-                eventSource.onerror = function(err) {
-                    console.error("EventSource failed:", err);
-                    if (err && err.status === 429) {
-                        llmBubble.innerHTML += "<br><strong>Error: Too many requests. Please try again later.</strong>";
-                    } else {
-                        llmBubble.innerHTML += "<br><strong>Error: Connection failed.</strong>";
-                    }
-                    eventSource.close();
-                };
-            });
-
-            function appendMessage(sender, message, className) {
-                const messageElement = document.createElement('div');
-                messageElement.classList.add('message', className);
-                messageElement.innerHTML = `<div class="message-bubble"><strong>${sender}:</strong> ${message}</div>`;
-                chatBox.appendChild(messageElement);
-                chatBox.scrollTop = chatBox.scrollHeight;
-                return messageElement;
-            }
-            
-            function createLlmMessageElement() {
-                const messageElement = document.createElement('div');
-                messageElement.classList.add('message', 'llm-message');
-                messageElement.innerHTML = `<div class="message-bubble markdown-body"><strong>Agent:</strong> </div>`;
-                chatBox.appendChild(messageElement);
-                return messageElement;
-            }
-        });
-    </script>
+    <script th:src="@{/js/chat.js}"></script>
 </div>
 </body>
 </html>
