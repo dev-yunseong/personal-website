@@ -121,8 +121,9 @@ public class Memo {
                 Memo{
                     id=%d,
                     name=%s,
+                    url=https://yunseong.dev/public/memos/%d,
                     content=%s
-                
-                """, id, name, content);
+                }
+                """, id, name, id, content);
     }
 }
