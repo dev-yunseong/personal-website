@@ -1,6 +1,5 @@
 package dev.yunseong.website.ai.tool;
 
-import dev.yunseong.website.blog.domain.Memo;
 import dev.yunseong.website.blog.domain.MemoDirectory;
 import dev.yunseong.website.blog.service.MemoFileService;
 import jakarta.annotation.PostConstruct;
