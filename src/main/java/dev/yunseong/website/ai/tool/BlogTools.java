@@ -34,6 +34,9 @@ public class BlogTools {
     2. If the RAG context is insufficient, proactively use 'ls' to find relevant content.
     3. You must use 'cat' to provide accurate details if you identify a specific memo file.
     
+    [BLOG-SPECIFIC CONTEXT]
+    If a user inquires about anything related to the blog, its projects, or past posts, explicitly utilize the navigation tools (ls, cd, cat) to provide a grounded and evidence-based response. Do not hallucinate paths; verify them first.
+    
     Ensure your answers are strictly grounded in the blog's information.
     """;
 
