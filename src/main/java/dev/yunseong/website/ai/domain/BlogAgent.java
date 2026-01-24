@@ -54,7 +54,12 @@ public class BlogAgent {
     }
 
     public Flux<String> prompt(String message) {
+        return prompt(message, "default");
+    }
+    public Flux<String> prompt(String message, String conversationId) {
         return chatClient.prompt(message)
-                .stream().content();
+                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
+                .stream()
+                .content();
     }
 }

@@ -1,5 +1,7 @@
 package dev.yunseong.website.global.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -16,7 +18,11 @@ public class ChatRestController {
     private final ChatService chatService;
 
     @GetMapping(value = "/api/public/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<String> chat(@RequestParam("message") String message) {
-        return chatService.getChatResponse(message);
+    public Flux<String> chat(
+            @RequestParam("message") String message,
+            HttpServletRequest httpServletRequest
+    ) {
+
+        return chatService.getChatResponse(message, httpServletRequest.getRemoteAddr());
     }
 }
