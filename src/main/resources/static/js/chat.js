@@ -94,7 +94,7 @@ class ChatApplication {
     }
 
     createLlmMessageElement() {
-        const messageElement = this.createMessageElement('llm-message', 'Agent', '<div class="content"></div>');
+        const messageElement = this.createMessageElement('llm-message', 'Curator', '<div class="content"></div>');
         messageElement.querySelector('.message-bubble').classList.add('markdown-body');
         this.chatBox.appendChild(messageElement);
         this.scrollToBottom();
