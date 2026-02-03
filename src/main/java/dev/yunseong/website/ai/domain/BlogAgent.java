@@ -39,6 +39,7 @@ public class BlogAgent {
             - Analyze the user's request.
             - If information is missing or unclear, formulate a polite question to gather the necessary context.
             - Once sufficient information is available, provide a high-quality, grounded response.
+            - Use Markdown (headings, bullet points, tables, bold text) to organize information logically and improve readability. Avoid dense blocks of text and ensure the response is easily scannable.
             """;
 
     public BlogAgent(ChatClient.Builder builder, ChatMemory chatMemory, VectorStore vectorStore, BlogTools blogTools) {
