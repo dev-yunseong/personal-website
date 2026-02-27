@@ -43,13 +43,13 @@ public class SitemapService {
                 memo.getUpdatedAt().format(DATE_FORMATTER) : null);
         }
         
-        // Add public games list page
-        addUrl(sitemap, baseUrl + "/public/games", null);
+        // Add public projects list page
+        addUrl(sitemap, baseUrl + "/public/projects", null);
         
-        // Add all game URLs
+        // Add all project URLs
         List<GameProject> allGames = gameProjectService.getAllGameProjects();
         for (GameProject game : allGames) {
-            String url = baseUrl + "/public/games/" + game.getId();
+            String url = baseUrl + "/public/projects/" + game.getId();
             addUrl(sitemap, url, null);
         }
         

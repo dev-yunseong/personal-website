@@ -3,10 +3,10 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}"
       th:with="
-        pageTitle='Games | Yunseong',
-        pageDescription='Yunseong의 게임 프로젝트 모음입니다. 다양한 게임을 플레이해보세요.',
-        pageKeywords='게임, 게임 프로젝트, 웹 게임, 개발',
-        pageUrl='/public/games'">
+        pageTitle='Projects | Yunseong',
+        pageDescription='Yunseong의 프로젝트 모음입니다. 다양한 게임과 데모를 체험해보세요.',
+        pageKeywords='프로젝트, 게임, 데모, 웹 프로젝트, 개발',
+        pageUrl='/public/projects'">
 
 <th:block layout:fragment="css">
     <style>
@@ -38,12 +38,12 @@
 <body>
 <th:block layout:fragment="content">
     <div class="container px-3 px-md-4">
-        <h1 class="my-3 my-md-4">Games</h1>
-        <p class="lead">Choose a game to play</p>
+        <h1 class="my-3 my-md-4">Projects</h1>
+        <p class="lead">Choose a project to explore</p>
         
         <div class="row">
             <div class="col-12 col-sm-6 col-md-4 mb-4" th:each="game : ${games}">
-                <a th:href="@{/public/games/{id}(id=${game.id})}" class="text-decoration-none">
+                <a th:href="@{/public/projects/{id}(id=${game.id})}" class="text-decoration-none">
                     <div class="card game-card h-100 shadow">
                         <div class="card-body">
                             <div class="game-title-container">
@@ -55,7 +55,7 @@
                                 <h5 class="card-title mb-0" th:text="${game.getTitle()}">Game Title</h5>
                             </div>
                             <p class="card-text text-muted mt-2 small" th:text="${game.gameUrl}">Game URL</p>
-                            <span class="badge bg-primary">Play Now</span>
+                            <span class="badge bg-primary">Open</span>
                         </div>
                     </div>
                 </a>
@@ -63,7 +63,7 @@
         </div>
         
         <div th:if="${games.isEmpty()}" class="alert alert-info" role="alert">
-            No games available at the moment.
+            No projects available at the moment.
         </div>
     </div>
 </th:block>

@@ -4,9 +4,9 @@
       layout:decorate="~{layout}"
       th:with="
         pageTitle=${gameProject.title + ' | Yunseong'},
-        pageDescription=${gameProject.title + ' - Yunseong의 게임 프로젝트입니다.'},
-        pageKeywords=${gameProject.title + ', 게임, 웹 게임, 프로젝트'},
-        pageUrl=${'/public/games/' + gameProject.id}">
+        pageDescription=${gameProject.title + ' - Yunseong의 프로젝트입니다.'},
+        pageKeywords=${gameProject.title + ', 프로젝트, 게임, 데모'},
+        pageUrl=${'/public/projects/' + gameProject.id}">
 
 <th:block layout:fragment="script">
     <th:block th:replace="~{fragments/game_player_fragment :: gamePlayerScript}"></th:block>
