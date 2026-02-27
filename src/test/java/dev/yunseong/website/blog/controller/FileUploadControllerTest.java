@@ -54,7 +54,7 @@ class FileUploadControllerTest {
 
     @Test
     @WithMockUser
-    void uploadImage_Success() throws Exception {
+    void uploadFile_ImageSuccess() throws Exception {
         // Given
         MockMultipartFile file = new MockMultipartFile(
                 "file",
@@ -66,7 +66,7 @@ class FileUploadControllerTest {
         when(s3StorageService.uploadFile(any())).thenReturn(expectedUrl);
 
         // When & Then
-        mockMvc.perform(multipart("/admin/upload/image")
+        mockMvc.perform(multipart("/admin/upload/file")
                         .file(file)
                         .with(csrf()))
                 .andExpect(status().isOk())
@@ -77,126 +77,7 @@ class FileUploadControllerTest {
 
     @Test
     @WithMockUser
-    void uploadImage_EmptyFile() throws Exception {
-        // Given
-        MockMultipartFile file = new MockMultipartFile(
-                "file",
-                "test-image.jpg",
-                "image/jpeg",
-                new byte[0]
-        );
-
-        // When & Then
-        mockMvc.perform(multipart("/admin/upload/image")
-                        .file(file)
-                        .with(csrf()))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("File is empty"));
-    }
-
-    @Test
-    @WithMockUser
-    void uploadImage_NotAnImage() throws Exception {
-        // Given
-        MockMultipartFile file = new MockMultipartFile(
-                "file",
-                "test-file.txt",
-                "text/plain",
-                "test content".getBytes()
-        );
-
-        // When & Then
-        mockMvc.perform(multipart("/admin/upload/image")
-                        .file(file)
-                        .with(csrf()))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Only image files are allowed"));
-    }
-
-    @Test
-    @WithMockUser
-    void uploadImage_ServiceException() throws Exception {
-        // Given
-        MockMultipartFile file = new MockMultipartFile(
-                "file",
-                "test-image.jpg",
-                "image/jpeg",
-                "test content".getBytes()
-        );
-        when(s3StorageService.uploadFile(any())).thenThrow(new IOException("Storage error"));
-
-        // When & Then
-        mockMvc.perform(multipart("/admin/upload/image")
-                        .file(file)
-                        .with(csrf()))
-                .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.error").value("Failed to upload file: Storage error"));
-    }
-
-    @Test
-    @WithMockUser
-    void uploadPdf_Success() throws Exception {
-        // Given
-        MockMultipartFile file = new MockMultipartFile(
-                "file",
-                "test-document.pdf",
-                "application/pdf",
-                "test pdf content".getBytes()
-        );
-        String expectedUrl = "http://localhost:9000/test-bucket/test-document.pdf";
-        when(s3StorageService.uploadFile(any())).thenReturn(expectedUrl);
-
-        // When & Then
-        mockMvc.perform(multipart("/admin/upload/pdf")
-                        .file(file)
-                        .with(csrf()))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.url").value(expectedUrl))
-                .andExpect(jsonPath("$.markdown").value("[test-document.pdf](" + expectedUrl + ")"));
-    }
-
-    @Test
-    @WithMockUser
-    void uploadPdf_EmptyFile() throws Exception {
-        // Given
-        MockMultipartFile file = new MockMultipartFile(
-                "file",
-                "test-document.pdf",
-                "application/pdf",
-                new byte[0]
-        );
-
-        // When & Then
-        mockMvc.perform(multipart("/admin/upload/pdf")
-                        .file(file)
-                        .with(csrf()))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("File is empty"));
-    }
-
-    @Test
-    @WithMockUser
-    void uploadPdf_NotAPdf() throws Exception {
-        // Given
-        MockMultipartFile file = new MockMultipartFile(
-                "file",
-                "test-file.txt",
-                "text/plain",
-                "test content".getBytes()
-        );
-
-        // When & Then
-        mockMvc.perform(multipart("/admin/upload/pdf")
-                        .file(file)
-                        .with(csrf()))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Only PDF files are allowed"));
-    }
-
-    @Test
-    @WithMockUser
-    void uploadVideo_Success_Mp4() throws Exception {
+    void uploadFile_VideoSuccess() throws Exception {
         // Given
         MockMultipartFile file = new MockMultipartFile(
                 "file",
@@ -208,7 +89,7 @@ class FileUploadControllerTest {
         when(s3StorageService.uploadFile(any())).thenReturn(expectedUrl);
 
         // When & Then
-        mockMvc.perform(multipart("/admin/upload/video")
+        mockMvc.perform(multipart("/admin/upload/file")
                         .file(file)
                         .with(csrf()))
                 .andExpect(status().isOk())
@@ -219,40 +100,40 @@ class FileUploadControllerTest {
 
     @Test
     @WithMockUser
-    void uploadVideo_Success_Mov() throws Exception {
+    void uploadFile_OtherFileSuccess() throws Exception {
         // Given
         MockMultipartFile file = new MockMultipartFile(
                 "file",
-                "test-video.mov",
-                "video/quicktime",
-                "test video content".getBytes()
+                "test-document.pdf",
+                "application/pdf",
+                "test pdf content".getBytes()
         );
-        String expectedUrl = "http://localhost:9000/test-bucket/test-video.mov";
+        String expectedUrl = "http://localhost:9000/test-bucket/test-document.pdf";
         when(s3StorageService.uploadFile(any())).thenReturn(expectedUrl);
 
         // When & Then
-        mockMvc.perform(multipart("/admin/upload/video")
+        mockMvc.perform(multipart("/admin/upload/file")
                         .file(file)
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.url").value(expectedUrl))
-                .andExpect(jsonPath("$.markdown").value("<video controls>\n  <source src=\"" + expectedUrl + "\" type=\"video/quicktime\">\n  Your browser does not support the video tag.\n</video>"));
+                .andExpect(jsonPath("$.markdown").value("[test-document.pdf](" + expectedUrl + ")"));
     }
 
     @Test
     @WithMockUser
-    void uploadVideo_EmptyFile() throws Exception {
+    void uploadFile_EmptyFile() throws Exception {
         // Given
         MockMultipartFile file = new MockMultipartFile(
                 "file",
-                "test-video.mp4",
-                "video/mp4",
+                "test-image.jpg",
+                "image/jpeg",
                 new byte[0]
         );
 
         // When & Then
-        mockMvc.perform(multipart("/admin/upload/video")
+        mockMvc.perform(multipart("/admin/upload/file")
                         .file(file)
                         .with(csrf()))
                 .andExpect(status().isBadRequest())
@@ -261,20 +142,21 @@ class FileUploadControllerTest {
 
     @Test
     @WithMockUser
-    void uploadVideo_NotAVideo() throws Exception {
+    void uploadFile_ServiceException() throws Exception {
         // Given
         MockMultipartFile file = new MockMultipartFile(
                 "file",
-                "test-file.txt",
-                "text/plain",
+                "test-image.jpg",
+                "image/jpeg",
                 "test content".getBytes()
         );
+        when(s3StorageService.uploadFile(any())).thenThrow(new IOException("Storage error"));
 
         // When & Then
-        mockMvc.perform(multipart("/admin/upload/video")
+        mockMvc.perform(multipart("/admin/upload/file")
                         .file(file)
                         .with(csrf()))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").value("Only MP4 and MOV video files are allowed"));
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.error").value("Failed to upload file: Storage error"));
     }
 }
