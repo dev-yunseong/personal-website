@@ -89,7 +89,7 @@ class SitemapServiceTest {
     }
 
     @Test
-    void generateSitemap_IncludesPublicGamesListPage() {
+    void generateSitemap_IncludesPublicProjectsListPage() {
         // Given
         when(memoService.getMemos(any(Pageable.class)))
             .thenReturn(new PageImpl<>(Arrays.asList()));
@@ -100,7 +100,7 @@ class SitemapServiceTest {
         String sitemap = sitemapService.generateSitemap("https://example.com");
 
         // Then
-        assertTrue(sitemap.contains("<loc>https://example.com/public/games</loc>"));
+        assertTrue(sitemap.contains("<loc>https://example.com/public/projects</loc>"));
     }
 
     @Test
@@ -123,7 +123,7 @@ class SitemapServiceTest {
     }
 
     @Test
-    void generateSitemap_IncludesAllGames() {
+    void generateSitemap_IncludesAllProjects() {
         // Given
         when(memoService.getMemos(any(Pageable.class)))
             .thenReturn(new PageImpl<>(Arrays.asList()));
@@ -134,8 +134,8 @@ class SitemapServiceTest {
         String sitemap = sitemapService.generateSitemap("https://example.com");
 
         // Then
-        assertTrue(sitemap.contains("<loc>https://example.com/public/games/1</loc>"));
-        assertTrue(sitemap.contains("<loc>https://example.com/public/games/2</loc>"));
+        assertTrue(sitemap.contains("<loc>https://example.com/public/projects/1</loc>"));
+        assertTrue(sitemap.contains("<loc>https://example.com/public/projects/2</loc>"));
     }
 
     @Test

@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
-@RequestMapping("/public/games")
+@RequestMapping("/public/projects")
 @RequiredArgsConstructor
 public class GameController {
     
