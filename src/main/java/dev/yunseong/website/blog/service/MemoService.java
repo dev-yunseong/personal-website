@@ -17,6 +17,10 @@ public class MemoService {
 
     private final MemoRepository memoRepository;
 
+    public Page<Memo> searchMemo(String query, Pageable pageable) {
+        return memoRepository.findByQuery(query, pageable);
+    }
+
     public long saveMemo(String title, String content) {
         Memo memo = new Memo(title, content);
         memoRepository.save(memo);

@@ -17,9 +17,25 @@ public interface MemoRepository extends JpaRepository<Memo, Long> {
             value = """
         SELECT *
         FROM memos
+        WHERE name LIKE CONCAT('%', :query, '%')
+        ORDER BY updated_at DESC
+        """,
+            countQuery = """
+        SELECT count(*)
+        FROM memos
+        WHERE name LIKE CONCAT('%', :query, '%')
+        """,
+            nativeQuery = true
+    )
+    Page<Memo> findByQuery(String query, Pageable pageable);
+
+    @Query(
+            value = """
+        SELECT *
+        FROM memos
         WHERE name ~ CONCAT('^', :path, '[^/]+$')
            OR name = RTRIM(:path, '/')
-        ORDER BY created_at DESC
+        ORDER BY updated_at DESC
         """,
             countQuery = """
         SELECT count(*)

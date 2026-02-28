@@ -76,6 +76,8 @@ dependencies {
     implementation 'software.amazon.awssdk:s3:2.20.26'
 
     implementation 'dev.yunseong:api-limit-mvc:0.0.1'
+
+    implementation 'net.bytebuddy:byte-buddy:1.14.12'
 }
 
 tasks.named('test') {
