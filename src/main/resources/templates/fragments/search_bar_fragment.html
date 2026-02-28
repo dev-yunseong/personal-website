@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <style>
+        .search-container {
+            position: relative;
+        }
+        .autocomplete-suggestions {
+            position: absolute;
+            width: 100%;
+            z-index: 9999;
+            top: 100%;
+            left: 0;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .autocomplete-suggestions .list-group-item {
+            border: none;
+        }
+        .autocomplete-suggestions .list-group-item:hover,
+        .autocomplete-suggestions .list-group-item.active {
+            background-color: #f5f5f5;
+        }
+    </style>
+</head>
+<body>
+<div th:fragment="searchBar" class="search-container">
+    <form th:action="@{/public/search}" method="get" class="d-flex">
+        <input type="text" id="search-input" name="keyword" class="form-control me-2" placeholder="Search memos..." autocomplete="off">
+        <button type="submit" class="btn btn-secondary">Search</button>
+    </form>
+    <div id="autocomplete-suggestions" class="autocomplete-suggestions list-group"></div>
+</div>
+
+<th:block th:fragment="searchBarScript">
+  <script>
+    const searchInput = document.getElementById('search-input');
+    if (searchInput) {
+      const suggestionsPanel = document.getElementById('autocomplete-suggestions');
+      const searchContainer = document.querySelector('.search-container');
+      let timeout = null;
+      let activeIndex = -1;
+
+      function updateActiveSuggestion(suggestions, index) {
+        suggestions.forEach((suggestion, i) => {
+            if (i === index) {
+                suggestion.classList.add('active');
+            } else {
+                suggestion.classList.remove('active');
+            }
+        });
+      }
+
+      searchInput.addEventListener('keydown', function(e) {
+        const suggestions = suggestionsPanel.querySelectorAll('.list-group-item');
+        if (suggestions.length === 0) return;
+
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          activeIndex = (activeIndex + 1) % suggestions.length;
+          updateActiveSuggestion(suggestions, activeIndex);
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          activeIndex = (activeIndex - 1 + suggestions.length) % suggestions.length;
+          updateActiveSuggestion(suggestions, activeIndex);
+        } else if (e.key === 'Enter') {
+          if (activeIndex > -1) {
+            e.preventDefault();
+            searchInput.value = suggestions[activeIndex].textContent;
+            suggestionsPanel.innerHTML = '';
+            suggestionsPanel.style.display = 'none';
+            document.querySelector('form').submit();
+          }
+        }
+      });
+
+      searchInput.addEventListener('keyup', function (e) {
+        if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'Enter') {
+            return;
+        }
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+          const keyword = e.target.value;
+          if (keyword.length >= 3) {
+            fetch(`/api/public/search/suggestions?keyword=${keyword}`)
+            .then(response => response.json())
+            .then(data => {
+              suggestionsPanel.innerHTML = '';
+              activeIndex = -1;
+              if(data.length > 0) {
+                suggestionsPanel.style.display = 'block';
+                data.forEach(suggestion => {
+                  const suggestionElement = document.createElement('a');
+                  suggestionElement.href = '#';
+                  suggestionElement.textContent = suggestion.title;
+                  suggestionElement.classList.add('list-group-item', 'list-group-item-action');
+                  suggestionElement.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    searchInput.value = suggestion.title;
+                    suggestionsPanel.innerHTML = '';
+                    document.querySelector('form').submit();
+                  });
+                  suggestionsPanel.appendChild(suggestionElement);
+                });
+              } else {
+                suggestionsPanel.style.display = 'none';
+              }
+            });
+          } else {
+            suggestionsPanel.innerHTML = '';
+            suggestionsPanel.style.display = 'none';
+          }
+        }, 200);
+      });
+
+      document.addEventListener('click', function (e) {
+        if (!searchContainer.contains(e.target)) {
+          suggestionsPanel.style.display = 'none';
+        }
+      });
+    }
+  </script>
+</th:block>
+
+</body>
+</html>

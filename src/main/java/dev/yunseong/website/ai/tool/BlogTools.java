@@ -1,15 +1,19 @@
 package dev.yunseong.website.ai.tool;
 
+import dev.yunseong.website.blog.domain.Memo;
 import dev.yunseong.website.blog.domain.MemoDirectory;
 import dev.yunseong.website.blog.service.MemoFileService;
+import dev.yunseong.website.blog.service.MemoService;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.ai.tool.annotation.Tool;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -17,6 +21,7 @@ import java.util.List;
 public class BlogTools {
 
     private final MemoFileService memoFileService;
+    private final MemoService memoService;
 
     public static final String BLOG_TOOL_PROMPT = """
     You are a highly competent Archive Curator for Yunsung's Blog.
@@ -27,14 +32,15 @@ public class BlogTools {
     - Use 'ls' to explore what's inside the current directory or a given path.
     - Use 'cd' to move between directories.
     - Use 'cat' to read the actual content of a memo.
+    - Use 'search' to find memos by keyword.
     
     [WORKING GUIDELINE]
     1. When a user asks about a topic, don't just rely on your memory or RAG context.
-    2. If the RAG context is insufficient, proactively use 'ls' to find relevant content.
+    2. If the RAG context is insufficient, proactively use 'ls' or 'search' to find relevant content.
     3. You must use 'cat' to provide accurate details if you identify a specific memo file.
     
     [BLOG-SPECIFIC CONTEXT]
-    If a user inquires about anything related to the blog, its projects, or past posts, explicitly utilize the navigation tools (ls, cd, cat) to provide a grounded and evidence-based response. Do not hallucinate paths; verify them first.
+    If a user inquires about anything related to the blog, its projects, or past posts, explicitly utilize the navigation tools (ls, cd, cat, search) to provide a grounded and evidence-based response. Do not hallucinate paths; verify them first.
     
     Ensure your answers are strictly grounded in the blog's information.
     """;
@@ -45,6 +51,16 @@ public class BlogTools {
     public void init() {
         memoFileService.initMemoFileSystem();
         this.workingDirectory = memoFileService.getRoot();
+    }
+
+    @Tool(description = "Search for memos by a keyword. Returns a list of memo full path.")
+    public List<String> search(String keyword) {
+        log.info("search: {}", keyword);
+        return memoService.searchMemo(keyword, PageRequest.of(0, 10))
+                .getContent()
+                .stream()
+                .map(Memo::getName)
+                .collect(Collectors.toList());
     }
 
     @Tool(description = "Get the current directory, similar to 'pwd' in a file system.")

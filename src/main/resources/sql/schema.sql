@@ -1,3 +1,4 @@
+-- ADD Memo System
 CREATE TABLE memos (
     id BIGSERIAL PRIMARY KEY,
     name       VARCHAR(255),
@@ -9,6 +10,8 @@ CREATE TABLE memos (
 ALTER TABLE memos
 ADD CONSTRAINT uq_memos_name UNIQUE (name);
 
+
+-- ADD Project View
 CREATE TABLE game_projects (
     id BIGSERIAL PRIMARY KEY,
     game_url VARCHAR(512) NOT NULL,
@@ -16,6 +19,8 @@ CREATE TABLE game_projects (
     CONSTRAINT fk_game_projects_memo FOREIGN KEY (memo_id) REFERENCES memos(id) ON DELETE CASCADE
 );
 
+
+-- ADD Statistic System
 CREATE TABLE request_statistics (
     id BIGSERIAL PRIMARY KEY,
     uri VARCHAR(512) NOT NULL,
@@ -28,6 +33,8 @@ CREATE TABLE request_statistics (
 CREATE INDEX idx_request_statistics_created_at ON request_statistics(created_at);
 CREATE INDEX idx_request_statistics_uri ON request_statistics(uri);
 
+
+-- ADD RAG
 -- VECTOR DB
 CREATE EXTENSION IF NOT EXISTS vector;
 CREATE EXTENSION IF NOT EXISTS hstore;
@@ -57,3 +64,9 @@ CREATE TABLE IF NOT EXISTS rag_documents (
 CREATE INDEX idx_rag_documents_resource_type_id ON rag_documents(resource_type, resource_id);
 
 ALTER TABLE request_statistics ADD COLUMN ip VARCHAR(15);
+
+-- ADD Search System
+CREATE EXTENSION pg_trgm;
+
+
+CREATE INDEX idx_content_trgm ON memos USING GIN (content gin_trgm_ops);
