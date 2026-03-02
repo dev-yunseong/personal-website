@@ -15,7 +15,7 @@ class ImageResizerTest {
     private ImageResizer imageResizer;
 
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-    private static final int MAX_DIMENSION = 1920;
+    private static final int MAX_DIMENSION = 512;
 
     @BeforeEach
     void setUp() {

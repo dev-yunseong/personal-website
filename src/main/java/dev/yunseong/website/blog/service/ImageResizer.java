@@ -20,7 +20,7 @@ import java.util.Iterator;
 public class ImageResizer {
 
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
-    private static final int MAX_DIMENSION = 1920; // Max width or height in pixels
+    private static final int MAX_DIMENSION = 512; // Max width or height in pixels
 
     /**
      * Checks if the content type represents an image
