@@ -15,6 +15,7 @@ class ImageResizerTest {
     private ImageResizer imageResizer;
 
     private static final long MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    private static final int MAX_DIMENSION = 1920;
 
     @BeforeEach
     void setUp() {
@@ -85,6 +86,74 @@ class ImageResizerTest {
 
         // Then
         assertEquals(MAX_FILE_SIZE, maxFileSize);
+    }
+
+    @Test
+    void getMaxDimension_ReturnsCorrectValue() {
+        // When
+        int maxDimension = imageResizer.getMaxDimension();
+
+        // Then
+        assertEquals(MAX_DIMENSION, maxDimension);
+    }
+
+    @Test
+    void resize_SmallImage_ReturnsOriginalBytes() throws IOException {
+        // Given - Create a small image within both limits
+        byte[] smallImageBytes = createTestImage(100, 100, "jpeg");
+        assertTrue(smallImageBytes.length < MAX_FILE_SIZE, "Test image should be smaller than 10MB");
+
+        // When
+        byte[] result = imageResizer.resize(smallImageBytes, "image/jpeg");
+
+        // Then
+        assertSame(smallImageBytes, result, "Original bytes should be returned unchanged when no resizing needed");
+    }
+
+    @Test
+    void resize_ImageWithLargeDimensions_ResizesToMaxDimension() throws IOException {
+        // Given - Create an image whose dimensions exceed MAX_DIMENSION but file size is under 10MB
+        byte[] largeImageBytes = createTestImage(3000, 2000, "jpeg");
+
+        // When
+        byte[] resizedBytes = imageResizer.resize(largeImageBytes, "image/jpeg");
+
+        // Then
+        assertNotNull(resizedBytes);
+        assertTrue(resizedBytes.length > 0);
+        assertTrue(resizedBytes.length <= MAX_FILE_SIZE, "Resized image should be under 10MB");
+
+        // Verify dimensions are within MAX_DIMENSION
+        java.awt.image.BufferedImage resizedImage = javax.imageio.ImageIO.read(new java.io.ByteArrayInputStream(resizedBytes));
+        assertNotNull(resizedImage);
+        assertTrue(resizedImage.getWidth() <= MAX_DIMENSION, "Width should be within max dimension");
+        assertTrue(resizedImage.getHeight() <= MAX_DIMENSION, "Height should be within max dimension");
+    }
+
+    @Test
+    void resize_LargeImage_ResizesSuccessfully() throws IOException {
+        // Given - Create a large test image (> 10MB)
+        byte[] largeImageBytes = createTestImage(5000, 5000, "jpeg");
+        assertTrue(largeImageBytes.length > MAX_FILE_SIZE, "Test image should be larger than 10MB");
+
+        // When
+        byte[] resizedBytes = imageResizer.resize(largeImageBytes, "image/jpeg");
+
+        // Then
+        assertNotNull(resizedBytes);
+        assertTrue(resizedBytes.length <= MAX_FILE_SIZE, "Resized image should be under 10MB");
+        assertTrue(resizedBytes.length > 0);
+    }
+
+    @Test
+    void resize_WithInvalidImageData_ThrowsException() {
+        // Given
+        byte[] invalidBytes = "not an image".getBytes();
+
+        // When & Then
+        assertThrows(IOException.class, () ->
+                imageResizer.resize(invalidBytes, "image/jpeg")
+        );
     }
 
     @Test

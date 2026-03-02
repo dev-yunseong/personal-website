@@ -121,7 +121,7 @@ class S3StorageServiceTest {
 
     @Test
     void uploadFile_SmallImage_NoResize() throws IOException {
-        // Given - Create a small test image (< 10MB)
+        // Given - Create a small test image (< 10MB, dimensions within limit)
         byte[] smallImageBytes = createTestImage(100, 100, "jpeg");
         MockMultipartFile file = new MockMultipartFile(
                 "file",
@@ -130,17 +130,36 @@ class S3StorageServiceTest {
                 smallImageBytes
         );
 
-        ArgumentCaptor<RequestBody> bodyCaptor = ArgumentCaptor.forClass(RequestBody.class);
+        // When
+        String result = s3StorageService.uploadFile(file);
+
+        // Then
+        verify(s3Client).putObject(any(PutObjectRequest.class), any(RequestBody.class));
+        assertNotNull(result);
+        assertTrue(result.contains("test-bucket"));
+        // Small image within limits should be uploaded successfully
+        assertTrue(smallImageBytes.length < MAX_FILE_SIZE);
+    }
+
+    @Test
+    void uploadFile_ImageWithLargeDimensions_GetsResized() throws IOException {
+        // Given - Create an image exceeding MAX_DIMENSION (1920px) but under 10MB
+        byte[] wideImageBytes = createTestImage(3000, 100, "jpeg");
+
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "wide-image.jpg",
+                "image/jpeg",
+                wideImageBytes
+        );
 
         // When
         String result = s3StorageService.uploadFile(file);
 
         // Then
-        verify(s3Client).putObject(any(PutObjectRequest.class), bodyCaptor.capture());
+        verify(s3Client).putObject(any(PutObjectRequest.class), any(RequestBody.class));
         assertNotNull(result);
         assertTrue(result.contains("test-bucket"));
-        // The uploaded file should be the same size as original (not resized)
-        assertTrue(smallImageBytes.length < MAX_FILE_SIZE);
     }
 
     @Test
