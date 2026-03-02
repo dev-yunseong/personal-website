@@ -49,7 +49,7 @@ class S3StorageServiceTest {
                 "file",
                 "test-image.jpg",
                 "image/jpeg",
-                "test content".getBytes()
+                getTestImage()
         );
 
         // When
@@ -64,11 +64,12 @@ class S3StorageServiceTest {
     @Test
     void uploadFile_WithoutExtension() throws IOException {
         // Given
+        byte[] smallImageBytes = createTestImage(100, 100, "jpeg");
         MockMultipartFile file = new MockMultipartFile(
                 "file",
                 "test-image",
                 "image/jpeg",
-                "test content".getBytes()
+                smallImageBytes
         );
 
         // When
@@ -103,7 +104,7 @@ class S3StorageServiceTest {
                 "file",
                 "test-image.png",
                 "image/png",
-                "test content".getBytes()
+                getTestImage()
         );
 
         ArgumentCaptor<PutObjectRequest> requestCaptor = ArgumentCaptor.forClass(PutObjectRequest.class);
@@ -224,7 +225,7 @@ class S3StorageServiceTest {
                 "file",
                 "test-image.jpg",
                 "image/jpeg",
-                "test content".getBytes()
+                getTestImage()
         );
 
         // When
@@ -244,7 +245,7 @@ class S3StorageServiceTest {
                 "file",
                 "test-image.jpg",
                 "image/jpeg",
-                "test content".getBytes()
+                getTestImage()
         );
 
         // When
@@ -265,7 +266,7 @@ class S3StorageServiceTest {
                 "file",
                 "test-image.jpg",
                 "image/jpeg",
-                "test content".getBytes()
+                getTestImage()
         );
 
         // When
@@ -275,6 +276,10 @@ class S3StorageServiceTest {
         verify(s3Client).putObject(any(PutObjectRequest.class), any(RequestBody.class));
         assertTrue(result.startsWith("https://test-bucket.s3.amazonaws.com/"));
         assertTrue(result.endsWith(".jpg"));
+    }
+
+    private byte[] getTestImage() throws IOException {
+        return createTestImage(100, 100, "jpeg");
     }
 
     /**
