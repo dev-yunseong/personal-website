@@ -46,11 +46,11 @@ public class S3StorageService {
         long fileSize = fileBytes.length;
         String contentType = file.getContentType();
 
-        // Check if file needs resizing
-        if (imageResizer.exceedsMaxSize(fileSize) && imageResizer.isImage(contentType)) {
-            log.info("File size {} exceeds maximum {}. Resizing image...", fileSize, imageResizer.getMaxFileSize());
-            fileBytes = imageResizer.resizeToFitMaxSize(fileBytes, contentType);
-            log.info("Image resized. New size: {}", fileBytes.length);
+        // Resize images to appropriate size (dimension and file size limits)
+        if (imageResizer.isImage(contentType)) {
+            log.info("Resizing image if needed (size={}, contentType={})...", fileSize, contentType);
+            fileBytes = imageResizer.resize(fileBytes, contentType);
+            log.info("Image processed. Final size: {}", fileBytes.length);
         }
 
         PutObjectRequest putObjectRequest = PutObjectRequest.builder()
