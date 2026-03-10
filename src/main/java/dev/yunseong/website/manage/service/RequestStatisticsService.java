@@ -1,9 +1,14 @@
 package dev.yunseong.website.manage.service;
 
 import dev.yunseong.website.manage.domain.RequestStatistics;
+import dev.yunseong.website.manage.domain.UriStat;
 import dev.yunseong.website.manage.repository.RequestStatisticsRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,17 +25,23 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class RequestStatisticsService {
+    private static final int PAGE_SIZE = 10;
+
     private final RequestStatisticsRepository requestStatisticsRepository;
     
     // In-memory storage for request statistics
     private final Queue<RequestStatistics> requestQueue = new ConcurrentLinkedDeque<>();
 
     public void recordRequest(String uri, String method, String referer, String userAgent, String ipAddress) {
+        recordRequest(uri, method, referer, userAgent, ipAddress, null);
+    }
+
+    public void recordRequest(String uri, String method, String referer, String userAgent, String ipAddress, Integer statusCode) {
         // Only track requests starting with /public/
         if (uri != null && uri.startsWith("/public/")) {
-            RequestStatistics stats = new RequestStatistics(uri, method, referer, userAgent, ipAddress);
+            RequestStatistics stats = new RequestStatistics(uri, method, referer, userAgent, ipAddress, statusCode);
             requestQueue.add(stats);
-            log.debug("Recorded request: {} {} (total in memory: {})", method, uri, requestQueue.size());
+            log.debug("Recorded request: {} {} {} (total in memory: {})", method, uri, statusCode, requestQueue.size());
         }
     }
 
@@ -61,6 +72,16 @@ public class RequestStatisticsService {
     }
 
     @Transactional(readOnly = true)
+    public Page<RequestStatistics> getStatisticsForLastDays(int days, String statusFilter, Pageable pageable) {
+        LocalDateTime startDate = LocalDateTime.now().minusDays(days);
+        if (statusFilter == null || statusFilter.isEmpty()) {
+            return requestStatisticsRepository.findByCreatedAtAfter(startDate, pageable);
+        }
+        int[] range = statusCodeRange(statusFilter);
+        return requestStatisticsRepository.findByCreatedAtAfterAndStatusCodeBetween(startDate, range[0], range[1], pageable);
+    }
+
+    @Transactional(readOnly = true)
     public Map<String, Long> getTopUrisForLastDays(int days) {
         LocalDateTime startDate = LocalDateTime.now().minusDays(days);
         List<Object[]> results = requestStatisticsRepository.findTopUrisByRequestCount(startDate);
@@ -74,9 +95,50 @@ public class RequestStatisticsService {
     }
 
     @Transactional(readOnly = true)
-    public long getTotalRequestsForLastDays(int days) {
+    public Page<UriStat> getTopUrisPageForLastDays(int days, String topSort, String topStatusFilter, int topPage) {
         LocalDateTime startDate = LocalDateTime.now().minusDays(days);
-        List<RequestStatistics> stats = requestStatisticsRepository.findByCreatedAtAfter(startDate);
-        return stats.size();
+        boolean filtered = topStatusFilter != null && !topStatusFilter.isEmpty();
+        Pageable basePageable = PageRequest.of(topPage, PAGE_SIZE);
+        if (filtered) {
+            int[] range = statusCodeRange(topStatusFilter);
+            return switch (topSort != null ? topSort : "count_desc") {
+                case "count_asc" -> requestStatisticsRepository.findTopUrisByCountAscAndStatusCodeBetween(
+                        startDate, range[0], range[1], basePageable);
+                case "uri_asc" -> requestStatisticsRepository.findTopUrisSortedByUriAndStatusCodeBetween(
+                        startDate, range[0], range[1], PageRequest.of(topPage, PAGE_SIZE, Sort.by("uri").ascending()));
+                case "uri_desc" -> requestStatisticsRepository.findTopUrisSortedByUriAndStatusCodeBetween(
+                        startDate, range[0], range[1], PageRequest.of(topPage, PAGE_SIZE, Sort.by("uri").descending()));
+                default -> requestStatisticsRepository.findTopUrisByRequestCountAndStatusCodeBetween(
+                        startDate, range[0], range[1], basePageable);
+            };
+        }
+        return switch (topSort != null ? topSort : "count_desc") {
+            case "count_asc" -> requestStatisticsRepository.findTopUrisByCountAsc(startDate, basePageable);
+            case "uri_asc" -> requestStatisticsRepository.findTopUrisSortedByUri(
+                    startDate, PageRequest.of(topPage, PAGE_SIZE, Sort.by("uri").ascending()));
+            case "uri_desc" -> requestStatisticsRepository.findTopUrisSortedByUri(
+                    startDate, PageRequest.of(topPage, PAGE_SIZE, Sort.by("uri").descending()));
+            default -> requestStatisticsRepository.findTopUrisByRequestCount(startDate, basePageable);
+        };
+    }
+
+    @Transactional(readOnly = true)
+    public long getTotalRequestsForLastDays(int days, String statusFilter) {
+        LocalDateTime startDate = LocalDateTime.now().minusDays(days);
+        if (statusFilter == null || statusFilter.isEmpty()) {
+            return requestStatisticsRepository.countByCreatedAtAfter(startDate);
+        }
+        int[] range = statusCodeRange(statusFilter);
+        return requestStatisticsRepository.countByCreatedAtAfterAndStatusCodeBetween(startDate, range[0], range[1]);
+    }
+
+    private static int[] statusCodeRange(String statusFilter) {
+        return switch (statusFilter) {
+            case "2xx" -> new int[]{200, 299};
+            case "3xx" -> new int[]{300, 399};
+            case "4xx" -> new int[]{400, 499};
+            case "5xx" -> new int[]{500, 599};
+            default -> new int[]{0, 999};
+        };
     }
 }

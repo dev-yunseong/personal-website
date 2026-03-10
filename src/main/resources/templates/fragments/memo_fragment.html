@@ -1,12 +1,13 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
 <body>
 <div th:fragment="memoFragment" th:if="${memo != null}" class="card shadow-lg border-0 w-100">
 
     <div class="card-header bg-light d-flex justify-content-between align-items-center flex-wrap">
         <h5 class="card-title mb-2 mb-sm-0 me-2" th:text="${memo.name}">Memo Title</h5>
-        <a th:href="@{/admin/memos/edit/{id}(id=${memo.id})}" class="btn btn-sm btn-outline-primary">
+        <a sec:authorize="isAuthenticated()" th:href="@{/admin/memos/edit/{id}(id=${memo.id})}" class="btn btn-sm btn-outline-primary">
             <i class="bi bi-pencil-square"></i>
         </a>
     </div>

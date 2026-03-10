@@ -10,8 +10,26 @@
 <body>
 <th:block layout:fragment="content">
     <div class="container mt-4">
-        <h1 class="mb-4">Admin Console</h1>
-        <p class="text-muted">Request statistics for the last 7 days</p>
+        <h1 class="mb-2">Admin Console</h1>
+
+        <!-- Time Period Selector -->
+        <div class="mb-4">
+            <div class="btn-group" role="group" aria-label="Time period">
+                <a th:href="@{/admin/console(days=1,statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab=${tab})}"
+                   th:classappend="${days == 1} ? 'active'"
+                   class="btn btn-outline-primary btn-sm">1일</a>
+                <a th:href="@{/admin/console(days=7,statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab=${tab})}"
+                   th:classappend="${days == 7} ? 'active'"
+                   class="btn btn-outline-primary btn-sm">7일</a>
+                <a th:href="@{/admin/console(days=30,statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab=${tab})}"
+                   th:classappend="${days == 30} ? 'active'"
+                   class="btn btn-outline-primary btn-sm">30일</a>
+                <a th:href="@{/admin/console(days=90,statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab=${tab})}"
+                   th:classappend="${days == 90} ? 'active'"
+                   class="btn btn-outline-primary btn-sm">90일</a>
+            </div>
+            <span class="ms-2 text-muted" th:text="'최근 ' + ${days} + '일 통계'"></span>
+        </div>
 
         <!-- Summary Cards -->
         <div class="row mb-4">
@@ -27,7 +45,7 @@
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">Unique Pages</h5>
-                        <p class="card-text display-4" th:text="${topUris.size()}">0</p>
+                        <p class="card-text display-4" th:text="${topUris.totalElements}">0</p>
                     </div>
                 </div>
             </div>
@@ -35,16 +53,71 @@
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">Data Points</h5>
-                        <p class="card-text display-4" th:text="${statistics.size()}">0</p>
+                        <p class="card-text display-4" th:text="${statistics.totalElements}">0</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Top Pages -->
+        <!-- Sub Navigation Tabs -->
+        <ul class="nav nav-tabs mb-3" id="consoleTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" th:classappend="${tab == 'top'} ? 'active'"
+                   th:href="@{/admin/console(days=${days},page=${page},topPage=${topPage},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='top')}"
+                   role="tab">Top Pages</a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" th:classappend="${tab == 'history'} ? 'active'"
+                   th:href="@{/admin/console(days=${days},page=${page},topPage=${topPage},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='history')}"
+                   role="tab">Request History</a>
+            </li>
+        </ul>
+
+        <div class="tab-content">
+
+        <!-- Top Pages Tab -->
+        <div class="tab-pane fade" th:classappend="${tab == 'top'} ? 'show active'">
         <div class="card mb-4">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <h5 class="mb-0">Top Pages by Request Count</h5>
+                <div class="d-flex gap-2 align-items-center">
+                    <!-- Status code filter for Top Pages -->
+                    <div class="btn-group" role="group" aria-label="Top pages status filter">
+                        <a th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter='',topSort=${topSort},tab='top')}"
+                           th:classappend="${topStatusFilter == ''} ? 'active'"
+                           class="btn btn-outline-secondary btn-sm">All</a>
+                        <a th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter='2xx',topSort=${topSort},tab='top')}"
+                           th:classappend="${topStatusFilter == '2xx'} ? 'active'"
+                           class="btn btn-outline-success btn-sm">2xx</a>
+                        <a th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter='3xx',topSort=${topSort},tab='top')}"
+                           th:classappend="${topStatusFilter == '3xx'} ? 'active'"
+                           class="btn btn-outline-info btn-sm">3xx</a>
+                        <a th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter='4xx',topSort=${topSort},tab='top')}"
+                           th:classappend="${topStatusFilter == '4xx'} ? 'active'"
+                           class="btn btn-outline-warning btn-sm">4xx</a>
+                        <a th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter='5xx',topSort=${topSort},tab='top')}"
+                           th:classappend="${topStatusFilter == '5xx'} ? 'active'"
+                           class="btn btn-outline-danger btn-sm">5xx</a>
+                    </div>
+                    <!-- Sort dropdown -->
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                            <span th:text="${topSortLabel}">Requests ↓</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item"
+                                   th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort='count_desc',tab='top')}">Requests ↓</a></li>
+                            <li><a class="dropdown-item"
+                                   th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort='count_asc',tab='top')}">Requests ↑</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item"
+                                   th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort='uri_asc',tab='top')}">URI A→Z</a></li>
+                            <li><a class="dropdown-item"
+                                   th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort='uri_desc',tab='top')}">URI Z→A</a></li>
+                        </ul>
+                    </div>
+                </div>
             </div>
             <div class="card-body">
                 <div th:if="${topUris.isEmpty()}" class="alert alert-info">
@@ -59,20 +132,76 @@
                         </tr>
                         </thead>
                         <tbody>
-                        <tr th:each="entry : ${topUris}">
-                            <td th:text="${entry.key}"></td>
-                            <td th:text="${entry.value}"></td>
+                        <tr th:each="uriStat : ${topUris}">
+                            <td th:text="${uriStat.uri}"></td>
+                            <td th:text="${uriStat.requestCount}"></td>
                         </tr>
                         </tbody>
                     </table>
+
+                    <!-- Top Pages Pagination -->
+                    <nav th:if="${topUris.totalPages > 1}"
+                         th:with="startPage=${T(java.lang.Math).max(0, topUris.number - 2)},
+                                  endPage=${T(java.lang.Math).min(topUris.totalPages - 1, topUris.number + 2)}"
+                         aria-label="Top pages pagination">
+                        <ul class="pagination pagination-sm flex-wrap justify-content-center">
+                            <li class="page-item" th:classappend="${topUris.first} ? 'disabled'">
+                                <a class="page-link"
+                                   th:href="@{/admin/console(days=${days},page=${page},topPage=${topUris.number - 1},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='top')}"
+                                   aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                            <li th:if="${startPage > 0}" class="page-item disabled">
+                                <span class="page-link">&hellip;</span>
+                            </li>
+                            <li class="page-item"
+                                th:each="i : ${#numbers.sequence(startPage, endPage)}"
+                                th:classappend="${i == topUris.number} ? 'active'">
+                                <a class="page-link"
+                                   th:href="@{/admin/console(days=${days},page=${page},topPage=${i},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='top')}"
+                                   th:text="${i + 1}"></a>
+                            </li>
+                            <li th:if="${endPage < topUris.totalPages - 1}" class="page-item disabled">
+                                <span class="page-link">&hellip;</span>
+                            </li>
+                            <li class="page-item" th:classappend="${topUris.last} ? 'disabled'">
+                                <a class="page-link"
+                                   th:href="@{/admin/console(days=${days},page=${page},topPage=${topUris.number + 1},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='top')}"
+                                   aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
                 </div>
             </div>
         </div>
+        </div>
 
-        <!-- Detailed Statistics -->
+        <!-- Request History Tab -->
+        <div class="tab-pane fade" th:classappend="${tab == 'history'} ? 'show active'">
         <div class="card mb-4">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Request History</h5>
+                <!-- Status Code Filter -->
+                <div class="btn-group" role="group" aria-label="Status code filter">
+                    <a th:href="@{/admin/console(days=${days},page=0,topPage=${topPage},statusFilter='',topStatusFilter=${topStatusFilter},topSort=${topSort},tab='history')}"
+                       th:classappend="${statusFilter == ''} ? 'active'"
+                       class="btn btn-outline-secondary btn-sm">All</a>
+                    <a th:href="@{/admin/console(days=${days},page=0,topPage=${topPage},statusFilter='2xx',topStatusFilter=${topStatusFilter},topSort=${topSort},tab='history')}"
+                       th:classappend="${statusFilter == '2xx'} ? 'active'"
+                       class="btn btn-outline-success btn-sm">2xx</a>
+                    <a th:href="@{/admin/console(days=${days},page=0,topPage=${topPage},statusFilter='3xx',topStatusFilter=${topStatusFilter},topSort=${topSort},tab='history')}"
+                       th:classappend="${statusFilter == '3xx'} ? 'active'"
+                       class="btn btn-outline-info btn-sm">3xx</a>
+                    <a th:href="@{/admin/console(days=${days},page=0,topPage=${topPage},statusFilter='4xx',topStatusFilter=${topStatusFilter},topSort=${topSort},tab='history')}"
+                       th:classappend="${statusFilter == '4xx'} ? 'active'"
+                       class="btn btn-outline-warning btn-sm">4xx</a>
+                    <a th:href="@{/admin/console(days=${days},page=0,topPage=${topPage},statusFilter='5xx',topStatusFilter=${topStatusFilter},topSort=${topSort},tab='history')}"
+                       th:classappend="${statusFilter == '5xx'} ? 'active'"
+                       class="btn btn-outline-danger btn-sm">5xx</a>
+                </div>
             </div>
             <div class="card-body">
                 <div th:if="${statistics.isEmpty()}" class="alert alert-info">
@@ -84,6 +213,7 @@
                         <tr>
                             <th>Timestamp</th>
                             <th>Method</th>
+                            <th>Status</th>
                             <th>URI</th>
                             <th>Referer</th>
                             <th>User Agent</th>
@@ -95,6 +225,16 @@
                             <td>
                                 <span class="badge bg-primary" th:text="${stat.method}"></span>
                             </td>
+                            <td>
+                                <span th:if="${stat.statusCode != null}"
+                                      th:classappend="${stat.statusCode >= 500 ? 'bg-danger' :
+                                                        stat.statusCode >= 400 ? 'bg-warning text-dark' :
+                                                        stat.statusCode >= 300 ? 'bg-info text-dark' :
+                                                                                 'bg-success'}"
+                                      class="badge"
+                                      th:text="${stat.statusCode}"></span>
+                                <span th:if="${stat.statusCode == null}" class="badge bg-secondary">-</span>
+                            </td>
                             <td th:text="${stat.uri}"></td>
                             <td>
                                 <small class="text-muted" th:text="${stat.referer != null ? stat.referer : '-'}"></small>
@@ -105,9 +245,48 @@
                         </tr>
                         </tbody>
                     </table>
+
+                    <!-- Request History Pagination -->
+                    <nav th:if="${statistics.totalPages > 1}"
+                         th:with="startPage=${T(java.lang.Math).max(0, statistics.number - 2)},
+                                  endPage=${T(java.lang.Math).min(statistics.totalPages - 1, statistics.number + 2)}"
+                         aria-label="Request history pagination">
+                        <ul class="pagination pagination-sm flex-wrap justify-content-center">
+                            <li class="page-item" th:classappend="${statistics.first} ? 'disabled'">
+                                <a class="page-link"
+                                   th:href="@{/admin/console(days=${days},page=${statistics.number - 1},topPage=${topPage},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='history')}"
+                                   aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                            <li th:if="${startPage > 0}" class="page-item disabled">
+                                <span class="page-link">&hellip;</span>
+                            </li>
+                            <li class="page-item"
+                                th:each="i : ${#numbers.sequence(startPage, endPage)}"
+                                th:classappend="${i == statistics.number} ? 'active'">
+                                <a class="page-link"
+                                   th:href="@{/admin/console(days=${days},page=${i},topPage=${topPage},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='history')}"
+                                   th:text="${i + 1}"></a>
+                            </li>
+                            <li th:if="${endPage < statistics.totalPages - 1}" class="page-item disabled">
+                                <span class="page-link">&hellip;</span>
+                            </li>
+                            <li class="page-item" th:classappend="${statistics.last} ? 'disabled'">
+                                <a class="page-link"
+                                   th:href="@{/admin/console(days=${days},page=${statistics.number + 1},topPage=${topPage},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='history')}"
+                                   aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
                 </div>
             </div>
         </div>
+        </div>
+
+        </div><!-- end tab-content -->
     </div>
 </th:block>
 </body>
