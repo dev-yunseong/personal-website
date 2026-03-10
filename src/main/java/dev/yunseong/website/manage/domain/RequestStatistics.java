@@ -36,11 +36,18 @@ public class RequestStatistics {
     @Column
     private String ip;
 
+    @Column(name = "status_code")
+    private Integer statusCode;
+
     @Column(name = "created_at")
     @CreationTimestamp
     private LocalDateTime createdAt;
 
     public RequestStatistics(String uri, String method, String referer, String userAgent, String ipAddress) {
-        this(null, uri, method, referer, userAgent, ipAddress, null);
+        this(null, uri, method, referer, userAgent, ipAddress, null, null);
+    }
+
+    public RequestStatistics(String uri, String method, String referer, String userAgent, String ipAddress, Integer statusCode) {
+        this(null, uri, method, referer, userAgent, ipAddress, statusCode, null);
     }
 }

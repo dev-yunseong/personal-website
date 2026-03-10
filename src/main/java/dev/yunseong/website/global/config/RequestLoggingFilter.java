@@ -3,6 +3,7 @@ package dev.yunseong.website.global.config;
 import dev.yunseong.website.manage.service.RequestStatisticsService;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -31,10 +32,13 @@ public class RequestLoggingFilter implements Filter {
                 filterChain.doFilter(servletRequest, servletResponse);
             } finally {
                 long duration = System.currentTimeMillis() - startTime;
+                Integer statusCode = (servletResponse instanceof HttpServletResponse httpResponse)
+                        ? httpResponse.getStatus() : null;
 
-                log.info("[Request End] method={}, uri={}, duration={}ms",
+                log.info("[Request End] method={}, uri={}, status={}, duration={}ms",
                         httpRequest.getMethod(),
                         httpRequest.getRequestURI(),
+                        statusCode,
                         duration
                 );
 
@@ -42,7 +46,7 @@ public class RequestLoggingFilter implements Filter {
                 String referer = httpRequest.getHeader(HttpHeaders.REFERER);
                 String userAgent = httpRequest.getHeader(HttpHeaders.USER_AGENT);
                 String ipAddress = httpRequest.getRemoteAddr();
-                requestStatisticsService.recordRequest(httpRequest.getRequestURI(), httpRequest.getMethod(), referer, userAgent, ipAddress);
+                requestStatisticsService.recordRequest(httpRequest.getRequestURI(), httpRequest.getMethod(), referer, userAgent, ipAddress, statusCode);
             }
         } else {
             log.warn("Received a non-HTTP request. Skipping request logging.");

@@ -6,7 +6,6 @@ import dev.yunseong.website.manage.service.RequestStatisticsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -27,13 +26,14 @@ public class ConsoleController {
     public String console(Model model,
                           @RequestParam(defaultValue = "7") int days,
                           @RequestParam(defaultValue = "0") int page,
-                          @RequestParam(defaultValue = "0") int topPage) {
+                          @RequestParam(defaultValue = "0") int topPage,
+                          @RequestParam(defaultValue = "") String statusFilter,
+                          @RequestParam(defaultValue = "count_desc") String topSort) {
         Pageable historyPageable = PageRequest.of(page, PAGE_SIZE, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Pageable topPageable = PageRequest.of(topPage, PAGE_SIZE);
 
-        Page<RequestStatistics> statistics = requestStatisticsService.getStatisticsForLastDays(days, historyPageable);
-        Page<UriStat> topUris = requestStatisticsService.getTopUrisPageForLastDays(days, topPageable);
-        long totalRequests = requestStatisticsService.getTotalRequestsForLastDays(days);
+        Page<RequestStatistics> statistics = requestStatisticsService.getStatisticsForLastDays(days, statusFilter, historyPageable);
+        Page<UriStat> topUris = requestStatisticsService.getTopUrisPageForLastDays(days, topSort, topPage);
+        long totalRequests = requestStatisticsService.getTotalRequestsForLastDays(days, statusFilter);
 
         model.addAttribute("statistics", statistics);
         model.addAttribute("topUris", topUris);
@@ -41,6 +41,14 @@ public class ConsoleController {
         model.addAttribute("days", days);
         model.addAttribute("page", page);
         model.addAttribute("topPage", topPage);
+        model.addAttribute("statusFilter", statusFilter);
+        model.addAttribute("topSort", topSort);
+        model.addAttribute("topSortLabel", switch (topSort) {
+            case "count_asc" -> "Requests ↑";
+            case "uri_asc"   -> "URI A→Z";
+            case "uri_desc"  -> "URI Z→A";
+            default          -> "Requests ↓";
+        });
 
         return "console/dashboard";
     }
