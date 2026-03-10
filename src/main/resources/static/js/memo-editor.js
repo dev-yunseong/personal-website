@@ -10,11 +10,26 @@ function initMemoEditor() {
         document.getElementById('writePane').style.display = 'none';
         const previewPane = document.getElementById('previewPane');
         previewPane.style.display = 'block';
-        previewPane.innerHTML = DOMPurify.sanitize(marked.parse(document.getElementById('content').value));
+        previewPane.innerHTML = '<span class="text-muted">Loading preview...</span>';
         document.getElementById('previewTab').classList.add('active');
         document.getElementById('writeTab').classList.remove('active');
-        if (window.Prism) {
-            Prism.highlightAllUnder(previewPane);
-        }
+
+        const token = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+        const header = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+        const formData = new FormData();
+        formData.append('content', document.getElementById('content').value);
+
+        fetch('/admin/memos/preview', {
+            method: 'POST',
+            headers: { [header]: token },
+            body: formData
+        })
+        .then(response => response.text())
+        .then(html => { previewPane.innerHTML = html; })
+        .catch(error => {
+            console.error('Preview failed:', error);
+            previewPane.innerHTML = '<span class="text-danger">Failed to load preview.</span>';
+        });
     });
 }
