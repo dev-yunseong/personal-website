@@ -5,6 +5,9 @@
 <head>
     <title>Edit Memo</title>
 </head>
+<th:block layout:fragment="css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown-light.css">
+</th:block>
 <body>
 <div layout:fragment="content">
     <div class="row justify-content-center py-5">
@@ -20,8 +23,19 @@
                             <input type="text" class="form-control" id="title" name="title" th:value="${memo.name}">
                         </div>
                         <div class="mb-3">
-                            <label for="content" class="form-label">Content</label>
-                            <textarea class="form-control" id="content" name="content" rows="5" th:text="${memo.content}"></textarea>
+                            <label class="form-label">Content</label>
+                            <ul class="nav nav-tabs mb-2" id="editorTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="writeTab" type="button" role="tab">Write</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="previewTab" type="button" role="tab">Preview</button>
+                                </li>
+                            </ul>
+                            <div id="writePane">
+                                <textarea class="form-control font-monospace" id="content" name="content" rows="20" th:text="${memo.content}"></textarea>
+                            </div>
+                            <div id="previewPane" class="border rounded p-3 markdown-body" style="display: none; min-height: 400px;"></div>
                         </div>
                         <div class="mb-3">
                             <label for="fileUpload" class="form-label">Upload File</label>
@@ -49,7 +63,12 @@
                             <button type="submit" class="btn btn-primary">Save Changes</button>
                         </div>
                     </form>
+                    <script src="https://cdn.jsdelivr.net/npm/marked@9.1.6/marked.min.js"></script>
+                    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
+                    <script th:src="@{/js/memo-editor.js}"></script>
                     <script>
+                        initMemoEditor();
+
                         document.getElementById('isGameProject').addEventListener('change', function() {
                             const gameProjectForm = document.getElementById('gameProjectForm');
                             if (this.checked) {
