@@ -5,6 +5,9 @@
 <head>
     <title>Edit Memo</title>
 </head>
+<th:block layout:fragment="css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown-light.css">
+</th:block>
 <body>
 <div layout:fragment="content">
     <div class="row justify-content-center py-5">
@@ -20,8 +23,19 @@
                             <input type="text" class="form-control" id="title" name="title" th:value="${memo.name}">
                         </div>
                         <div class="mb-3">
-                            <label for="content" class="form-label">Content</label>
-                            <textarea class="form-control" id="content" name="content" rows="5" th:text="${memo.content}"></textarea>
+                            <label class="form-label">Content</label>
+                            <ul class="nav nav-tabs mb-2" id="editorTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active" id="writeTab" type="button" role="tab">Write</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link" id="previewTab" type="button" role="tab">Preview</button>
+                                </li>
+                            </ul>
+                            <div id="writePane">
+                                <textarea class="form-control font-monospace" id="content" name="content" rows="20" th:text="${memo.content}"></textarea>
+                            </div>
+                            <div id="previewPane" class="border rounded p-3 markdown-body" style="display: none; min-height: 400px;"></div>
                         </div>
                         <div class="mb-3">
                             <label for="fileUpload" class="form-label">Upload File</label>
@@ -45,11 +59,15 @@
                             <div class="form-text">Enter the URL where the project can be accessed</div>
                         </div>
                         <div class="d-flex justify-content-end">
-                            <a href="/" class="btn btn-secondary me-2">Cancel</a>
+                            <a href="javascript:history.back()" class="btn btn-secondary me-2">Cancel</a>
                             <button type="submit" class="btn btn-primary">Save Changes</button>
                         </div>
                     </form>
+                    <div th:replace="~{fragments/mermaid_katex_parser.html :: parser}"></div>
+                    <script th:src="@{/js/memo-editor.js}"></script>
                     <script>
+                        initMemoEditor();
+
                         document.getElementById('isGameProject').addEventListener('change', function() {
                             const gameProjectForm = document.getElementById('gameProjectForm');
                             if (this.checked) {

@@ -5,6 +5,8 @@ import dev.yunseong.website.blog.domain.Memo;
 import dev.yunseong.website.blog.service.GameProjectService;
 import dev.yunseong.website.blog.service.MemoService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -86,5 +88,13 @@ public class AdminMemoController {
 
     private GameProject getFirstGameProject(Memo memo) {
         return memo.getGameProjects().isEmpty() ? null : memo.getGameProjects().get(0);
+    }
+
+    @PostMapping(value = "/preview", produces = MediaType.TEXT_HTML_VALUE)
+    @ResponseBody
+    public ResponseEntity<String> previewMemo(@RequestParam(defaultValue = "") String content) {
+        Memo memo = new Memo();
+        memo.setContent(content);
+        return ResponseEntity.ok(memo.getHtml());
     }
 }
