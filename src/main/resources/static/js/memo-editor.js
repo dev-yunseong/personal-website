@@ -26,7 +26,39 @@ function initMemoEditor() {
             body: formData
         })
         .then(response => response.text())
-        .then(html => { previewPane.innerHTML = html; })
+        .then(async html => {
+            previewPane.innerHTML = html;
+
+            if (window.renderMathInElement) {
+                renderMathInElement(previewPane, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false}
+                    ],
+                    throwOnError: false
+                });
+            }
+
+            const mermaidBlocks = previewPane.querySelectorAll('code.language-mermaid');
+            if (window.mermaid && mermaidBlocks.length > 0) {
+                mermaidBlocks.forEach((code) => {
+                    const content = code.textContent;
+                    const div = document.createElement('div');
+                    div.className = 'mermaid';
+                    div.textContent = content;
+                    if (code.parentElement && code.parentElement.tagName === 'PRE') {
+                        code.parentElement.replaceWith(div);
+                    } else {
+                        code.replaceWith(div);
+                    }
+                });
+                try {
+                    await mermaid.run({ querySelector: '#previewPane .mermaid' });
+                } catch (e) {
+                    console.error('Mermaid error:', e);
+                }
+            }
+        })
         .catch(error => {
             console.error('Preview failed:', error);
             previewPane.innerHTML = '<span class="text-danger">Failed to load preview.</span>';
