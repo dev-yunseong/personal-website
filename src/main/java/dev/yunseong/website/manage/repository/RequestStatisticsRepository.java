@@ -1,6 +1,8 @@
 package dev.yunseong.website.manage.repository;
 
 import dev.yunseong.website.manage.domain.RequestStatistics;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,6 +15,13 @@ import java.util.List;
 public interface RequestStatisticsRepository extends JpaRepository<RequestStatistics, Long> {
     @Query("SELECT r FROM RequestStatistics r WHERE r.createdAt >= :startDate ORDER BY r.createdAt DESC")
     List<RequestStatistics> findByCreatedAtAfter(@Param("startDate") LocalDateTime startDate);
+
+    @Query(value = "SELECT r FROM RequestStatistics r WHERE r.createdAt >= :startDate ORDER BY r.createdAt DESC",
+            countQuery = "SELECT COUNT(r) FROM RequestStatistics r WHERE r.createdAt >= :startDate")
+    Page<RequestStatistics> findByCreatedAtAfter(@Param("startDate") LocalDateTime startDate, Pageable pageable);
+
+    @Query("SELECT COUNT(r) FROM RequestStatistics r WHERE r.createdAt >= :startDate")
+    long countByCreatedAtAfter(@Param("startDate") LocalDateTime startDate);
 
     @Query("SELECT r.uri, COUNT(r) as totalCount FROM RequestStatistics r WHERE r.createdAt >= :startDate GROUP BY r.uri ORDER BY totalCount DESC")
     List<Object[]> findTopUrisByRequestCount(@Param("startDate") LocalDateTime startDate);

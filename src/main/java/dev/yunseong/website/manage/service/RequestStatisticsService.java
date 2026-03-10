@@ -4,6 +4,8 @@ import dev.yunseong.website.manage.domain.RequestStatistics;
 import dev.yunseong.website.manage.repository.RequestStatisticsRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,6 +63,12 @@ public class RequestStatisticsService {
     }
 
     @Transactional(readOnly = true)
+    public Page<RequestStatistics> getStatisticsForLastDays(int days, Pageable pageable) {
+        LocalDateTime startDate = LocalDateTime.now().minusDays(days);
+        return requestStatisticsRepository.findByCreatedAtAfter(startDate, pageable);
+    }
+
+    @Transactional(readOnly = true)
     public Map<String, Long> getTopUrisForLastDays(int days) {
         LocalDateTime startDate = LocalDateTime.now().minusDays(days);
         List<Object[]> results = requestStatisticsRepository.findTopUrisByRequestCount(startDate);
@@ -76,7 +84,6 @@ public class RequestStatisticsService {
     @Transactional(readOnly = true)
     public long getTotalRequestsForLastDays(int days) {
         LocalDateTime startDate = LocalDateTime.now().minusDays(days);
-        List<RequestStatistics> stats = requestStatisticsRepository.findByCreatedAtAfter(startDate);
-        return stats.size();
+        return requestStatisticsRepository.countByCreatedAtAfter(startDate);
     }
 }

@@ -10,6 +10,11 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -18,6 +23,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -150,19 +156,39 @@ class RequestStatisticsServiceTest {
     }
 
     @Test
-    void getTotalRequestsForLastDays_ReturnsTotal() {
+    void getStatisticsForLastDays_WithPageable_ReturnsPage() {
         // Given
         RequestStatistics stat1 = new RequestStatistics("/public/memos/1", "GET", null, "Mozilla/5.0", "1.1.1.1");
         RequestStatistics stat2 = new RequestStatistics("/public/memos/2", "GET", null, "Chrome/91.0", "1.1.1.1");
-        List<RequestStatistics> mockStats = Arrays.asList(stat1, stat2);
-        
-        when(requestStatisticsRepository.findByCreatedAtAfter(any(LocalDateTime.class)))
-                .thenReturn(mockStats);
+        Pageable pageable = PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<RequestStatistics> mockPage = new PageImpl<>(Arrays.asList(stat1, stat2), pageable, 2);
+
+        when(requestStatisticsRepository.findByCreatedAtAfter(any(LocalDateTime.class), eq(pageable)))
+                .thenReturn(mockPage);
+
+        // When
+        Page<RequestStatistics> result = requestStatisticsService.getStatisticsForLastDays(7, pageable);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(2, result.getTotalElements());
+        assertEquals(2, result.getContent().size());
+        verify(requestStatisticsRepository, times(1)).findByCreatedAtAfter(any(LocalDateTime.class), eq(pageable));
+    }
+
+    @Test
+    void getTotalRequestsForLastDays_UsesCountQuery() {
+        // Given
+        when(requestStatisticsRepository.countByCreatedAtAfter(any(LocalDateTime.class)))
+                .thenReturn(5L);
 
         // When
         long total = requestStatisticsService.getTotalRequestsForLastDays(7);
 
         // Then
-        assertEquals(2L, total); // Now returns count of records, not sum of request_count
+        assertEquals(5L, total);
+        verify(requestStatisticsRepository, times(1)).countByCreatedAtAfter(any(LocalDateTime.class));
+        verify(requestStatisticsRepository, never()).findByCreatedAtAfter(any(LocalDateTime.class));
     }
+
 }

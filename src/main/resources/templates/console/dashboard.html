@@ -10,8 +10,26 @@
 <body>
 <th:block layout:fragment="content">
     <div class="container mt-4">
-        <h1 class="mb-4">Admin Console</h1>
-        <p class="text-muted">Request statistics for the last 7 days</p>
+        <h1 class="mb-2">Admin Console</h1>
+
+        <!-- Time Period Selector -->
+        <div class="mb-4">
+            <div class="btn-group" role="group" aria-label="Time period">
+                <a th:href="@{/admin/console(days=1)}"
+                   th:classappend="${days == 1} ? 'active'"
+                   class="btn btn-outline-primary btn-sm">1일</a>
+                <a th:href="@{/admin/console(days=7)}"
+                   th:classappend="${days == 7} ? 'active'"
+                   class="btn btn-outline-primary btn-sm">7일</a>
+                <a th:href="@{/admin/console(days=30)}"
+                   th:classappend="${days == 30} ? 'active'"
+                   class="btn btn-outline-primary btn-sm">30일</a>
+                <a th:href="@{/admin/console(days=90)}"
+                   th:classappend="${days == 90} ? 'active'"
+                   class="btn btn-outline-primary btn-sm">90일</a>
+            </div>
+            <span class="ms-2 text-muted" th:text="'최근 ' + ${days} + '일 통계'"></span>
+        </div>
 
         <!-- Summary Cards -->
         <div class="row mb-4">
@@ -35,7 +53,7 @@
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">Data Points</h5>
-                        <p class="card-text display-4" th:text="${statistics.size()}">0</p>
+                        <p class="card-text display-4" th:text="${statistics.totalElements}">0</p>
                     </div>
                 </div>
             </div>
@@ -105,6 +123,33 @@
                         </tr>
                         </tbody>
                     </table>
+
+                    <!-- Pagination -->
+                    <nav th:if="${statistics.totalPages > 1}" aria-label="Request history pagination">
+                        <ul class="pagination pagination-sm flex-wrap justify-content-center">
+                            <li class="page-item" th:classappend="${statistics.first} ? 'disabled'">
+                                <a class="page-link"
+                                   th:href="@{/admin/console(days=${days}, page=${statistics.number - 1}, size=${statistics.size})}"
+                                   aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                            <li class="page-item"
+                                th:each="i : ${#numbers.sequence(0, statistics.totalPages - 1)}"
+                                th:classappend="${i == statistics.number} ? 'active'">
+                                <a class="page-link"
+                                   th:href="@{/admin/console(days=${days}, page=${i}, size=${statistics.size})}"
+                                   th:text="${i + 1}"></a>
+                            </li>
+                            <li class="page-item" th:classappend="${statistics.last} ? 'disabled'">
+                                <a class="page-link"
+                                   th:href="@{/admin/console(days=${days}, page=${statistics.number + 1}, size=${statistics.size})}"
+                                   aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
                 </div>
             </div>
         </div>
