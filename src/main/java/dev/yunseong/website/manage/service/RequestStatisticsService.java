@@ -95,16 +95,30 @@ public class RequestStatisticsService {
     }
 
     @Transactional(readOnly = true)
-    public Page<UriStat> getTopUrisPageForLastDays(int days, String topSort, int topPage) {
+    public Page<UriStat> getTopUrisPageForLastDays(int days, String topSort, String topStatusFilter, int topPage) {
         LocalDateTime startDate = LocalDateTime.now().minusDays(days);
-        Pageable countOnlyPageable = PageRequest.of(topPage, PAGE_SIZE);
+        boolean filtered = topStatusFilter != null && !topStatusFilter.isEmpty();
+        Pageable basePageable = PageRequest.of(topPage, PAGE_SIZE);
+        if (filtered) {
+            int[] range = statusCodeRange(topStatusFilter);
+            return switch (topSort != null ? topSort : "count_desc") {
+                case "count_asc" -> requestStatisticsRepository.findTopUrisByCountAscAndStatusCodeBetween(
+                        startDate, range[0], range[1], basePageable);
+                case "uri_asc" -> requestStatisticsRepository.findTopUrisSortedByUriAndStatusCodeBetween(
+                        startDate, range[0], range[1], PageRequest.of(topPage, PAGE_SIZE, Sort.by("uri").ascending()));
+                case "uri_desc" -> requestStatisticsRepository.findTopUrisSortedByUriAndStatusCodeBetween(
+                        startDate, range[0], range[1], PageRequest.of(topPage, PAGE_SIZE, Sort.by("uri").descending()));
+                default -> requestStatisticsRepository.findTopUrisByRequestCountAndStatusCodeBetween(
+                        startDate, range[0], range[1], basePageable);
+            };
+        }
         return switch (topSort != null ? topSort : "count_desc") {
-            case "count_asc" -> requestStatisticsRepository.findTopUrisByCountAsc(startDate, countOnlyPageable);
+            case "count_asc" -> requestStatisticsRepository.findTopUrisByCountAsc(startDate, basePageable);
             case "uri_asc" -> requestStatisticsRepository.findTopUrisSortedByUri(
                     startDate, PageRequest.of(topPage, PAGE_SIZE, Sort.by("uri").ascending()));
             case "uri_desc" -> requestStatisticsRepository.findTopUrisSortedByUri(
                     startDate, PageRequest.of(topPage, PAGE_SIZE, Sort.by("uri").descending()));
-            default -> requestStatisticsRepository.findTopUrisByRequestCount(startDate, countOnlyPageable);
+            default -> requestStatisticsRepository.findTopUrisByRequestCount(startDate, basePageable);
         };
     }
 

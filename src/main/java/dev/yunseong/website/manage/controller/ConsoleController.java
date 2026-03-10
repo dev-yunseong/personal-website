@@ -28,11 +28,12 @@ public class ConsoleController {
                           @RequestParam(defaultValue = "0") int page,
                           @RequestParam(defaultValue = "0") int topPage,
                           @RequestParam(defaultValue = "") String statusFilter,
+                          @RequestParam(defaultValue = "") String topStatusFilter,
                           @RequestParam(defaultValue = "count_desc") String topSort) {
         Pageable historyPageable = PageRequest.of(page, PAGE_SIZE, Sort.by(Sort.Direction.DESC, "createdAt"));
 
         Page<RequestStatistics> statistics = requestStatisticsService.getStatisticsForLastDays(days, statusFilter, historyPageable);
-        Page<UriStat> topUris = requestStatisticsService.getTopUrisPageForLastDays(days, topSort, topPage);
+        Page<UriStat> topUris = requestStatisticsService.getTopUrisPageForLastDays(days, topSort, topStatusFilter, topPage);
         long totalRequests = requestStatisticsService.getTotalRequestsForLastDays(days, statusFilter);
 
         model.addAttribute("statistics", statistics);
@@ -42,6 +43,7 @@ public class ConsoleController {
         model.addAttribute("page", page);
         model.addAttribute("topPage", topPage);
         model.addAttribute("statusFilter", statusFilter);
+        model.addAttribute("topStatusFilter", topStatusFilter);
         model.addAttribute("topSort", topSort);
         model.addAttribute("topSortLabel", switch (topSort) {
             case "count_asc" -> "Requests ↑";

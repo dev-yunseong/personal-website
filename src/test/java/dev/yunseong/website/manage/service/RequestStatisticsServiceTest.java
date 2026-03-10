@@ -241,7 +241,7 @@ class RequestStatisticsServiceTest {
                 .thenReturn(mockPage);
 
         // When
-        Page<UriStat> result = requestStatisticsService.getTopUrisPageForLastDays(7, "count_desc", 0);
+        Page<UriStat> result = requestStatisticsService.getTopUrisPageForLastDays(7, "count_desc", "", 0);
 
         // Then
         assertNotNull(result);
@@ -261,7 +261,7 @@ class RequestStatisticsServiceTest {
                 .thenReturn(mockPage);
 
         // When
-        Page<UriStat> result = requestStatisticsService.getTopUrisPageForLastDays(7, "count_asc", 0);
+        Page<UriStat> result = requestStatisticsService.getTopUrisPageForLastDays(7, "count_asc", "", 0);
 
         // Then
         assertNotNull(result);
@@ -278,11 +278,50 @@ class RequestStatisticsServiceTest {
                 .thenReturn(mockPage);
 
         // When
-        Page<UriStat> result = requestStatisticsService.getTopUrisPageForLastDays(7, "uri_asc", 0);
+        Page<UriStat> result = requestStatisticsService.getTopUrisPageForLastDays(7, "uri_asc", "", 0);
 
         // Then
         assertNotNull(result);
         verify(requestStatisticsRepository, times(1)).findTopUrisSortedByUri(any(LocalDateTime.class), eq(uriAscPageable));
+    }
+
+    @Test
+    void getTopUrisPageForLastDays_WithStatusFilter_UsesFilteredCountDescQuery() {
+        // Given
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<UriStat> mockPage = new PageImpl<>(List.of(), pageable, 0);
+
+        when(requestStatisticsRepository.findTopUrisByRequestCountAndStatusCodeBetween(
+                any(LocalDateTime.class), eq(400), eq(499), eq(pageable)))
+                .thenReturn(mockPage);
+
+        // When
+        Page<UriStat> result = requestStatisticsService.getTopUrisPageForLastDays(7, "count_desc", "4xx", 0);
+
+        // Then
+        assertNotNull(result);
+        verify(requestStatisticsRepository, times(1)).findTopUrisByRequestCountAndStatusCodeBetween(
+                any(LocalDateTime.class), eq(400), eq(499), eq(pageable));
+        verify(requestStatisticsRepository, never()).findTopUrisByRequestCount(any(LocalDateTime.class), any(Pageable.class));
+    }
+
+    @Test
+    void getTopUrisPageForLastDays_WithStatusFilterAndCountAsc_UsesFilteredCountAscQuery() {
+        // Given
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<UriStat> mockPage = new PageImpl<>(List.of(), pageable, 0);
+
+        when(requestStatisticsRepository.findTopUrisByCountAscAndStatusCodeBetween(
+                any(LocalDateTime.class), eq(200), eq(299), eq(pageable)))
+                .thenReturn(mockPage);
+
+        // When
+        Page<UriStat> result = requestStatisticsService.getTopUrisPageForLastDays(7, "count_asc", "2xx", 0);
+
+        // Then
+        assertNotNull(result);
+        verify(requestStatisticsRepository, times(1)).findTopUrisByCountAscAndStatusCodeBetween(
+                any(LocalDateTime.class), eq(200), eq(299), eq(pageable));
     }
 
 }

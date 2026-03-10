@@ -47,11 +47,11 @@ class ConsoleControllerTest {
                 PageRequest.of(0, 10), 2);
 
         when(requestStatisticsService.getStatisticsForLastDays(7, "", historyPageable)).thenReturn(statsPage);
-        when(requestStatisticsService.getTopUrisPageForLastDays(7, "count_desc", 0)).thenReturn(topUrisPage);
+        when(requestStatisticsService.getTopUrisPageForLastDays(7, "count_desc", "", 0)).thenReturn(topUrisPage);
         when(requestStatisticsService.getTotalRequestsForLastDays(7, "")).thenReturn(15L);
 
         // When
-        String viewName = consoleController.console(model, 7, 0, 0, "", "count_desc");
+        String viewName = consoleController.console(model, 7, 0, 0, "", "", "count_desc");
 
         // Then
         assertEquals("console/dashboard", viewName);
@@ -62,6 +62,7 @@ class ConsoleControllerTest {
         verify(model).addAttribute("page", 0);
         verify(model).addAttribute("topPage", 0);
         verify(model).addAttribute("statusFilter", "");
+        verify(model).addAttribute("topStatusFilter", "");
         verify(model).addAttribute("topSort", "count_desc");
         verify(model).addAttribute("topSortLabel", "Requests ↓");
     }
@@ -74,11 +75,11 @@ class ConsoleControllerTest {
         Page<UriStat> emptyTop = Page.empty(PageRequest.of(0, 10));
 
         when(requestStatisticsService.getStatisticsForLastDays(7, "", historyPageable)).thenReturn(emptyStats);
-        when(requestStatisticsService.getTopUrisPageForLastDays(7, "count_desc", 0)).thenReturn(emptyTop);
+        when(requestStatisticsService.getTopUrisPageForLastDays(7, "count_desc", "", 0)).thenReturn(emptyTop);
         when(requestStatisticsService.getTotalRequestsForLastDays(7, "")).thenReturn(0L);
 
         // When
-        String viewName = consoleController.console(model, 7, 0, 0, "", "count_desc");
+        String viewName = consoleController.console(model, 7, 0, 0, "", "", "count_desc");
 
         // Then
         assertEquals("console/dashboard", viewName);
@@ -96,16 +97,16 @@ class ConsoleControllerTest {
         Page<UriStat> emptyTop = Page.empty(PageRequest.of(0, 10));
 
         when(requestStatisticsService.getStatisticsForLastDays(1, "", historyPageable)).thenReturn(emptyStats);
-        when(requestStatisticsService.getTopUrisPageForLastDays(1, "count_desc", 0)).thenReturn(emptyTop);
+        when(requestStatisticsService.getTopUrisPageForLastDays(1, "count_desc", "", 0)).thenReturn(emptyTop);
         when(requestStatisticsService.getTotalRequestsForLastDays(1, "")).thenReturn(0L);
 
         // When
-        String viewName = consoleController.console(model, 1, 0, 0, "", "count_desc");
+        String viewName = consoleController.console(model, 1, 0, 0, "", "", "count_desc");
 
         // Then
         assertEquals("console/dashboard", viewName);
         verify(requestStatisticsService).getStatisticsForLastDays(eq(1), eq(""), eq(historyPageable));
-        verify(requestStatisticsService).getTopUrisPageForLastDays(eq(1), eq("count_desc"), eq(0));
+        verify(requestStatisticsService).getTopUrisPageForLastDays(eq(1), eq("count_desc"), eq(""), eq(0));
         verify(requestStatisticsService).getTotalRequestsForLastDays(eq(1), eq(""));
         verify(model).addAttribute("days", 1);
     }
@@ -118,11 +119,11 @@ class ConsoleControllerTest {
         Page<UriStat> emptyTop = Page.empty(PageRequest.of(0, 10));
 
         when(requestStatisticsService.getStatisticsForLastDays(7, "2xx", historyPageable)).thenReturn(emptyStats);
-        when(requestStatisticsService.getTopUrisPageForLastDays(7, "count_desc", 0)).thenReturn(emptyTop);
+        when(requestStatisticsService.getTopUrisPageForLastDays(7, "count_desc", "", 0)).thenReturn(emptyTop);
         when(requestStatisticsService.getTotalRequestsForLastDays(7, "2xx")).thenReturn(0L);
 
         // When
-        String viewName = consoleController.console(model, 7, 0, 0, "2xx", "count_desc");
+        String viewName = consoleController.console(model, 7, 0, 0, "2xx", "", "count_desc");
 
         // Then
         assertEquals("console/dashboard", viewName);
@@ -139,16 +140,36 @@ class ConsoleControllerTest {
         Page<UriStat> emptyTop = Page.empty(PageRequest.of(0, 10));
 
         when(requestStatisticsService.getStatisticsForLastDays(7, "", historyPageable)).thenReturn(emptyStats);
-        when(requestStatisticsService.getTopUrisPageForLastDays(7, "uri_asc", 0)).thenReturn(emptyTop);
+        when(requestStatisticsService.getTopUrisPageForLastDays(7, "uri_asc", "", 0)).thenReturn(emptyTop);
         when(requestStatisticsService.getTotalRequestsForLastDays(7, "")).thenReturn(0L);
 
         // When
-        String viewName = consoleController.console(model, 7, 0, 0, "", "uri_asc");
+        String viewName = consoleController.console(model, 7, 0, 0, "", "", "uri_asc");
 
         // Then
         assertEquals("console/dashboard", viewName);
-        verify(requestStatisticsService).getTopUrisPageForLastDays(eq(7), eq("uri_asc"), eq(0));
+        verify(requestStatisticsService).getTopUrisPageForLastDays(eq(7), eq("uri_asc"), eq(""), eq(0));
         verify(model).addAttribute("topSort", "uri_asc");
         verify(model).addAttribute("topSortLabel", "URI A→Z");
+    }
+
+    @Test
+    void console_WithTopStatusFilter_FiltersTopPages() {
+        // Given
+        var historyPageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<RequestStatistics> emptyStats = Page.empty(historyPageable);
+        Page<UriStat> emptyTop = Page.empty(PageRequest.of(0, 10));
+
+        when(requestStatisticsService.getStatisticsForLastDays(7, "", historyPageable)).thenReturn(emptyStats);
+        when(requestStatisticsService.getTopUrisPageForLastDays(7, "count_desc", "4xx", 0)).thenReturn(emptyTop);
+        when(requestStatisticsService.getTotalRequestsForLastDays(7, "")).thenReturn(0L);
+
+        // When
+        String viewName = consoleController.console(model, 7, 0, 0, "", "4xx", "count_desc");
+
+        // Then
+        assertEquals("console/dashboard", viewName);
+        verify(requestStatisticsService).getTopUrisPageForLastDays(eq(7), eq("count_desc"), eq("4xx"), eq(0));
+        verify(model).addAttribute("topStatusFilter", "4xx");
     }
 }
