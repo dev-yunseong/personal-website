@@ -1,6 +1,7 @@
 package dev.yunseong.website.manage.controller;
 
 import dev.yunseong.website.manage.domain.RequestStatistics;
+import dev.yunseong.website.manage.domain.UriStat;
 import dev.yunseong.website.manage.service.RequestStatisticsService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,13 +11,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.ui.Model;
 
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,45 +39,49 @@ class ConsoleControllerTest {
                 new RequestStatistics("/public/memos/1", "GET", "https://google.com", "Mozilla/5.0", "1.1.1.1"),
                 new RequestStatistics("/public/memos/2", "GET", null, "Chrome/91.0", "1.1.1.1")
         );
-        Pageable pageable = PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<RequestStatistics> statsPage = new PageImpl<>(statList, pageable, 2);
+        var historyPageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
+        var topPageable = PageRequest.of(0, 10);
+        Page<RequestStatistics> statsPage = new PageImpl<>(statList, historyPageable, 2);
+        Page<UriStat> topUrisPage = new PageImpl<>(
+                List.of(new UriStat("/public/memos/1", 10L), new UriStat("/public/memos/2", 5L)),
+                topPageable, 2);
 
-        Map<String, Long> topUris = new LinkedHashMap<>();
-        topUris.put("/public/memos/1", 10L);
-        topUris.put("/public/memos/2", 5L);
-
-        when(requestStatisticsService.getStatisticsForLastDays(7, pageable)).thenReturn(statsPage);
-        when(requestStatisticsService.getTopUrisForLastDays(7)).thenReturn(topUris);
+        when(requestStatisticsService.getStatisticsForLastDays(7, historyPageable)).thenReturn(statsPage);
+        when(requestStatisticsService.getTopUrisPageForLastDays(7, topPageable)).thenReturn(topUrisPage);
         when(requestStatisticsService.getTotalRequestsForLastDays(7)).thenReturn(15L);
 
         // When
-        String viewName = consoleController.console(model, 7, pageable);
+        String viewName = consoleController.console(model, 7, 0, 0);
 
         // Then
         assertEquals("console/dashboard", viewName);
         verify(model).addAttribute("statistics", statsPage);
-        verify(model).addAttribute("topUris", topUris);
+        verify(model).addAttribute("topUris", topUrisPage);
         verify(model).addAttribute("totalRequests", 15L);
         verify(model).addAttribute("days", 7);
+        verify(model).addAttribute("page", 0);
+        verify(model).addAttribute("topPage", 0);
     }
 
     @Test
     void console_WithNoData_ShowsEmptyDashboard() {
         // Given
-        Pageable pageable = PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<RequestStatistics> emptyPage = Page.empty(pageable);
+        var historyPageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
+        var topPageable = PageRequest.of(0, 10);
+        Page<RequestStatistics> emptyStats = Page.empty(historyPageable);
+        Page<UriStat> emptyTop = Page.empty(topPageable);
 
-        when(requestStatisticsService.getStatisticsForLastDays(7, pageable)).thenReturn(emptyPage);
-        when(requestStatisticsService.getTopUrisForLastDays(7)).thenReturn(Collections.emptyMap());
+        when(requestStatisticsService.getStatisticsForLastDays(7, historyPageable)).thenReturn(emptyStats);
+        when(requestStatisticsService.getTopUrisPageForLastDays(7, topPageable)).thenReturn(emptyTop);
         when(requestStatisticsService.getTotalRequestsForLastDays(7)).thenReturn(0L);
 
         // When
-        String viewName = consoleController.console(model, 7, pageable);
+        String viewName = consoleController.console(model, 7, 0, 0);
 
         // Then
         assertEquals("console/dashboard", viewName);
-        verify(model).addAttribute("statistics", emptyPage);
-        verify(model).addAttribute("topUris", Collections.emptyMap());
+        verify(model).addAttribute("statistics", emptyStats);
+        verify(model).addAttribute("topUris", emptyTop);
         verify(model).addAttribute("totalRequests", 0L);
         verify(model).addAttribute("days", 7);
     }
@@ -84,20 +89,22 @@ class ConsoleControllerTest {
     @Test
     void console_WithCustomDays_UsesGivenDays() {
         // Given
-        Pageable pageable = PageRequest.of(0, 20, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<RequestStatistics> emptyPage = Page.empty(pageable);
+        var historyPageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
+        var topPageable = PageRequest.of(0, 10);
+        Page<RequestStatistics> emptyStats = Page.empty(historyPageable);
+        Page<UriStat> emptyTop = Page.empty(topPageable);
 
-        when(requestStatisticsService.getStatisticsForLastDays(1, pageable)).thenReturn(emptyPage);
-        when(requestStatisticsService.getTopUrisForLastDays(1)).thenReturn(Collections.emptyMap());
+        when(requestStatisticsService.getStatisticsForLastDays(1, historyPageable)).thenReturn(emptyStats);
+        when(requestStatisticsService.getTopUrisPageForLastDays(1, topPageable)).thenReturn(emptyTop);
         when(requestStatisticsService.getTotalRequestsForLastDays(1)).thenReturn(0L);
 
         // When
-        String viewName = consoleController.console(model, 1, pageable);
+        String viewName = consoleController.console(model, 1, 0, 0);
 
         // Then
         assertEquals("console/dashboard", viewName);
-        verify(requestStatisticsService).getStatisticsForLastDays(1, pageable);
-        verify(requestStatisticsService).getTopUrisForLastDays(1);
+        verify(requestStatisticsService).getStatisticsForLastDays(eq(1), eq(historyPageable));
+        verify(requestStatisticsService).getTopUrisPageForLastDays(eq(1), eq(topPageable));
         verify(requestStatisticsService).getTotalRequestsForLastDays(1);
         verify(model).addAttribute("days", 1);
     }

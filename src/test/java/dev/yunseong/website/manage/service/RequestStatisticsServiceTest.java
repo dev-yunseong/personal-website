@@ -1,6 +1,7 @@
 package dev.yunseong.website.manage.service;
 
 import dev.yunseong.website.manage.domain.RequestStatistics;
+import dev.yunseong.website.manage.domain.UriStat;
 import dev.yunseong.website.manage.repository.RequestStatisticsRepository;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -189,6 +190,28 @@ class RequestStatisticsServiceTest {
         assertEquals(5L, total);
         verify(requestStatisticsRepository, times(1)).countByCreatedAtAfter(any(LocalDateTime.class));
         verify(requestStatisticsRepository, never()).findByCreatedAtAfter(any(LocalDateTime.class));
+    }
+
+    @Test
+    void getTopUrisPageForLastDays_ReturnsPage() {
+        // Given
+        UriStat row1 = new UriStat("/public/memos/1", 10L);
+        UriStat row2 = new UriStat("/public/memos/2", 5L);
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<UriStat> mockPage = new PageImpl<>(Arrays.asList(row1, row2), pageable, 2);
+
+        when(requestStatisticsRepository.findTopUrisByRequestCount(any(LocalDateTime.class), eq(pageable)))
+                .thenReturn(mockPage);
+
+        // When
+        Page<UriStat> result = requestStatisticsService.getTopUrisPageForLastDays(7, pageable);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(2, result.getTotalElements());
+        assertEquals("/public/memos/1", result.getContent().get(0).uri());
+        assertEquals(10L, result.getContent().get(0).requestCount());
+        verify(requestStatisticsRepository, times(1)).findTopUrisByRequestCount(any(LocalDateTime.class), eq(pageable));
     }
 
 }

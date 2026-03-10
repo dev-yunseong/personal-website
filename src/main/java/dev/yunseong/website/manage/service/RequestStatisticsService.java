@@ -1,6 +1,7 @@
 package dev.yunseong.website.manage.service;
 
 import dev.yunseong.website.manage.domain.RequestStatistics;
+import dev.yunseong.website.manage.domain.UriStat;
 import dev.yunseong.website.manage.repository.RequestStatisticsRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -79,6 +80,12 @@ public class RequestStatisticsService {
                         row -> ((Number) row[1]).longValue(),
                         (a, b) -> a
                 ));
+    }
+
+    @Transactional(readOnly = true)
+    public Page<UriStat> getTopUrisPageForLastDays(int days, Pageable pageable) {
+        LocalDateTime startDate = LocalDateTime.now().minusDays(days);
+        return requestStatisticsRepository.findTopUrisByRequestCount(startDate, pageable);
     }
 
     @Transactional(readOnly = true)

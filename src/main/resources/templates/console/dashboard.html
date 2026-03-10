@@ -45,7 +45,7 @@
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">Unique Pages</h5>
-                        <p class="card-text display-4" th:text="${topUris.size()}">0</p>
+                        <p class="card-text display-4" th:text="${topUris.totalElements}">0</p>
                     </div>
                 </div>
             </div>
@@ -77,12 +77,48 @@
                         </tr>
                         </thead>
                         <tbody>
-                        <tr th:each="entry : ${topUris}">
-                            <td th:text="${entry.key}"></td>
-                            <td th:text="${entry.value}"></td>
+                        <tr th:each="uriStat : ${topUris}">
+                            <td th:text="${uriStat.uri}"></td>
+                            <td th:text="${uriStat.requestCount}"></td>
                         </tr>
                         </tbody>
                     </table>
+
+                    <!-- Top Pages Pagination -->
+                    <nav th:if="${topUris.totalPages > 1}"
+                         th:with="startPage=${T(java.lang.Math).max(0, topUris.number - 2)},
+                                  endPage=${T(java.lang.Math).min(topUris.totalPages - 1, topUris.number + 2)}"
+                         aria-label="Top pages pagination">
+                        <ul class="pagination pagination-sm flex-wrap justify-content-center">
+                            <li class="page-item" th:classappend="${topUris.first} ? 'disabled'">
+                                <a class="page-link"
+                                   th:href="@{/admin/console(days=${days}, page=${page}, topPage=${topUris.number - 1})}"
+                                   aria-label="Previous">
+                                    <span aria-hidden="true">&laquo;</span>
+                                </a>
+                            </li>
+                            <li th:if="${startPage > 0}" class="page-item disabled">
+                                <span class="page-link">&hellip;</span>
+                            </li>
+                            <li class="page-item"
+                                th:each="i : ${#numbers.sequence(startPage, endPage)}"
+                                th:classappend="${i == topUris.number} ? 'active'">
+                                <a class="page-link"
+                                   th:href="@{/admin/console(days=${days}, page=${page}, topPage=${i})}"
+                                   th:text="${i + 1}"></a>
+                            </li>
+                            <li th:if="${endPage < topUris.totalPages - 1}" class="page-item disabled">
+                                <span class="page-link">&hellip;</span>
+                            </li>
+                            <li class="page-item" th:classappend="${topUris.last} ? 'disabled'">
+                                <a class="page-link"
+                                   th:href="@{/admin/console(days=${days}, page=${page}, topPage=${topUris.number + 1})}"
+                                   aria-label="Next">
+                                    <span aria-hidden="true">&raquo;</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
                 </div>
             </div>
         </div>
@@ -124,26 +160,35 @@
                         </tbody>
                     </table>
 
-                    <!-- Pagination -->
-                    <nav th:if="${statistics.totalPages > 1}" aria-label="Request history pagination">
+                    <!-- Request History Pagination -->
+                    <nav th:if="${statistics.totalPages > 1}"
+                         th:with="startPage=${T(java.lang.Math).max(0, statistics.number - 2)},
+                                  endPage=${T(java.lang.Math).min(statistics.totalPages - 1, statistics.number + 2)}"
+                         aria-label="Request history pagination">
                         <ul class="pagination pagination-sm flex-wrap justify-content-center">
                             <li class="page-item" th:classappend="${statistics.first} ? 'disabled'">
                                 <a class="page-link"
-                                   th:href="@{/admin/console(days=${days}, page=${statistics.number - 1}, size=${statistics.size})}"
+                                   th:href="@{/admin/console(days=${days}, page=${statistics.number - 1}, topPage=${topPage})}"
                                    aria-label="Previous">
                                     <span aria-hidden="true">&laquo;</span>
                                 </a>
                             </li>
+                            <li th:if="${startPage > 0}" class="page-item disabled">
+                                <span class="page-link">&hellip;</span>
+                            </li>
                             <li class="page-item"
-                                th:each="i : ${#numbers.sequence(0, statistics.totalPages - 1)}"
+                                th:each="i : ${#numbers.sequence(startPage, endPage)}"
                                 th:classappend="${i == statistics.number} ? 'active'">
                                 <a class="page-link"
-                                   th:href="@{/admin/console(days=${days}, page=${i}, size=${statistics.size})}"
+                                   th:href="@{/admin/console(days=${days}, page=${i}, topPage=${topPage})}"
                                    th:text="${i + 1}"></a>
+                            </li>
+                            <li th:if="${endPage < statistics.totalPages - 1}" class="page-item disabled">
+                                <span class="page-link">&hellip;</span>
                             </li>
                             <li class="page-item" th:classappend="${statistics.last} ? 'disabled'">
                                 <a class="page-link"
-                                   th:href="@{/admin/console(days=${days}, page=${statistics.number + 1}, size=${statistics.size})}"
+                                   th:href="@{/admin/console(days=${days}, page=${statistics.number + 1}, topPage=${topPage})}"
                                    aria-label="Next">
                                     <span aria-hidden="true">&raquo;</span>
                                 </a>
