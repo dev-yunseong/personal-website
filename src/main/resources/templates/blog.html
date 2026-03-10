@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       layout:decorate="~{layout}"
       th:with="
         pageTitle=${selectedCategory != null and !#strings.isEmpty(selectedCategory) ? 'Blog - ' + selectedCategory + ' | Yunseong' : 'Blog | Yunseong'},
@@ -29,7 +30,7 @@
             <h2>Search results for "[[${keyword}]]"</h2>
         </div>
 
-        <a th:if="${keyword == null}" th:href="@{/admin/memos/new(category=${selectedCategory})}" class="btn btn-primary mb-3">Write a new memo</a>
+        <a sec:authorize="isAuthenticated()" th:if="${keyword == null}" th:href="@{/admin/memos/new(category=${selectedCategory})}" class="btn btn-primary mb-3">Write a new memo</a>
         <div class="row">
             <!-- Category sidebar - shown at top on mobile -->
             <div th:if="${keyword == null}" class="col-12 col-md-3 order-md-2 mb-4 mb-md-0">

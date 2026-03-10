@@ -51,7 +51,7 @@ class ConsoleControllerTest {
         when(requestStatisticsService.getTotalRequestsForLastDays(7, "")).thenReturn(15L);
 
         // When
-        String viewName = consoleController.console(model, 7, 0, 0, "", "", "count_desc");
+        String viewName = consoleController.console(model, 7, 0, 0, "", "", "count_desc", "top");
 
         // Then
         assertEquals("console/dashboard", viewName);
@@ -64,6 +64,7 @@ class ConsoleControllerTest {
         verify(model).addAttribute("statusFilter", "");
         verify(model).addAttribute("topStatusFilter", "");
         verify(model).addAttribute("topSort", "count_desc");
+        verify(model).addAttribute("tab", "top");
         verify(model).addAttribute("topSortLabel", "Requests ↓");
     }
 
@@ -79,7 +80,7 @@ class ConsoleControllerTest {
         when(requestStatisticsService.getTotalRequestsForLastDays(7, "")).thenReturn(0L);
 
         // When
-        String viewName = consoleController.console(model, 7, 0, 0, "", "", "count_desc");
+        String viewName = consoleController.console(model, 7, 0, 0, "", "", "count_desc", "top");
 
         // Then
         assertEquals("console/dashboard", viewName);
@@ -101,7 +102,7 @@ class ConsoleControllerTest {
         when(requestStatisticsService.getTotalRequestsForLastDays(1, "")).thenReturn(0L);
 
         // When
-        String viewName = consoleController.console(model, 1, 0, 0, "", "", "count_desc");
+        String viewName = consoleController.console(model, 1, 0, 0, "", "", "count_desc", "top");
 
         // Then
         assertEquals("console/dashboard", viewName);
@@ -123,7 +124,7 @@ class ConsoleControllerTest {
         when(requestStatisticsService.getTotalRequestsForLastDays(7, "2xx")).thenReturn(0L);
 
         // When
-        String viewName = consoleController.console(model, 7, 0, 0, "2xx", "", "count_desc");
+        String viewName = consoleController.console(model, 7, 0, 0, "2xx", "", "count_desc", "history");
 
         // Then
         assertEquals("console/dashboard", viewName);
@@ -144,7 +145,7 @@ class ConsoleControllerTest {
         when(requestStatisticsService.getTotalRequestsForLastDays(7, "")).thenReturn(0L);
 
         // When
-        String viewName = consoleController.console(model, 7, 0, 0, "", "", "uri_asc");
+        String viewName = consoleController.console(model, 7, 0, 0, "", "", "uri_asc", "top");
 
         // Then
         assertEquals("console/dashboard", viewName);
@@ -165,7 +166,7 @@ class ConsoleControllerTest {
         when(requestStatisticsService.getTotalRequestsForLastDays(7, "")).thenReturn(0L);
 
         // When
-        String viewName = consoleController.console(model, 7, 0, 0, "", "4xx", "count_desc");
+        String viewName = consoleController.console(model, 7, 0, 0, "", "4xx", "count_desc", "top");
 
         // Then
         assertEquals("console/dashboard", viewName);

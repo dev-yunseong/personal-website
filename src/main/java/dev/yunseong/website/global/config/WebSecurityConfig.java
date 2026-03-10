@@ -21,7 +21,10 @@ public class WebSecurityConfig {
                         .authenticated()
                         .anyRequest().permitAll()
                 )
-                .formLogin(withDefaults());;
+                .formLogin(withDefaults())
+                .logout(logout -> logout
+                        .logoutSuccessUrl("/")
+                        .permitAll());
 
         return http.build();
     }
