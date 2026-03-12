@@ -1,13 +1,6 @@
 package dev.yunseong.website.manage.controller;
 
-import dev.yunseong.website.manage.domain.RequestStatistics;
-import dev.yunseong.website.manage.domain.UriStat;
-import dev.yunseong.website.manage.service.RequestStatisticsService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,10 +12,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 @RequiredArgsConstructor
 public class ConsoleController {
 
-    private static final int PAGE_SIZE = 10;
-
-    private final RequestStatisticsService requestStatisticsService;
-
     @GetMapping
     public String console(Model model,
                           @RequestParam(defaultValue = "7") int days,
@@ -31,16 +20,10 @@ public class ConsoleController {
                           @RequestParam(defaultValue = "") String statusFilter,
                           @RequestParam(defaultValue = "") String topStatusFilter,
                           @RequestParam(defaultValue = "count_desc") String topSort,
-                          @RequestParam(defaultValue = "top") String tab) {
-        Pageable historyPageable = PageRequest.of(page, PAGE_SIZE, Sort.by(Sort.Direction.DESC, "createdAt"));
-
-        Page<RequestStatistics> statistics = requestStatisticsService.getStatisticsForLastDays(days, statusFilter, historyPageable);
-        Page<UriStat> topUris = requestStatisticsService.getTopUrisPageForLastDays(days, topSort, topStatusFilter, topPage);
-        long totalRequests = requestStatisticsService.getTotalRequestsForLastDays(days, statusFilter);
-
-        model.addAttribute("statistics", statistics);
-        model.addAttribute("topUris", topUris);
-        model.addAttribute("totalRequests", totalRequests);
+                          @RequestParam(defaultValue = "top") String tab,
+                          @RequestParam(defaultValue = "uri") String topGroupBy,
+                          @RequestParam(defaultValue = "") String timelineStatusFilter,
+                          @RequestParam(defaultValue = "day") String timelineResolution) {
         model.addAttribute("days", days);
         model.addAttribute("page", page);
         model.addAttribute("topPage", topPage);
@@ -48,13 +31,9 @@ public class ConsoleController {
         model.addAttribute("topStatusFilter", topStatusFilter);
         model.addAttribute("topSort", topSort);
         model.addAttribute("tab", tab);
-        model.addAttribute("topSortLabel", switch (topSort) {
-            case "count_asc" -> "Requests ↑";
-            case "uri_asc"   -> "URI A→Z";
-            case "uri_desc"  -> "URI Z→A";
-            default          -> "Requests ↓";
-        });
-
+        model.addAttribute("topGroupBy", topGroupBy);
+        model.addAttribute("timelineStatusFilter", timelineStatusFilter);
+        model.addAttribute("timelineResolution", timelineResolution);
         return "console/dashboard";
     }
 }

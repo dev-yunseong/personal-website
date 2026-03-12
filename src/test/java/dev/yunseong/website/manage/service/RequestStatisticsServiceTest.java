@@ -1,6 +1,7 @@
 package dev.yunseong.website.manage.service;
 
 import dev.yunseong.website.manage.domain.RequestStatistics;
+import dev.yunseong.website.manage.domain.TimelineStat;
 import dev.yunseong.website.manage.domain.UriStat;
 import dev.yunseong.website.manage.repository.RequestStatisticsRepository;
 
@@ -17,6 +18,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -278,7 +280,7 @@ class RequestStatisticsServiceTest {
                 .thenReturn(mockPage);
 
         // When
-        Page<UriStat> result = requestStatisticsService.getTopUrisPageForLastDays(7, "uri_asc", "", 0);
+        Page<UriStat> result = requestStatisticsService.getTopUrisPageForLastDays(7, "key_asc", "", 0);
 
         // Then
         assertNotNull(result);
@@ -324,4 +326,173 @@ class RequestStatisticsServiceTest {
                 any(LocalDateTime.class), eq(200), eq(299), eq(pageable));
     }
 
+    @Test
+    void getTopIpsPageForLastDays_DefaultSort_ReturnsCountDescPage() {
+        // Given
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<UriStat> mockPage = new PageImpl<>(List.of(new UriStat("1.1.1.1", 5L)), pageable, 1);
+
+        when(requestStatisticsRepository.findTopIpsByRequestCount(any(LocalDateTime.class), eq(pageable)))
+                .thenReturn(mockPage);
+
+        // When
+        Page<UriStat> result = requestStatisticsService.getTopIpsPageForLastDays(7, "count_desc", "", 0);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        verify(requestStatisticsRepository, times(1)).findTopIpsByRequestCount(any(LocalDateTime.class), eq(pageable));
+    }
+
+    @Test
+    void getTopIpsPageForLastDays_WithStatusFilter_UsesFilteredQuery() {
+        // Given
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<UriStat> mockPage = new PageImpl<>(List.of(), pageable, 0);
+
+        when(requestStatisticsRepository.findTopIpsByRequestCountAndStatusCodeBetween(
+                any(LocalDateTime.class), eq(200), eq(299), eq(pageable)))
+                .thenReturn(mockPage);
+
+        // When
+        Page<UriStat> result = requestStatisticsService.getTopIpsPageForLastDays(7, "count_desc", "2xx", 0);
+
+        // Then
+        assertNotNull(result);
+        verify(requestStatisticsRepository, times(1)).findTopIpsByRequestCountAndStatusCodeBetween(
+                any(LocalDateTime.class), eq(200), eq(299), eq(pageable));
+    }
+
+    @Test
+    void getTopUserAgentsPageForLastDays_DefaultSort_ReturnsCountDescPage() {
+        // Given
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<UriStat> mockPage = new PageImpl<>(List.of(new UriStat("Mozilla/5.0", 8L)), pageable, 1);
+
+        when(requestStatisticsRepository.findTopUserAgentsByRequestCount(any(LocalDateTime.class), eq(pageable)))
+                .thenReturn(mockPage);
+
+        // When
+        Page<UriStat> result = requestStatisticsService.getTopUserAgentsPageForLastDays(7, "count_desc", "", 0);
+
+        // Then
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        verify(requestStatisticsRepository, times(1)).findTopUserAgentsByRequestCount(any(LocalDateTime.class), eq(pageable));
+    }
+
+    @Test
+    void getTopUserAgentsPageForLastDays_WithStatusFilter_UsesFilteredQuery() {
+        // Given
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<UriStat> mockPage = new PageImpl<>(List.of(), pageable, 0);
+
+        when(requestStatisticsRepository.findTopUserAgentsByRequestCountAndStatusCodeBetween(
+                any(LocalDateTime.class), eq(400), eq(499), eq(pageable)))
+                .thenReturn(mockPage);
+
+        // When
+        Page<UriStat> result = requestStatisticsService.getTopUserAgentsPageForLastDays(7, "count_desc", "4xx", 0);
+
+        // Then
+        assertNotNull(result);
+        verify(requestStatisticsRepository, times(1)).findTopUserAgentsByRequestCountAndStatusCodeBetween(
+                any(LocalDateTime.class), eq(400), eq(499), eq(pageable));
+    }
+
+    @Test
+    void getTimelineForLastDays_NoFilter_ReturnsAllDailyData() {
+        // Given - repository now returns Object[] rows
+        java.time.LocalDate date1 = LocalDate.of(2024, 1, 1);
+        java.time.LocalDate date2 = LocalDate.of(2024, 1, 2);
+        List<Object[]> mockRows = List.of(
+                new Object[]{date1, 10L},
+                new Object[]{date2, 20L}
+        );
+        when(requestStatisticsRepository.findDailyRequestCounts(any(LocalDateTime.class))).thenReturn(mockRows);
+
+        // When
+        List<TimelineStat> result = requestStatisticsService.getTimelineForLastDays(7, "");
+
+        // Then
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertEquals("2024-01-01", result.get(0).label());
+        assertEquals(10L, result.get(0).count());
+        verify(requestStatisticsRepository, times(1)).findDailyRequestCounts(any(LocalDateTime.class));
+    }
+
+    @Test
+    void getTimelineForLastDays_WithStatusFilter_UsesFilteredQuery() {
+        // Given
+        java.time.LocalDate date1 = LocalDate.of(2024, 1, 1);
+        List<Object[]> mockRows = List.of(new Object[]{date1, 5L});
+        when(requestStatisticsRepository.findDailyRequestCountsAndStatusCodeBetween(
+                any(LocalDateTime.class), eq(200), eq(299))).thenReturn(mockRows);
+
+        // When
+        List<TimelineStat> result = requestStatisticsService.getTimelineForLastDays(7, "2xx");
+
+        // Then
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("2024-01-01", result.get(0).label());
+        verify(requestStatisticsRepository, times(1)).findDailyRequestCountsAndStatusCodeBetween(
+                any(LocalDateTime.class), eq(200), eq(299));
+        verify(requestStatisticsRepository, never()).findDailyRequestCounts(any(LocalDateTime.class));
+    }
+
+    @Test
+    void getTimelineForLastDays_HourlyResolution_UsesHourlyQuery() {
+        // Given
+        java.time.LocalDateTime dt = java.time.LocalDateTime.of(2024, 1, 1, 10, 0);
+        List<Object[]> mockRows = List.of(new Object[]{dt, 5L});
+        when(requestStatisticsRepository.findHourlyRequestCounts(any(LocalDateTime.class))).thenReturn(mockRows);
+
+        // When
+        List<TimelineStat> result = requestStatisticsService.getTimelineForLastDays(1, "", "hour");
+
+        // Then
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("2024-01-01 10:00", result.get(0).label());
+        verify(requestStatisticsRepository, times(1)).findHourlyRequestCounts(any(LocalDateTime.class));
+    }
+
+    @Test
+    void getTimelineForLastDays_WeeklyResolution_AggregatesDailyIntoWeeks() {
+        // Given - two dates in the same week (Mon 2024-01-01 and Tue 2024-01-02)
+        List<Object[]> mockRows = List.of(
+                new Object[]{LocalDate.of(2024, 1, 1), 10L},
+                new Object[]{LocalDate.of(2024, 1, 2), 20L}
+        );
+        when(requestStatisticsRepository.findDailyRequestCounts(any(LocalDateTime.class))).thenReturn(mockRows);
+
+        // When
+        List<TimelineStat> result = requestStatisticsService.getTimelineForLastDays(7, "", "week");
+
+        // Then
+        assertNotNull(result);
+        assertEquals(1, result.size()); // both dates map to same ISO week start
+        assertEquals(30L, result.get(0).count());
+    }
+
+    @Test
+    void getTimelineForLastDays_MonthlyResolution_UsesMonthlyQuery() {
+        // Given
+        java.time.LocalDateTime dt = java.time.LocalDateTime.of(2024, 1, 1, 0, 0);
+        List<Object[]> mockRows = List.of(new Object[]{dt, 50L});
+        when(requestStatisticsRepository.findMonthlyRequestCounts(any(LocalDateTime.class))).thenReturn(mockRows);
+
+        // When
+        List<TimelineStat> result = requestStatisticsService.getTimelineForLastDays(30, "", "month");
+
+        // Then
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("2024-01", result.get(0).label());
+        verify(requestStatisticsRepository, times(1)).findMonthlyRequestCounts(any(LocalDateTime.class));
+    }
+
 }
+
