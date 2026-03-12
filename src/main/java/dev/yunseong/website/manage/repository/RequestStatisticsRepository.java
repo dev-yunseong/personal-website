@@ -1,7 +1,6 @@
 package dev.yunseong.website.manage.repository;
 
 import dev.yunseong.website.manage.domain.RequestStatistics;
-import dev.yunseong.website.manage.domain.TimelineStat;
 import dev.yunseong.website.manage.domain.UriStat;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -145,11 +144,31 @@ public interface RequestStatisticsRepository extends JpaRepository<RequestStatis
 
     // --- Timeline (daily request counts) ---
 
-    @Query("SELECT new dev.yunseong.website.manage.domain.TimelineStat(CAST(r.createdAt AS date), COUNT(r)) FROM RequestStatistics r WHERE r.createdAt >= :startDate GROUP BY CAST(r.createdAt AS date) ORDER BY CAST(r.createdAt AS date) ASC")
-    List<TimelineStat> findDailyRequestCounts(@Param("startDate") LocalDateTime startDate);
+    @Query("SELECT CAST(r.createdAt AS date), COUNT(r) FROM RequestStatistics r WHERE r.createdAt >= :startDate GROUP BY CAST(r.createdAt AS date) ORDER BY CAST(r.createdAt AS date) ASC")
+    List<Object[]> findDailyRequestCounts(@Param("startDate") LocalDateTime startDate);
 
-    @Query("SELECT new dev.yunseong.website.manage.domain.TimelineStat(CAST(r.createdAt AS date), COUNT(r)) FROM RequestStatistics r WHERE r.createdAt >= :startDate AND r.statusCode >= :minStatus AND r.statusCode <= :maxStatus GROUP BY CAST(r.createdAt AS date) ORDER BY CAST(r.createdAt AS date) ASC")
-    List<TimelineStat> findDailyRequestCountsAndStatusCodeBetween(@Param("startDate") LocalDateTime startDate,
-                                                                   @Param("minStatus") int minStatus,
-                                                                   @Param("maxStatus") int maxStatus);
+    @Query("SELECT CAST(r.createdAt AS date), COUNT(r) FROM RequestStatistics r WHERE r.createdAt >= :startDate AND r.statusCode >= :minStatus AND r.statusCode <= :maxStatus GROUP BY CAST(r.createdAt AS date) ORDER BY CAST(r.createdAt AS date) ASC")
+    List<Object[]> findDailyRequestCountsAndStatusCodeBetween(@Param("startDate") LocalDateTime startDate,
+                                                              @Param("minStatus") int minStatus,
+                                                              @Param("maxStatus") int maxStatus);
+
+    // --- Timeline (hourly request counts) ---
+
+    @Query("SELECT trunc(r.createdAt, HOUR), COUNT(r) FROM RequestStatistics r WHERE r.createdAt >= :startDate GROUP BY trunc(r.createdAt, HOUR) ORDER BY trunc(r.createdAt, HOUR) ASC")
+    List<Object[]> findHourlyRequestCounts(@Param("startDate") LocalDateTime startDate);
+
+    @Query("SELECT trunc(r.createdAt, HOUR), COUNT(r) FROM RequestStatistics r WHERE r.createdAt >= :startDate AND r.statusCode >= :minStatus AND r.statusCode <= :maxStatus GROUP BY trunc(r.createdAt, HOUR) ORDER BY trunc(r.createdAt, HOUR) ASC")
+    List<Object[]> findHourlyRequestCountsAndStatusCodeBetween(@Param("startDate") LocalDateTime startDate,
+                                                               @Param("minStatus") int minStatus,
+                                                               @Param("maxStatus") int maxStatus);
+
+    // --- Timeline (monthly request counts) ---
+
+    @Query("SELECT trunc(r.createdAt, MONTH), COUNT(r) FROM RequestStatistics r WHERE r.createdAt >= :startDate GROUP BY trunc(r.createdAt, MONTH) ORDER BY trunc(r.createdAt, MONTH) ASC")
+    List<Object[]> findMonthlyRequestCounts(@Param("startDate") LocalDateTime startDate);
+
+    @Query("SELECT trunc(r.createdAt, MONTH), COUNT(r) FROM RequestStatistics r WHERE r.createdAt >= :startDate AND r.statusCode >= :minStatus AND r.statusCode <= :maxStatus GROUP BY trunc(r.createdAt, MONTH) ORDER BY trunc(r.createdAt, MONTH) ASC")
+    List<Object[]> findMonthlyRequestCountsAndStatusCodeBetween(@Param("startDate") LocalDateTime startDate,
+                                                                @Param("minStatus") int minStatus,
+                                                                @Param("maxStatus") int maxStatus);
 }

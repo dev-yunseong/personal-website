@@ -13,31 +13,23 @@
         <h1 class="mb-2">Admin Console</h1>
 
         <!-- Time Period Selector -->
-        <div class="mb-4">
+        <div class="mb-4 d-flex align-items-center gap-3 flex-wrap">
             <div class="btn-group" role="group" aria-label="Time period">
-                <a th:href="@{/admin/console(days=1,statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab=${tab},topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
-                   th:classappend="${days == 1} ? 'active'"
-                   class="btn btn-outline-primary btn-sm">1일</a>
-                <a th:href="@{/admin/console(days=7,statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab=${tab},topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
-                   th:classappend="${days == 7} ? 'active'"
-                   class="btn btn-outline-primary btn-sm">7일</a>
-                <a th:href="@{/admin/console(days=30,statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab=${tab},topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
-                   th:classappend="${days == 30} ? 'active'"
-                   class="btn btn-outline-primary btn-sm">30일</a>
-                <a th:href="@{/admin/console(days=90,statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab=${tab},topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
-                   th:classappend="${days == 90} ? 'active'"
-                   class="btn btn-outline-primary btn-sm">90일</a>
+                <button class="btn btn-outline-primary btn-sm js-days" th:classappend="${days == 1} ? 'active'" data-days="1" type="button">1일</button>
+                <button class="btn btn-outline-primary btn-sm js-days" th:classappend="${days == 7} ? 'active'" data-days="7" type="button">7일</button>
+                <button class="btn btn-outline-primary btn-sm js-days" th:classappend="${days == 30} ? 'active'" data-days="30" type="button">30일</button>
+                <button class="btn btn-outline-primary btn-sm js-days" th:classappend="${days == 90} ? 'active'" data-days="90" type="button">90일</button>
             </div>
-            <span class="ms-2 text-muted" th:text="'최근 ' + ${days} + '일 통계'"></span>
+            <span class="text-muted js-days-label" th:text="'최근 ' + ${days} + '일 통계'"></span>
         </div>
 
         <!-- Summary Cards -->
-        <div class="row mb-4">
+        <div class="row mb-4" id="summary-cards">
             <div class="col-md-4">
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">Total Requests</h5>
-                        <p class="card-text display-4" th:text="${totalRequests}">0</p>
+                        <p class="card-text display-4" id="stat-total-requests"><span class="text-muted">…</span></p>
                     </div>
                 </div>
             </div>
@@ -45,7 +37,7 @@
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">Unique Pages</h5>
-                        <p class="card-text display-4" th:text="${topUris.totalElements}">0</p>
+                        <p class="card-text display-4" id="stat-unique-uris"><span class="text-muted">…</span></p>
                     </div>
                 </div>
             </div>
@@ -53,7 +45,7 @@
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title">Data Points</h5>
-                        <p class="card-text display-4" th:text="${statistics.totalElements}">0</p>
+                        <p class="card-text display-4" id="stat-data-points"><span class="text-muted">…</span></p>
                     </div>
                 </div>
             </div>
@@ -62,278 +54,103 @@
         <!-- Sub Navigation Tabs -->
         <ul class="nav nav-tabs mb-3" id="consoleTabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <a class="nav-link" th:classappend="${tab == 'top'} ? 'active'"
-                   th:href="@{/admin/console(days=${days},page=${page},topPage=${topPage},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='top',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
-                   role="tab">Top Pages</a>
+                <button class="nav-link" id="tab-btn-top" data-tab="top" role="tab" type="button">Top Pages</button>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="nav-link" th:classappend="${tab == 'history'} ? 'active'"
-                   th:href="@{/admin/console(days=${days},page=${page},topPage=${topPage},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='history',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
-                   role="tab">Request History</a>
+                <button class="nav-link" id="tab-btn-history" data-tab="history" role="tab" type="button">Request History</button>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="nav-link" th:classappend="${tab == 'timeline'} ? 'active'"
-                   th:href="@{/admin/console(days=${days},page=${page},topPage=${topPage},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='timeline',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
-                   role="tab">Timeline</a>
+                <button class="nav-link" id="tab-btn-timeline" data-tab="timeline" role="tab" type="button">Timeline</button>
             </li>
         </ul>
 
         <div class="tab-content">
 
         <!-- Top Pages Tab -->
-        <div class="tab-pane fade" th:classappend="${tab == 'top'} ? 'show active'">
+        <div class="tab-pane fade" id="pane-top" role="tabpanel">
         <div class="card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <h5 class="mb-0">Top <span th:text="${topGroupByLabel}">URI</span> by Request Count</h5>
+                <h5 class="mb-0">Top <span id="top-group-label">URI</span> by Request Count</h5>
                 <div class="d-flex gap-2 align-items-center flex-wrap">
                     <!-- Group by selector -->
                     <div class="btn-group" role="group" aria-label="Group by">
-                        <a th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='top',topGroupBy='uri',timelineStatusFilter=${timelineStatusFilter})}"
-                           th:classappend="${topGroupBy == 'uri'} ? 'active'"
-                           class="btn btn-outline-dark btn-sm">URI</a>
-                        <a th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='top',topGroupBy='ip',timelineStatusFilter=${timelineStatusFilter})}"
-                           th:classappend="${topGroupBy == 'ip'} ? 'active'"
-                           class="btn btn-outline-dark btn-sm">IP</a>
-                        <a th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='top',topGroupBy='ua',timelineStatusFilter=${timelineStatusFilter})}"
-                           th:classappend="${topGroupBy == 'ua'} ? 'active'"
-                           class="btn btn-outline-dark btn-sm">User Agent</a>
+                        <button class="btn btn-outline-dark btn-sm js-top-group" data-group="uri" type="button">URI</button>
+                        <button class="btn btn-outline-dark btn-sm js-top-group" data-group="ip" type="button">IP</button>
+                        <button class="btn btn-outline-dark btn-sm js-top-group" data-group="ua" type="button">User Agent</button>
                     </div>
                     <!-- Status code filter for Top Pages -->
                     <div class="btn-group" role="group" aria-label="Top pages status filter">
-                        <a th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter='',topSort=${topSort},tab='top',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
-                           th:classappend="${topStatusFilter == ''} ? 'active'"
-                           class="btn btn-outline-secondary btn-sm">All</a>
-                        <a th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter='2xx',topSort=${topSort},tab='top',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
-                           th:classappend="${topStatusFilter == '2xx'} ? 'active'"
-                           class="btn btn-outline-success btn-sm">2xx</a>
-                        <a th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter='3xx',topSort=${topSort},tab='top',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
-                           th:classappend="${topStatusFilter == '3xx'} ? 'active'"
-                           class="btn btn-outline-info btn-sm">3xx</a>
-                        <a th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter='4xx',topSort=${topSort},tab='top',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
-                           th:classappend="${topStatusFilter == '4xx'} ? 'active'"
-                           class="btn btn-outline-warning btn-sm">4xx</a>
-                        <a th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter='5xx',topSort=${topSort},tab='top',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
-                           th:classappend="${topStatusFilter == '5xx'} ? 'active'"
-                           class="btn btn-outline-danger btn-sm">5xx</a>
+                        <button class="btn btn-outline-secondary btn-sm js-top-status" data-status="" type="button">All</button>
+                        <button class="btn btn-outline-success btn-sm js-top-status" data-status="2xx" type="button">2xx</button>
+                        <button class="btn btn-outline-info btn-sm js-top-status" data-status="3xx" type="button">3xx</button>
+                        <button class="btn btn-outline-warning btn-sm js-top-status" data-status="4xx" type="button">4xx</button>
+                        <button class="btn btn-outline-danger btn-sm js-top-status" data-status="5xx" type="button">5xx</button>
                     </div>
                     <!-- Sort dropdown -->
                     <div class="dropdown">
                         <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button"
-                                data-bs-toggle="dropdown" aria-expanded="false">
-                            <span th:text="${topSortLabel}">Requests ↓</span>
-                        </button>
+                                data-bs-toggle="dropdown" aria-expanded="false" id="top-sort-label">Requests ↓</button>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item"
-                                   th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort='count_desc',tab='top',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}">Requests ↓</a></li>
-                            <li><a class="dropdown-item"
-                                   th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort='count_asc',tab='top',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}">Requests ↑</a></li>
+                            <li><button class="dropdown-item js-top-sort" data-sort="count_desc" type="button">Requests ↓</button></li>
+                            <li><button class="dropdown-item js-top-sort" data-sort="count_asc" type="button">Requests ↑</button></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item"
-                                   th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort='key_asc',tab='top',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}">Key A→Z</a></li>
-                            <li><a class="dropdown-item"
-                                   th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort='key_desc',tab='top',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}">Key Z→A</a></li>
+                            <li><button class="dropdown-item js-top-sort" data-sort="key_asc" type="button">Key A→Z</button></li>
+                            <li><button class="dropdown-item js-top-sort" data-sort="key_desc" type="button">Key Z→A</button></li>
                         </ul>
                     </div>
                 </div>
             </div>
-            <div class="card-body">
-                <div th:if="${topUris.isEmpty()}" class="alert alert-info">
-                    No request data available yet. Statistics will appear after requests to /public/** endpoints are made.
-                </div>
-                <div th:unless="${topUris.isEmpty()}">
-                    <table class="table table-striped">
-                        <thead>
-                        <tr>
-                            <th th:text="${topGroupByLabel}">URI</th>
-                            <th>Total Requests</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr th:each="uriStat : ${topUris}">
-                            <td th:text="${uriStat.uri}"></td>
-                            <td th:text="${uriStat.requestCount}"></td>
-                        </tr>
-                        </tbody>
-                    </table>
-
-                    <!-- Top Pages Pagination -->
-                    <nav th:if="${topUris.totalPages > 1}"
-                         th:with="startPage=${T(java.lang.Math).max(0, topUris.number - 2)},
-                                  endPage=${T(java.lang.Math).min(topUris.totalPages - 1, topUris.number + 2)}"
-                         aria-label="Top pages pagination">
-                        <ul class="pagination pagination-sm flex-wrap justify-content-center">
-                            <li class="page-item" th:classappend="${topUris.first} ? 'disabled'">
-                                <a class="page-link"
-                                   th:href="@{/admin/console(days=${days},page=${page},topPage=${topUris.number - 1},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='top',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
-                                   aria-label="Previous">
-                                    <span aria-hidden="true">&laquo;</span>
-                                </a>
-                            </li>
-                            <li th:if="${startPage > 0}" class="page-item disabled">
-                                <span class="page-link">&hellip;</span>
-                            </li>
-                            <li class="page-item"
-                                th:each="i : ${#numbers.sequence(startPage, endPage)}"
-                                th:classappend="${i == topUris.number} ? 'active'">
-                                <a class="page-link"
-                                   th:href="@{/admin/console(days=${days},page=${page},topPage=${i},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='top',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
-                                   th:text="${i + 1}"></a>
-                            </li>
-                            <li th:if="${endPage < topUris.totalPages - 1}" class="page-item disabled">
-                                <span class="page-link">&hellip;</span>
-                            </li>
-                            <li class="page-item" th:classappend="${topUris.last} ? 'disabled'">
-                                <a class="page-link"
-                                   th:href="@{/admin/console(days=${days},page=${page},topPage=${topUris.number + 1},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='top',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
-                                   aria-label="Next">
-                                    <span aria-hidden="true">&raquo;</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </nav>
-                </div>
+            <div class="card-body" id="top-content">
+                <div class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>
             </div>
         </div>
         </div>
 
         <!-- Request History Tab -->
-        <div class="tab-pane fade" th:classappend="${tab == 'history'} ? 'show active'">
+        <div class="tab-pane fade" id="pane-history" role="tabpanel">
         <div class="card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">Request History</h5>
                 <!-- Status Code Filter -->
                 <div class="btn-group" role="group" aria-label="Status code filter">
-                    <a th:href="@{/admin/console(days=${days},page=0,topPage=${topPage},statusFilter='',topStatusFilter=${topStatusFilter},topSort=${topSort},tab='history',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
-                       th:classappend="${statusFilter == ''} ? 'active'"
-                       class="btn btn-outline-secondary btn-sm">All</a>
-                    <a th:href="@{/admin/console(days=${days},page=0,topPage=${topPage},statusFilter='2xx',topStatusFilter=${topStatusFilter},topSort=${topSort},tab='history',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
-                       th:classappend="${statusFilter == '2xx'} ? 'active'"
-                       class="btn btn-outline-success btn-sm">2xx</a>
-                    <a th:href="@{/admin/console(days=${days},page=0,topPage=${topPage},statusFilter='3xx',topStatusFilter=${topStatusFilter},topSort=${topSort},tab='history',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
-                       th:classappend="${statusFilter == '3xx'} ? 'active'"
-                       class="btn btn-outline-info btn-sm">3xx</a>
-                    <a th:href="@{/admin/console(days=${days},page=0,topPage=${topPage},statusFilter='4xx',topStatusFilter=${topStatusFilter},topSort=${topSort},tab='history',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
-                       th:classappend="${statusFilter == '4xx'} ? 'active'"
-                       class="btn btn-outline-warning btn-sm">4xx</a>
-                    <a th:href="@{/admin/console(days=${days},page=0,topPage=${topPage},statusFilter='5xx',topStatusFilter=${topStatusFilter},topSort=${topSort},tab='history',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
-                       th:classappend="${statusFilter == '5xx'} ? 'active'"
-                       class="btn btn-outline-danger btn-sm">5xx</a>
+                    <button class="btn btn-outline-secondary btn-sm js-hist-status" data-status="" type="button">All</button>
+                    <button class="btn btn-outline-success btn-sm js-hist-status" data-status="2xx" type="button">2xx</button>
+                    <button class="btn btn-outline-info btn-sm js-hist-status" data-status="3xx" type="button">3xx</button>
+                    <button class="btn btn-outline-warning btn-sm js-hist-status" data-status="4xx" type="button">4xx</button>
+                    <button class="btn btn-outline-danger btn-sm js-hist-status" data-status="5xx" type="button">5xx</button>
                 </div>
             </div>
-            <div class="card-body">
-                <div th:if="${statistics.isEmpty()}" class="alert alert-info">
-                    No request statistics available yet. Statistics are saved every 5 minutes.
-                </div>
-                <div th:unless="${statistics.isEmpty()}">
-                    <table class="table table-striped table-hover">
-                        <thead>
-                        <tr>
-                            <th>Timestamp</th>
-                            <th>Method</th>
-                            <th>Status</th>
-                            <th>URI</th>
-                            <th>Referer</th>
-                            <th>User Agent</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr th:each="stat : ${statistics}">
-                            <td th:text="${#temporals.format(stat.createdAt, 'yyyy-MM-dd HH:mm:ss')}"></td>
-                            <td>
-                                <span class="badge bg-primary" th:text="${stat.method}"></span>
-                            </td>
-                            <td>
-                                <span th:if="${stat.statusCode != null}"
-                                      th:classappend="${stat.statusCode >= 500 ? 'bg-danger' :
-                                                        stat.statusCode >= 400 ? 'bg-warning text-dark' :
-                                                        stat.statusCode >= 300 ? 'bg-info text-dark' :
-                                                                                 'bg-success'}"
-                                      class="badge"
-                                      th:text="${stat.statusCode}"></span>
-                                <span th:if="${stat.statusCode == null}" class="badge bg-secondary">-</span>
-                            </td>
-                            <td th:text="${stat.uri}"></td>
-                            <td>
-                                <small class="text-muted" th:text="${stat.referer != null ? stat.referer : '-'}"></small>
-                            </td>
-                            <td>
-                                <small class="text-muted" th:text="${stat.userAgent != null ? #strings.abbreviate(stat.userAgent, 50) : '-'}"></small>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
-
-                    <!-- Request History Pagination -->
-                    <nav th:if="${statistics.totalPages > 1}"
-                         th:with="startPage=${T(java.lang.Math).max(0, statistics.number - 2)},
-                                  endPage=${T(java.lang.Math).min(statistics.totalPages - 1, statistics.number + 2)}"
-                         aria-label="Request history pagination">
-                        <ul class="pagination pagination-sm flex-wrap justify-content-center">
-                            <li class="page-item" th:classappend="${statistics.first} ? 'disabled'">
-                                <a class="page-link"
-                                   th:href="@{/admin/console(days=${days},page=${statistics.number - 1},topPage=${topPage},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='history',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
-                                   aria-label="Previous">
-                                    <span aria-hidden="true">&laquo;</span>
-                                </a>
-                            </li>
-                            <li th:if="${startPage > 0}" class="page-item disabled">
-                                <span class="page-link">&hellip;</span>
-                            </li>
-                            <li class="page-item"
-                                th:each="i : ${#numbers.sequence(startPage, endPage)}"
-                                th:classappend="${i == statistics.number} ? 'active'">
-                                <a class="page-link"
-                                   th:href="@{/admin/console(days=${days},page=${i},topPage=${topPage},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='history',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
-                                   th:text="${i + 1}"></a>
-                            </li>
-                            <li th:if="${endPage < statistics.totalPages - 1}" class="page-item disabled">
-                                <span class="page-link">&hellip;</span>
-                            </li>
-                            <li class="page-item" th:classappend="${statistics.last} ? 'disabled'">
-                                <a class="page-link"
-                                   th:href="@{/admin/console(days=${days},page=${statistics.number + 1},topPage=${topPage},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='history',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
-                                   aria-label="Next">
-                                    <span aria-hidden="true">&raquo;</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </nav>
-                </div>
+            <div class="card-body" id="history-content">
+                <div class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>
             </div>
         </div>
         </div>
 
         <!-- Timeline Tab -->
-        <div class="tab-pane fade" th:classappend="${tab == 'timeline'} ? 'show active'">
+        <div class="tab-pane fade" id="pane-timeline" role="tabpanel">
         <div class="card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <h5 class="mb-0">Request Timeline</h5>
-                <!-- Status Code Filter -->
-                <div class="btn-group" role="group" aria-label="Timeline status filter">
-                    <a th:href="@{/admin/console(days=${days},page=${page},topPage=${topPage},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='timeline',topGroupBy=${topGroupBy},timelineStatusFilter='')}"
-                       th:classappend="${timelineStatusFilter == ''} ? 'active'"
-                       class="btn btn-outline-secondary btn-sm">All</a>
-                    <a th:href="@{/admin/console(days=${days},page=${page},topPage=${topPage},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='timeline',topGroupBy=${topGroupBy},timelineStatusFilter='2xx')}"
-                       th:classappend="${timelineStatusFilter == '2xx'} ? 'active'"
-                       class="btn btn-outline-success btn-sm">2xx</a>
-                    <a th:href="@{/admin/console(days=${days},page=${page},topPage=${topPage},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='timeline',topGroupBy=${topGroupBy},timelineStatusFilter='3xx')}"
-                       th:classappend="${timelineStatusFilter == '3xx'} ? 'active'"
-                       class="btn btn-outline-info btn-sm">3xx</a>
-                    <a th:href="@{/admin/console(days=${days},page=${page},topPage=${topPage},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='timeline',topGroupBy=${topGroupBy},timelineStatusFilter='4xx')}"
-                       th:classappend="${timelineStatusFilter == '4xx'} ? 'active'"
-                       class="btn btn-outline-warning btn-sm">4xx</a>
-                    <a th:href="@{/admin/console(days=${days},page=${page},topPage=${topPage},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='timeline',topGroupBy=${topGroupBy},timelineStatusFilter='5xx')}"
-                       th:classappend="${timelineStatusFilter == '5xx'} ? 'active'"
-                       class="btn btn-outline-danger btn-sm">5xx</a>
+                <div class="d-flex gap-2 align-items-center flex-wrap">
+                    <!-- Resolution selector -->
+                    <div class="btn-group" role="group" aria-label="Timeline resolution">
+                        <button class="btn btn-outline-dark btn-sm js-tl-resolution" data-resolution="hour" type="button">Hour</button>
+                        <button class="btn btn-outline-dark btn-sm js-tl-resolution" data-resolution="day" type="button">Day</button>
+                        <button class="btn btn-outline-dark btn-sm js-tl-resolution" data-resolution="week" type="button">Week</button>
+                        <button class="btn btn-outline-dark btn-sm js-tl-resolution" data-resolution="month" type="button">Month</button>
+                    </div>
+                    <!-- Status Code Filter -->
+                    <div class="btn-group" role="group" aria-label="Timeline status filter">
+                        <button class="btn btn-outline-secondary btn-sm js-tl-status" data-status="" type="button">All</button>
+                        <button class="btn btn-outline-success btn-sm js-tl-status" data-status="2xx" type="button">2xx</button>
+                        <button class="btn btn-outline-info btn-sm js-tl-status" data-status="3xx" type="button">3xx</button>
+                        <button class="btn btn-outline-warning btn-sm js-tl-status" data-status="4xx" type="button">4xx</button>
+                        <button class="btn btn-outline-danger btn-sm js-tl-status" data-status="5xx" type="button">5xx</button>
+                    </div>
                 </div>
             </div>
-            <div class="card-body">
-                <div th:if="${timeline.isEmpty()}" class="alert alert-info">
-                    No timeline data available yet. Statistics will appear after requests to /public/** endpoints are made.
-                </div>
-                <div th:unless="${timeline.isEmpty()}">
-                    <canvas id="timelineChart" style="max-height: 400px;"></canvas>
-                </div>
+            <div class="card-body" id="timeline-content">
+                <div class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>
             </div>
         </div>
         </div>
@@ -341,42 +158,322 @@
         </div><!-- end tab-content -->
     </div>
 
-    <!-- Chart.js for Timeline -->
-    <script th:if="${tab == 'timeline' and !timeline.isEmpty()}"
-            src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"
-            crossorigin="anonymous"></script>
-    <script th:if="${tab == 'timeline' and !timeline.isEmpty()}" th:inline="javascript">
-        (function () {
-            const labels = /*[[${timeline.![date.toString()]}]]*/ [];
-            const data   = /*[[${timeline.![count]}]]*/ [];
-            const ctx = document.getElementById('timelineChart');
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Requests',
-                        data: data,
-                        backgroundColor: 'rgba(13, 110, 253, 0.6)',
-                        borderColor: 'rgba(13, 110, 253, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { mode: 'index', intersect: false }
-                    },
-                    scales: {
-                        x: { title: { display: true, text: 'Date' } },
-                        y: { beginAtZero: true, title: { display: true, text: 'Request Count' } }
-                    }
-                }
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" crossorigin="anonymous"></script>
+
+    <script th:inline="javascript">
+    (function () {
+        // ── initial state from server-rendered params ──────────────────
+        const STATE = {
+            days:               /*[[${days}]]*/ 7,
+            tab:                /*[[${tab}]]*/ 'top',
+            page:               /*[[${page}]]*/ 0,
+            topPage:            /*[[${topPage}]]*/ 0,
+            statusFilter:       /*[[${statusFilter}]]*/ '',
+            topStatusFilter:    /*[[${topStatusFilter}]]*/ '',
+            topSort:            /*[[${topSort}]]*/ 'count_desc',
+            topGroupBy:         /*[[${topGroupBy}]]*/ 'uri',
+            timelineStatusFilter: /*[[${timelineStatusFilter}]]*/ '',
+            timelineResolution: /*[[${timelineResolution}]]*/ 'day'
+        };
+
+        let timelineChart = null;
+
+        // ── helpers ────────────────────────────────────────────────────
+        function apiFetch(path, params) {
+            const url = new URL('/api/admin/console/' + path, location.origin);
+            Object.entries(params).forEach(([k,v]) => v !== undefined && v !== null && url.searchParams.set(k, v));
+            return fetch(url, {credentials: 'same-origin'}).then(r => {
+                if (!r.ok) throw new Error('API error ' + r.status + ' at /api/admin/console/' + path);
+                return r.json();
             });
-        })();
+        }
+
+        function pushState() {
+            const p = new URLSearchParams();
+            p.set('days',   STATE.days);
+            p.set('tab',    STATE.tab);
+            p.set('page',   STATE.page);
+            p.set('topPage', STATE.topPage);
+            p.set('statusFilter',        STATE.statusFilter);
+            p.set('topStatusFilter',     STATE.topStatusFilter);
+            p.set('topSort',             STATE.topSort);
+            p.set('topGroupBy',          STATE.topGroupBy);
+            p.set('timelineStatusFilter', STATE.timelineStatusFilter);
+            p.set('timelineResolution',  STATE.timelineResolution);
+            history.replaceState(null, '', '/admin/console?' + p.toString());
+        }
+
+        function setActive(selector, dataAttr, value) {
+            document.querySelectorAll(selector).forEach(el => {
+                el.classList.toggle('active', el.dataset[dataAttr] === String(value));
+            });
+        }
+
+        function statusBadge(code) {
+            if (!code) return '<span class="badge bg-secondary">-</span>';
+            const cls = code >= 500 ? 'bg-danger' : code >= 400 ? 'bg-warning text-dark' : code >= 300 ? 'bg-info text-dark' : 'bg-success';
+            return `<span class="badge ${cls}">${code}</span>`;
+        }
+
+        function paginationHtml(number, totalPages, onClickAttr) {
+            if (totalPages <= 1) return '';
+            let html = '<nav><ul class="pagination pagination-sm flex-wrap justify-content-center">';
+            html += `<li class="page-item ${number === 0 ? 'disabled' : ''}"><button class="page-link" ${onClickAttr}="${number - 1}" type="button">&laquo;</button></li>`;
+            const start = Math.max(0, number - 2);
+            const end   = Math.min(totalPages - 1, number + 2);
+            if (start > 0) html += '<li class="page-item disabled"><span class="page-link">&hellip;</span></li>';
+            for (let i = start; i <= end; i++) {
+                html += `<li class="page-item ${i === number ? 'active' : ''}"><button class="page-link" ${onClickAttr}="${i}" type="button">${i+1}</button></li>`;
+            }
+            if (end < totalPages - 1) html += '<li class="page-item disabled"><span class="page-link">&hellip;</span></li>';
+            html += `<li class="page-item ${number === totalPages - 1 ? 'disabled' : ''}"><button class="page-link" ${onClickAttr}="${number + 1}" type="button">&raquo;</button></li>`;
+            html += '</ul></nav>';
+            return html;
+        }
+
+        // ── summary ────────────────────────────────────────────────────
+        function loadSummary() {
+            apiFetch('summary', {days: STATE.days, statusFilter: STATE.statusFilter}).then(d => {
+                document.getElementById('stat-total-requests').textContent = d.totalRequests;
+                document.getElementById('stat-unique-uris').textContent    = d.uniqueUris;
+                document.getElementById('stat-data-points').textContent    = d.dataPoints;
+            }).catch(() => {});
+        }
+
+        // ── Top Pages ─────────────────────────────────────────────────
+        function loadTop() {
+            const el = document.getElementById('top-content');
+            el.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>';
+            apiFetch('top', {
+                days: STATE.days, topPage: STATE.topPage,
+                topSort: STATE.topSort, topStatusFilter: STATE.topStatusFilter,
+                topGroupBy: STATE.topGroupBy
+            }).then(d => {
+                document.getElementById('top-group-label').textContent = d.groupByLabel;
+                document.getElementById('top-sort-label').textContent = {
+                    count_asc: 'Requests ↑', key_asc: 'Key A→Z', key_desc: 'Key Z→A'
+                }[STATE.topSort] || 'Requests ↓';
+
+                if (!d.content || d.content.length === 0) {
+                    el.innerHTML = '<div class="alert alert-info">No request data available yet. Statistics will appear after requests to /public/** endpoints are made.</div>';
+                    return;
+                }
+                let html = `<table class="table table-striped"><thead><tr><th>${d.groupByLabel}</th><th>Total Requests</th></tr></thead><tbody>`;
+                d.content.forEach(row => {
+                html += `<tr><td>${escHtml(row.uri)}</td><td>${escHtml(String(row.requestCount))}</td></tr>`;
+                });
+                html += '</tbody></table>';
+                html += paginationHtml(d.number, d.totalPages, 'data-top-page');
+                el.innerHTML = html;
+
+                el.querySelectorAll('[data-top-page]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        STATE.topPage = parseInt(btn.dataset.topPage);
+                        pushState();
+                        loadTop();
+                    });
+                });
+            }).catch(() => {
+                el.innerHTML = '<div class="alert alert-danger">Failed to load data.</div>';
+            });
+        }
+
+        // ── Request History ───────────────────────────────────────────
+        function loadHistory() {
+            const el = document.getElementById('history-content');
+            el.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>';
+            apiFetch('history', {
+                days: STATE.days, page: STATE.page, statusFilter: STATE.statusFilter
+            }).then(d => {
+                if (!d.content || d.content.length === 0) {
+                    el.innerHTML = '<div class="alert alert-info">No request statistics available yet. Statistics are saved every 5 minutes.</div>';
+                    return;
+                }
+                let html = '<table class="table table-striped table-hover"><thead><tr><th>Timestamp</th><th>Method</th><th>Status</th><th>URI</th><th>Referer</th><th>User Agent</th></tr></thead><tbody>';
+                d.content.forEach(row => {
+                    const ts = row.createdAt ? row.createdAt.replace('T', ' ').substring(0, 19) : '-';
+                    html += `<tr>
+                        <td>${escHtml(ts)}</td>
+                        <td><span class="badge bg-primary">${escHtml(row.method || '')}</span></td>
+                        <td>${statusBadge(row.statusCode)}</td>
+                        <td>${escHtml(row.uri || '')}</td>
+                        <td><small class="text-muted">${escHtml(row.referer || '-')}</small></td>
+                        <td><small class="text-muted">${escHtml((row.userAgent || '').substring(0, 50) || '-')}</small></td>
+                    </tr>`;
+                });
+                html += '</tbody></table>';
+                html += paginationHtml(d.number, d.totalPages, 'data-hist-page');
+                el.innerHTML = html;
+
+                el.querySelectorAll('[data-hist-page]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        STATE.page = parseInt(btn.dataset.histPage);
+                        pushState();
+                        loadHistory();
+                    });
+                });
+            }).catch(() => {
+                el.innerHTML = '<div class="alert alert-danger">Failed to load data.</div>';
+            });
+        }
+
+        // ── Timeline ──────────────────────────────────────────────────
+        function loadTimeline() {
+            const el = document.getElementById('timeline-content');
+            el.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>';
+            apiFetch('timeline', {
+                days: STATE.days,
+                statusFilter: STATE.timelineStatusFilter,
+                resolution: STATE.timelineResolution
+            }).then(data => {
+                if (!data || data.length === 0) {
+                    el.innerHTML = '<div class="alert alert-info">No timeline data available yet. Statistics will appear after requests to /public/** endpoints are made.</div>';
+                    return;
+                }
+                el.innerHTML = '<canvas id="timelineChart" style="max-height:400px;"></canvas>';
+                if (timelineChart) { timelineChart.destroy(); timelineChart = null; }
+                timelineChart = new Chart(document.getElementById('timelineChart'), {
+                    type: 'bar',
+                    data: {
+                        labels: data.map(d => d.label),
+                        datasets: [{
+                            label: 'Requests',
+                            data:  data.map(d => d.count),
+                            backgroundColor: 'rgba(13,110,253,0.6)',
+                            borderColor: 'rgba(13,110,253,1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: { mode: 'index', intersect: false }
+                        },
+                        scales: {
+                            x: { title: { display: true, text: 'Period' } },
+                            y: { beginAtZero: true, title: { display: true, text: 'Request Count' } }
+                        }
+                    }
+                });
+            }).catch(() => {
+                el.innerHTML = '<div class="alert alert-danger">Failed to load data.</div>';
+            });
+        }
+
+        // ── Tab switching ──────────────────────────────────────────────
+        function activateTab(tabName) {
+            STATE.tab = tabName;
+            document.querySelectorAll('.nav-link[data-tab]').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.tab === tabName);
+            });
+            document.querySelectorAll('.tab-pane').forEach(pane => {
+                const active = pane.id === 'pane-' + tabName;
+                pane.classList.toggle('show', active);
+                pane.classList.toggle('active', active);
+            });
+            pushState();
+            if (tabName === 'top')      loadTop();
+            if (tabName === 'history')  loadHistory();
+            if (tabName === 'timeline') loadTimeline();
+        }
+
+        // ── XSS helper ────────────────────────────────────────────────
+        function escHtml(s) {
+            return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        // ── Event wiring ──────────────────────────────────────────────
+        document.querySelectorAll('.js-days').forEach(btn => {
+            btn.addEventListener('click', () => {
+                STATE.days = parseInt(btn.dataset.days);
+                STATE.page = 0; STATE.topPage = 0;
+                document.querySelector('.js-days-label').textContent = '최근 ' + STATE.days + '일 통계';
+                setActive('.js-days', 'days', STATE.days);
+                pushState();
+                loadSummary();
+                if (STATE.tab === 'top')      loadTop();
+                if (STATE.tab === 'history')  loadHistory();
+                if (STATE.tab === 'timeline') loadTimeline();
+            });
+        });
+
+        document.querySelectorAll('.nav-link[data-tab]').forEach(btn => {
+            btn.addEventListener('click', () => activateTab(btn.dataset.tab));
+        });
+
+        document.querySelectorAll('.js-top-group').forEach(btn => {
+            btn.addEventListener('click', () => {
+                STATE.topGroupBy = btn.dataset.group;
+                STATE.topPage = 0;
+                setActive('.js-top-group', 'group', STATE.topGroupBy);
+                pushState();
+                loadTop();
+            });
+        });
+
+        document.querySelectorAll('.js-top-status').forEach(btn => {
+            btn.addEventListener('click', () => {
+                STATE.topStatusFilter = btn.dataset.status;
+                STATE.topPage = 0;
+                setActive('.js-top-status', 'status', STATE.topStatusFilter);
+                pushState();
+                loadTop();
+            });
+        });
+
+        document.querySelectorAll('.js-top-sort').forEach(btn => {
+            btn.addEventListener('click', () => {
+                STATE.topSort = btn.dataset.sort;
+                STATE.topPage = 0;
+                pushState();
+                loadTop();
+            });
+        });
+
+        document.querySelectorAll('.js-hist-status').forEach(btn => {
+            btn.addEventListener('click', () => {
+                STATE.statusFilter = btn.dataset.status;
+                STATE.page = 0;
+                setActive('.js-hist-status', 'status', STATE.statusFilter);
+                pushState();
+                loadHistory();
+                loadSummary();
+            });
+        });
+
+        document.querySelectorAll('.js-tl-resolution').forEach(btn => {
+            btn.addEventListener('click', () => {
+                STATE.timelineResolution = btn.dataset.resolution;
+                setActive('.js-tl-resolution', 'resolution', STATE.timelineResolution);
+                pushState();
+                loadTimeline();
+            });
+        });
+
+        document.querySelectorAll('.js-tl-status').forEach(btn => {
+            btn.addEventListener('click', () => {
+                STATE.timelineStatusFilter = btn.dataset.status;
+                setActive('.js-tl-status', 'status', STATE.timelineStatusFilter);
+                pushState();
+                loadTimeline();
+            });
+        });
+
+        // ── Initial render ────────────────────────────────────────────
+        setActive('.js-days',        'days',       STATE.days);
+        setActive('.js-top-group',   'group',      STATE.topGroupBy);
+        setActive('.js-top-status',  'status',     STATE.topStatusFilter);
+        setActive('.js-hist-status', 'status',     STATE.statusFilter);
+        setActive('.js-tl-resolution','resolution',STATE.timelineResolution);
+        setActive('.js-tl-status',   'status',     STATE.timelineStatusFilter);
+
+        loadSummary();
+        activateTab(STATE.tab);
+    })();
     </script>
 </th:block>
 </body>
-</html>
 
+</html>

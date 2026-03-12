@@ -1,30 +1,16 @@
 package dev.yunseong.website.manage.controller;
 
-import dev.yunseong.website.manage.domain.RequestStatistics;
-import dev.yunseong.website.manage.domain.TimelineStat;
-import dev.yunseong.website.manage.domain.UriStat;
-import dev.yunseong.website.manage.service.RequestStatisticsService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import java.util.List;
-
 @Controller
 @RequestMapping("/admin/console")
 @RequiredArgsConstructor
 public class ConsoleController {
-
-    private static final int PAGE_SIZE = 10;
-
-    private final RequestStatisticsService requestStatisticsService;
 
     @GetMapping
     public String console(Model model,
@@ -36,21 +22,8 @@ public class ConsoleController {
                           @RequestParam(defaultValue = "count_desc") String topSort,
                           @RequestParam(defaultValue = "top") String tab,
                           @RequestParam(defaultValue = "uri") String topGroupBy,
-                          @RequestParam(defaultValue = "") String timelineStatusFilter) {
-        Pageable historyPageable = PageRequest.of(page, PAGE_SIZE, Sort.by(Sort.Direction.DESC, "createdAt"));
-
-        Page<RequestStatistics> statistics = requestStatisticsService.getStatisticsForLastDays(days, statusFilter, historyPageable);
-        Page<UriStat> topUris = switch (topGroupBy) {
-            case "ip" -> requestStatisticsService.getTopIpsPageForLastDays(days, topSort, topStatusFilter, topPage);
-            case "ua" -> requestStatisticsService.getTopUserAgentsPageForLastDays(days, topSort, topStatusFilter, topPage);
-            default  -> requestStatisticsService.getTopUrisPageForLastDays(days, topSort, topStatusFilter, topPage);
-        };
-        long totalRequests = requestStatisticsService.getTotalRequestsForLastDays(days, statusFilter);
-        List<TimelineStat> timeline = requestStatisticsService.getTimelineForLastDays(days, timelineStatusFilter);
-
-        model.addAttribute("statistics", statistics);
-        model.addAttribute("topUris", topUris);
-        model.addAttribute("totalRequests", totalRequests);
+                          @RequestParam(defaultValue = "") String timelineStatusFilter,
+                          @RequestParam(defaultValue = "day") String timelineResolution) {
         model.addAttribute("days", days);
         model.addAttribute("page", page);
         model.addAttribute("topPage", topPage);
@@ -60,19 +33,7 @@ public class ConsoleController {
         model.addAttribute("tab", tab);
         model.addAttribute("topGroupBy", topGroupBy);
         model.addAttribute("timelineStatusFilter", timelineStatusFilter);
-        model.addAttribute("timeline", timeline);
-        model.addAttribute("topSortLabel", switch (topSort) {
-            case "count_asc" -> "Requests ↑";
-            case "key_asc"   -> "Key A→Z";
-            case "key_desc"  -> "Key Z→A";
-            default          -> "Requests ↓";
-        });
-        model.addAttribute("topGroupByLabel", switch (topGroupBy) {
-            case "ip" -> "IP Address";
-            case "ua" -> "User Agent";
-            default   -> "URI";
-        });
-
+        model.addAttribute("timelineResolution", timelineResolution);
         return "console/dashboard";
     }
 }

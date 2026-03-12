@@ -14,11 +14,16 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.stream.Collectors;
 
@@ -181,12 +186,70 @@ public class RequestStatisticsService {
 
     @Transactional(readOnly = true)
     public List<TimelineStat> getTimelineForLastDays(int days, String statusFilter) {
+        return getTimelineForLastDays(days, statusFilter, "day");
+    }
+
+    @Transactional(readOnly = true)
+    public List<TimelineStat> getTimelineForLastDays(int days, String statusFilter, String resolution) {
         LocalDateTime startDate = LocalDateTime.now().minusDays(days);
-        if (statusFilter == null || statusFilter.isEmpty()) {
-            return requestStatisticsRepository.findDailyRequestCounts(startDate);
-        }
-        int[] range = statusCodeRange(statusFilter);
-        return requestStatisticsRepository.findDailyRequestCountsAndStatusCodeBetween(startDate, range[0], range[1]);
+        boolean filtered = statusFilter != null && !statusFilter.isEmpty();
+        int[] range = filtered ? statusCodeRange(statusFilter) : null;
+
+        return switch (resolution) {
+            case "hour" -> {
+                List<Object[]> rows = filtered
+                        ? requestStatisticsRepository.findHourlyRequestCountsAndStatusCodeBetween(startDate, range[0], range[1])
+                        : requestStatisticsRepository.findHourlyRequestCounts(startDate);
+                yield rows.stream()
+                        .map(r -> {
+                            LocalDateTime dt = (LocalDateTime) r[0];
+                            String label = dt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+                            return new TimelineStat(label, ((Number) r[1]).longValue());
+                        })
+                        .collect(Collectors.toList());
+            }
+            case "week" -> {
+                // Fetch daily data and aggregate in Java by ISO week start (Monday)
+                List<Object[]> rows = filtered
+                        ? requestStatisticsRepository.findDailyRequestCountsAndStatusCodeBetween(startDate, range[0], range[1])
+                        : requestStatisticsRepository.findDailyRequestCounts(startDate);
+                TreeMap<String, Long> weekly = new TreeMap<>();
+                for (Object[] r : rows) {
+                    LocalDate date = (LocalDate) r[0];
+                    LocalDate weekStart = date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+                    String label = weekStart.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                    weekly.merge(label, ((Number) r[1]).longValue(), Long::sum);
+                }
+                yield weekly.entrySet().stream()
+                        .map(e -> new TimelineStat(e.getKey(), e.getValue()))
+                        .collect(Collectors.toList());
+            }
+            case "month" -> {
+                List<Object[]> rows = filtered
+                        ? requestStatisticsRepository.findMonthlyRequestCountsAndStatusCodeBetween(startDate, range[0], range[1])
+                        : requestStatisticsRepository.findMonthlyRequestCounts(startDate);
+                yield rows.stream()
+                        .map(r -> {
+                            LocalDateTime dt = (LocalDateTime) r[0];
+                            String label = dt.format(DateTimeFormatter.ofPattern("yyyy-MM"));
+                            return new TimelineStat(label, ((Number) r[1]).longValue());
+                        })
+                        .collect(Collectors.toList());
+            }
+            default -> {
+                // day
+                List<Object[]> rows = filtered
+                        ? requestStatisticsRepository.findDailyRequestCountsAndStatusCodeBetween(startDate, range[0], range[1])
+                        : requestStatisticsRepository.findDailyRequestCounts(startDate);
+                yield rows.stream()
+                        .map(r -> {
+                            LocalDate date = (LocalDate) r[0];
+                            String label = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                            return new TimelineStat(label, ((Number) r[1]).longValue());
+                        })
+                        .collect(Collectors.toList());
+            }
+        };
     }
 
     @Transactional(readOnly = true)
