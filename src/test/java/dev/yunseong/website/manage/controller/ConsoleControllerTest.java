@@ -15,6 +15,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.ui.Model;
 
+import java.time.LocalDate;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -236,8 +237,8 @@ class ConsoleControllerTest {
         Page<RequestStatistics> emptyStats = Page.empty(historyPageable);
         Page<UriStat> emptyTop = Page.empty(PageRequest.of(0, 10));
         List<TimelineStat> timelineData = List.of(
-                new TimelineStat("2024-01-01", 10L),
-                new TimelineStat("2024-01-02", 20L)
+                new TimelineStat(LocalDate.of(2024, 1, 1), 10L),
+                new TimelineStat(LocalDate.of(2024, 1, 2), 20L)
         );
 
         when(requestStatisticsService.getStatisticsForLastDays(7, "", historyPageable)).thenReturn(emptyStats);
@@ -261,7 +262,7 @@ class ConsoleControllerTest {
         var historyPageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<RequestStatistics> emptyStats = Page.empty(historyPageable);
         Page<UriStat> emptyTop = Page.empty(PageRequest.of(0, 10));
-        List<TimelineStat> timelineData = List.of(new TimelineStat("2024-01-01", 5L));
+        List<TimelineStat> timelineData = List.of(new TimelineStat(LocalDate.of(2024, 1, 1), 5L));
 
         when(requestStatisticsService.getStatisticsForLastDays(7, "", historyPageable)).thenReturn(emptyStats);
         when(requestStatisticsService.getTopUrisPageForLastDays(7, "count_desc", "", 0)).thenReturn(emptyTop);

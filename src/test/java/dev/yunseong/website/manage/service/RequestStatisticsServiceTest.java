@@ -18,6 +18,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -403,8 +404,8 @@ class RequestStatisticsServiceTest {
     void getTimelineForLastDays_NoFilter_ReturnsAllDailyData() {
         // Given
         List<TimelineStat> mockData = List.of(
-                new TimelineStat("2024-01-01", 10L),
-                new TimelineStat("2024-01-02", 20L)
+                new TimelineStat(LocalDate.of(2024, 1, 1), 10L),
+                new TimelineStat(LocalDate.of(2024, 1, 2), 20L)
         );
         when(requestStatisticsRepository.findDailyRequestCounts(any(LocalDateTime.class))).thenReturn(mockData);
 
@@ -414,7 +415,7 @@ class RequestStatisticsServiceTest {
         // Then
         assertNotNull(result);
         assertEquals(2, result.size());
-        assertEquals("2024-01-01", result.get(0).date());
+        assertEquals(LocalDate.of(2024, 1, 1), result.get(0).date());
         assertEquals(10L, result.get(0).count());
         verify(requestStatisticsRepository, times(1)).findDailyRequestCounts(any(LocalDateTime.class));
     }
@@ -422,7 +423,7 @@ class RequestStatisticsServiceTest {
     @Test
     void getTimelineForLastDays_WithStatusFilter_UsesFilteredQuery() {
         // Given
-        List<TimelineStat> mockData = List.of(new TimelineStat("2024-01-01", 5L));
+        List<TimelineStat> mockData = List.of(new TimelineStat(LocalDate.of(2024, 1, 1), 5L));
         when(requestStatisticsRepository.findDailyRequestCountsAndStatusCodeBetween(
                 any(LocalDateTime.class), eq(200), eq(299))).thenReturn(mockData);
 

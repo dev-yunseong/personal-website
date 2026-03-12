@@ -345,9 +345,9 @@
     <script th:if="${tab == 'timeline' and !timeline.isEmpty()}"
             src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"
             crossorigin="anonymous"></script>
-    <script th:if="${tab == 'timeline' and !timeline.isEmpty()}">
+    <script th:if="${tab == 'timeline' and !timeline.isEmpty()}" th:inline="javascript">
         (function () {
-            const labels = /*[[${timeline.![date]}]]*/ [];
+            const labels = /*[[${timeline.![date.toString()]}]]*/ [];
             const data   = /*[[${timeline.![count]}]]*/ [];
             const ctx = document.getElementById('timelineChart');
             new Chart(ctx, {
