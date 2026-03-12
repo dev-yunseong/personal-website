@@ -1,6 +1,7 @@
 package dev.yunseong.website.manage.repository;
 
 import dev.yunseong.website.manage.domain.RequestStatistics;
+import dev.yunseong.website.manage.domain.TimelineStat;
 import dev.yunseong.website.manage.domain.UriStat;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -71,4 +72,84 @@ public interface RequestStatisticsRepository extends JpaRepository<RequestStatis
                                                              @Param("minStatus") int minStatus,
                                                              @Param("maxStatus") int maxStatus,
                                                              Pageable pageable);
+
+    // --- Group by IP ---
+
+    @Query(value = "SELECT new dev.yunseong.website.manage.domain.UriStat(r.ip, COUNT(r)) FROM RequestStatistics r WHERE r.createdAt >= :startDate GROUP BY r.ip ORDER BY COUNT(r) DESC",
+            countQuery = "SELECT COUNT(DISTINCT r.ip) FROM RequestStatistics r WHERE r.createdAt >= :startDate")
+    Page<UriStat> findTopIpsByRequestCount(@Param("startDate") LocalDateTime startDate, Pageable pageable);
+
+    @Query(value = "SELECT new dev.yunseong.website.manage.domain.UriStat(r.ip, COUNT(r)) FROM RequestStatistics r WHERE r.createdAt >= :startDate AND r.statusCode >= :minStatus AND r.statusCode <= :maxStatus GROUP BY r.ip ORDER BY COUNT(r) DESC",
+            countQuery = "SELECT COUNT(DISTINCT r.ip) FROM RequestStatistics r WHERE r.createdAt >= :startDate AND r.statusCode >= :minStatus AND r.statusCode <= :maxStatus")
+    Page<UriStat> findTopIpsByRequestCountAndStatusCodeBetween(@Param("startDate") LocalDateTime startDate,
+                                                               @Param("minStatus") int minStatus,
+                                                               @Param("maxStatus") int maxStatus,
+                                                               Pageable pageable);
+
+    @Query(value = "SELECT new dev.yunseong.website.manage.domain.UriStat(r.ip, COUNT(r)) FROM RequestStatistics r WHERE r.createdAt >= :startDate GROUP BY r.ip ORDER BY COUNT(r) ASC",
+            countQuery = "SELECT COUNT(DISTINCT r.ip) FROM RequestStatistics r WHERE r.createdAt >= :startDate")
+    Page<UriStat> findTopIpsByCountAsc(@Param("startDate") LocalDateTime startDate, Pageable pageable);
+
+    @Query(value = "SELECT new dev.yunseong.website.manage.domain.UriStat(r.ip, COUNT(r)) FROM RequestStatistics r WHERE r.createdAt >= :startDate AND r.statusCode >= :minStatus AND r.statusCode <= :maxStatus GROUP BY r.ip ORDER BY COUNT(r) ASC",
+            countQuery = "SELECT COUNT(DISTINCT r.ip) FROM RequestStatistics r WHERE r.createdAt >= :startDate AND r.statusCode >= :minStatus AND r.statusCode <= :maxStatus")
+    Page<UriStat> findTopIpsByCountAscAndStatusCodeBetween(@Param("startDate") LocalDateTime startDate,
+                                                           @Param("minStatus") int minStatus,
+                                                           @Param("maxStatus") int maxStatus,
+                                                           Pageable pageable);
+
+    @Query(value = "SELECT new dev.yunseong.website.manage.domain.UriStat(r.ip, COUNT(r)) FROM RequestStatistics r WHERE r.createdAt >= :startDate GROUP BY r.ip",
+            countQuery = "SELECT COUNT(DISTINCT r.ip) FROM RequestStatistics r WHERE r.createdAt >= :startDate")
+    Page<UriStat> findTopIpsSortedByKey(@Param("startDate") LocalDateTime startDate, Pageable pageable);
+
+    @Query(value = "SELECT new dev.yunseong.website.manage.domain.UriStat(r.ip, COUNT(r)) FROM RequestStatistics r WHERE r.createdAt >= :startDate AND r.statusCode >= :minStatus AND r.statusCode <= :maxStatus GROUP BY r.ip",
+            countQuery = "SELECT COUNT(DISTINCT r.ip) FROM RequestStatistics r WHERE r.createdAt >= :startDate AND r.statusCode >= :minStatus AND r.statusCode <= :maxStatus")
+    Page<UriStat> findTopIpsSortedByKeyAndStatusCodeBetween(@Param("startDate") LocalDateTime startDate,
+                                                            @Param("minStatus") int minStatus,
+                                                            @Param("maxStatus") int maxStatus,
+                                                            Pageable pageable);
+
+    // --- Group by User Agent ---
+
+    @Query(value = "SELECT new dev.yunseong.website.manage.domain.UriStat(r.userAgent, COUNT(r)) FROM RequestStatistics r WHERE r.createdAt >= :startDate GROUP BY r.userAgent ORDER BY COUNT(r) DESC",
+            countQuery = "SELECT COUNT(DISTINCT r.userAgent) FROM RequestStatistics r WHERE r.createdAt >= :startDate")
+    Page<UriStat> findTopUserAgentsByRequestCount(@Param("startDate") LocalDateTime startDate, Pageable pageable);
+
+    @Query(value = "SELECT new dev.yunseong.website.manage.domain.UriStat(r.userAgent, COUNT(r)) FROM RequestStatistics r WHERE r.createdAt >= :startDate AND r.statusCode >= :minStatus AND r.statusCode <= :maxStatus GROUP BY r.userAgent ORDER BY COUNT(r) DESC",
+            countQuery = "SELECT COUNT(DISTINCT r.userAgent) FROM RequestStatistics r WHERE r.createdAt >= :startDate AND r.statusCode >= :minStatus AND r.statusCode <= :maxStatus")
+    Page<UriStat> findTopUserAgentsByRequestCountAndStatusCodeBetween(@Param("startDate") LocalDateTime startDate,
+                                                                      @Param("minStatus") int minStatus,
+                                                                      @Param("maxStatus") int maxStatus,
+                                                                      Pageable pageable);
+
+    @Query(value = "SELECT new dev.yunseong.website.manage.domain.UriStat(r.userAgent, COUNT(r)) FROM RequestStatistics r WHERE r.createdAt >= :startDate GROUP BY r.userAgent ORDER BY COUNT(r) ASC",
+            countQuery = "SELECT COUNT(DISTINCT r.userAgent) FROM RequestStatistics r WHERE r.createdAt >= :startDate")
+    Page<UriStat> findTopUserAgentsByCountAsc(@Param("startDate") LocalDateTime startDate, Pageable pageable);
+
+    @Query(value = "SELECT new dev.yunseong.website.manage.domain.UriStat(r.userAgent, COUNT(r)) FROM RequestStatistics r WHERE r.createdAt >= :startDate AND r.statusCode >= :minStatus AND r.statusCode <= :maxStatus GROUP BY r.userAgent ORDER BY COUNT(r) ASC",
+            countQuery = "SELECT COUNT(DISTINCT r.userAgent) FROM RequestStatistics r WHERE r.createdAt >= :startDate AND r.statusCode >= :minStatus AND r.statusCode <= :maxStatus")
+    Page<UriStat> findTopUserAgentsByCountAscAndStatusCodeBetween(@Param("startDate") LocalDateTime startDate,
+                                                                  @Param("minStatus") int minStatus,
+                                                                  @Param("maxStatus") int maxStatus,
+                                                                  Pageable pageable);
+
+    @Query(value = "SELECT new dev.yunseong.website.manage.domain.UriStat(r.userAgent, COUNT(r)) FROM RequestStatistics r WHERE r.createdAt >= :startDate GROUP BY r.userAgent",
+            countQuery = "SELECT COUNT(DISTINCT r.userAgent) FROM RequestStatistics r WHERE r.createdAt >= :startDate")
+    Page<UriStat> findTopUserAgentsSortedByKey(@Param("startDate") LocalDateTime startDate, Pageable pageable);
+
+    @Query(value = "SELECT new dev.yunseong.website.manage.domain.UriStat(r.userAgent, COUNT(r)) FROM RequestStatistics r WHERE r.createdAt >= :startDate AND r.statusCode >= :minStatus AND r.statusCode <= :maxStatus GROUP BY r.userAgent",
+            countQuery = "SELECT COUNT(DISTINCT r.userAgent) FROM RequestStatistics r WHERE r.createdAt >= :startDate AND r.statusCode >= :minStatus AND r.statusCode <= :maxStatus")
+    Page<UriStat> findTopUserAgentsSortedByKeyAndStatusCodeBetween(@Param("startDate") LocalDateTime startDate,
+                                                                   @Param("minStatus") int minStatus,
+                                                                   @Param("maxStatus") int maxStatus,
+                                                                   Pageable pageable);
+
+    // --- Timeline (daily request counts) ---
+
+    @Query("SELECT new dev.yunseong.website.manage.domain.TimelineStat(CAST(r.createdAt AS date), COUNT(r)) FROM RequestStatistics r WHERE r.createdAt >= :startDate GROUP BY CAST(r.createdAt AS date) ORDER BY CAST(r.createdAt AS date) ASC")
+    List<TimelineStat> findDailyRequestCounts(@Param("startDate") LocalDateTime startDate);
+
+    @Query("SELECT new dev.yunseong.website.manage.domain.TimelineStat(CAST(r.createdAt AS date), COUNT(r)) FROM RequestStatistics r WHERE r.createdAt >= :startDate AND r.statusCode >= :minStatus AND r.statusCode <= :maxStatus GROUP BY CAST(r.createdAt AS date) ORDER BY CAST(r.createdAt AS date) ASC")
+    List<TimelineStat> findDailyRequestCountsAndStatusCodeBetween(@Param("startDate") LocalDateTime startDate,
+                                                                   @Param("minStatus") int minStatus,
+                                                                   @Param("maxStatus") int maxStatus);
 }

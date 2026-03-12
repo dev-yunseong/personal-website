@@ -15,16 +15,16 @@
         <!-- Time Period Selector -->
         <div class="mb-4">
             <div class="btn-group" role="group" aria-label="Time period">
-                <a th:href="@{/admin/console(days=1,statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab=${tab})}"
+                <a th:href="@{/admin/console(days=1,statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab=${tab},topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
                    th:classappend="${days == 1} ? 'active'"
                    class="btn btn-outline-primary btn-sm">1일</a>
-                <a th:href="@{/admin/console(days=7,statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab=${tab})}"
+                <a th:href="@{/admin/console(days=7,statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab=${tab},topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
                    th:classappend="${days == 7} ? 'active'"
                    class="btn btn-outline-primary btn-sm">7일</a>
-                <a th:href="@{/admin/console(days=30,statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab=${tab})}"
+                <a th:href="@{/admin/console(days=30,statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab=${tab},topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
                    th:classappend="${days == 30} ? 'active'"
                    class="btn btn-outline-primary btn-sm">30일</a>
-                <a th:href="@{/admin/console(days=90,statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab=${tab})}"
+                <a th:href="@{/admin/console(days=90,statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab=${tab},topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
                    th:classappend="${days == 90} ? 'active'"
                    class="btn btn-outline-primary btn-sm">90일</a>
             </div>
@@ -63,13 +63,18 @@
         <ul class="nav nav-tabs mb-3" id="consoleTabs" role="tablist">
             <li class="nav-item" role="presentation">
                 <a class="nav-link" th:classappend="${tab == 'top'} ? 'active'"
-                   th:href="@{/admin/console(days=${days},page=${page},topPage=${topPage},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='top')}"
+                   th:href="@{/admin/console(days=${days},page=${page},topPage=${topPage},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='top',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
                    role="tab">Top Pages</a>
             </li>
             <li class="nav-item" role="presentation">
                 <a class="nav-link" th:classappend="${tab == 'history'} ? 'active'"
-                   th:href="@{/admin/console(days=${days},page=${page},topPage=${topPage},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='history')}"
+                   th:href="@{/admin/console(days=${days},page=${page},topPage=${topPage},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='history',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
                    role="tab">Request History</a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" th:classappend="${tab == 'timeline'} ? 'active'"
+                   th:href="@{/admin/console(days=${days},page=${page},topPage=${topPage},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='timeline',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
+                   role="tab">Timeline</a>
             </li>
         </ul>
 
@@ -79,23 +84,35 @@
         <div class="tab-pane fade" th:classappend="${tab == 'top'} ? 'show active'">
         <div class="card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <h5 class="mb-0">Top Pages by Request Count</h5>
-                <div class="d-flex gap-2 align-items-center">
+                <h5 class="mb-0">Top <span th:text="${topGroupByLabel}">URI</span> by Request Count</h5>
+                <div class="d-flex gap-2 align-items-center flex-wrap">
+                    <!-- Group by selector -->
+                    <div class="btn-group" role="group" aria-label="Group by">
+                        <a th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='top',topGroupBy='uri',timelineStatusFilter=${timelineStatusFilter})}"
+                           th:classappend="${topGroupBy == 'uri'} ? 'active'"
+                           class="btn btn-outline-dark btn-sm">URI</a>
+                        <a th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='top',topGroupBy='ip',timelineStatusFilter=${timelineStatusFilter})}"
+                           th:classappend="${topGroupBy == 'ip'} ? 'active'"
+                           class="btn btn-outline-dark btn-sm">IP</a>
+                        <a th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='top',topGroupBy='ua',timelineStatusFilter=${timelineStatusFilter})}"
+                           th:classappend="${topGroupBy == 'ua'} ? 'active'"
+                           class="btn btn-outline-dark btn-sm">User Agent</a>
+                    </div>
                     <!-- Status code filter for Top Pages -->
                     <div class="btn-group" role="group" aria-label="Top pages status filter">
-                        <a th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter='',topSort=${topSort},tab='top')}"
+                        <a th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter='',topSort=${topSort},tab='top',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
                            th:classappend="${topStatusFilter == ''} ? 'active'"
                            class="btn btn-outline-secondary btn-sm">All</a>
-                        <a th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter='2xx',topSort=${topSort},tab='top')}"
+                        <a th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter='2xx',topSort=${topSort},tab='top',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
                            th:classappend="${topStatusFilter == '2xx'} ? 'active'"
                            class="btn btn-outline-success btn-sm">2xx</a>
-                        <a th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter='3xx',topSort=${topSort},tab='top')}"
+                        <a th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter='3xx',topSort=${topSort},tab='top',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
                            th:classappend="${topStatusFilter == '3xx'} ? 'active'"
                            class="btn btn-outline-info btn-sm">3xx</a>
-                        <a th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter='4xx',topSort=${topSort},tab='top')}"
+                        <a th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter='4xx',topSort=${topSort},tab='top',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
                            th:classappend="${topStatusFilter == '4xx'} ? 'active'"
                            class="btn btn-outline-warning btn-sm">4xx</a>
-                        <a th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter='5xx',topSort=${topSort},tab='top')}"
+                        <a th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter='5xx',topSort=${topSort},tab='top',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
                            th:classappend="${topStatusFilter == '5xx'} ? 'active'"
                            class="btn btn-outline-danger btn-sm">5xx</a>
                     </div>
@@ -107,14 +124,14 @@
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li><a class="dropdown-item"
-                                   th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort='count_desc',tab='top')}">Requests ↓</a></li>
+                                   th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort='count_desc',tab='top',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}">Requests ↓</a></li>
                             <li><a class="dropdown-item"
-                                   th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort='count_asc',tab='top')}">Requests ↑</a></li>
+                                   th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort='count_asc',tab='top',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}">Requests ↑</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item"
-                                   th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort='uri_asc',tab='top')}">URI A→Z</a></li>
+                                   th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort='key_asc',tab='top',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}">Key A→Z</a></li>
                             <li><a class="dropdown-item"
-                                   th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort='uri_desc',tab='top')}">URI Z→A</a></li>
+                                   th:href="@{/admin/console(days=${days},page=${page},topPage=0,statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort='key_desc',tab='top',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}">Key Z→A</a></li>
                         </ul>
                     </div>
                 </div>
@@ -127,7 +144,7 @@
                     <table class="table table-striped">
                         <thead>
                         <tr>
-                            <th>URI</th>
+                            <th th:text="${topGroupByLabel}">URI</th>
                             <th>Total Requests</th>
                         </tr>
                         </thead>
@@ -147,7 +164,7 @@
                         <ul class="pagination pagination-sm flex-wrap justify-content-center">
                             <li class="page-item" th:classappend="${topUris.first} ? 'disabled'">
                                 <a class="page-link"
-                                   th:href="@{/admin/console(days=${days},page=${page},topPage=${topUris.number - 1},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='top')}"
+                                   th:href="@{/admin/console(days=${days},page=${page},topPage=${topUris.number - 1},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='top',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
                                    aria-label="Previous">
                                     <span aria-hidden="true">&laquo;</span>
                                 </a>
@@ -159,7 +176,7 @@
                                 th:each="i : ${#numbers.sequence(startPage, endPage)}"
                                 th:classappend="${i == topUris.number} ? 'active'">
                                 <a class="page-link"
-                                   th:href="@{/admin/console(days=${days},page=${page},topPage=${i},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='top')}"
+                                   th:href="@{/admin/console(days=${days},page=${page},topPage=${i},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='top',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
                                    th:text="${i + 1}"></a>
                             </li>
                             <li th:if="${endPage < topUris.totalPages - 1}" class="page-item disabled">
@@ -167,7 +184,7 @@
                             </li>
                             <li class="page-item" th:classappend="${topUris.last} ? 'disabled'">
                                 <a class="page-link"
-                                   th:href="@{/admin/console(days=${days},page=${page},topPage=${topUris.number + 1},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='top')}"
+                                   th:href="@{/admin/console(days=${days},page=${page},topPage=${topUris.number + 1},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='top',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
                                    aria-label="Next">
                                     <span aria-hidden="true">&raquo;</span>
                                 </a>
@@ -186,19 +203,19 @@
                 <h5 class="mb-0">Request History</h5>
                 <!-- Status Code Filter -->
                 <div class="btn-group" role="group" aria-label="Status code filter">
-                    <a th:href="@{/admin/console(days=${days},page=0,topPage=${topPage},statusFilter='',topStatusFilter=${topStatusFilter},topSort=${topSort},tab='history')}"
+                    <a th:href="@{/admin/console(days=${days},page=0,topPage=${topPage},statusFilter='',topStatusFilter=${topStatusFilter},topSort=${topSort},tab='history',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
                        th:classappend="${statusFilter == ''} ? 'active'"
                        class="btn btn-outline-secondary btn-sm">All</a>
-                    <a th:href="@{/admin/console(days=${days},page=0,topPage=${topPage},statusFilter='2xx',topStatusFilter=${topStatusFilter},topSort=${topSort},tab='history')}"
+                    <a th:href="@{/admin/console(days=${days},page=0,topPage=${topPage},statusFilter='2xx',topStatusFilter=${topStatusFilter},topSort=${topSort},tab='history',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
                        th:classappend="${statusFilter == '2xx'} ? 'active'"
                        class="btn btn-outline-success btn-sm">2xx</a>
-                    <a th:href="@{/admin/console(days=${days},page=0,topPage=${topPage},statusFilter='3xx',topStatusFilter=${topStatusFilter},topSort=${topSort},tab='history')}"
+                    <a th:href="@{/admin/console(days=${days},page=0,topPage=${topPage},statusFilter='3xx',topStatusFilter=${topStatusFilter},topSort=${topSort},tab='history',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
                        th:classappend="${statusFilter == '3xx'} ? 'active'"
                        class="btn btn-outline-info btn-sm">3xx</a>
-                    <a th:href="@{/admin/console(days=${days},page=0,topPage=${topPage},statusFilter='4xx',topStatusFilter=${topStatusFilter},topSort=${topSort},tab='history')}"
+                    <a th:href="@{/admin/console(days=${days},page=0,topPage=${topPage},statusFilter='4xx',topStatusFilter=${topStatusFilter},topSort=${topSort},tab='history',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
                        th:classappend="${statusFilter == '4xx'} ? 'active'"
                        class="btn btn-outline-warning btn-sm">4xx</a>
-                    <a th:href="@{/admin/console(days=${days},page=0,topPage=${topPage},statusFilter='5xx',topStatusFilter=${topStatusFilter},topSort=${topSort},tab='history')}"
+                    <a th:href="@{/admin/console(days=${days},page=0,topPage=${topPage},statusFilter='5xx',topStatusFilter=${topStatusFilter},topSort=${topSort},tab='history',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
                        th:classappend="${statusFilter == '5xx'} ? 'active'"
                        class="btn btn-outline-danger btn-sm">5xx</a>
                 </div>
@@ -254,7 +271,7 @@
                         <ul class="pagination pagination-sm flex-wrap justify-content-center">
                             <li class="page-item" th:classappend="${statistics.first} ? 'disabled'">
                                 <a class="page-link"
-                                   th:href="@{/admin/console(days=${days},page=${statistics.number - 1},topPage=${topPage},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='history')}"
+                                   th:href="@{/admin/console(days=${days},page=${statistics.number - 1},topPage=${topPage},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='history',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
                                    aria-label="Previous">
                                     <span aria-hidden="true">&laquo;</span>
                                 </a>
@@ -266,7 +283,7 @@
                                 th:each="i : ${#numbers.sequence(startPage, endPage)}"
                                 th:classappend="${i == statistics.number} ? 'active'">
                                 <a class="page-link"
-                                   th:href="@{/admin/console(days=${days},page=${i},topPage=${topPage},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='history')}"
+                                   th:href="@{/admin/console(days=${days},page=${i},topPage=${topPage},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='history',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
                                    th:text="${i + 1}"></a>
                             </li>
                             <li th:if="${endPage < statistics.totalPages - 1}" class="page-item disabled">
@@ -274,7 +291,7 @@
                             </li>
                             <li class="page-item" th:classappend="${statistics.last} ? 'disabled'">
                                 <a class="page-link"
-                                   th:href="@{/admin/console(days=${days},page=${statistics.number + 1},topPage=${topPage},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='history')}"
+                                   th:href="@{/admin/console(days=${days},page=${statistics.number + 1},topPage=${topPage},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='history',topGroupBy=${topGroupBy},timelineStatusFilter=${timelineStatusFilter})}"
                                    aria-label="Next">
                                     <span aria-hidden="true">&raquo;</span>
                                 </a>
@@ -286,8 +303,80 @@
         </div>
         </div>
 
+        <!-- Timeline Tab -->
+        <div class="tab-pane fade" th:classappend="${tab == 'timeline'} ? 'show active'">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <h5 class="mb-0">Request Timeline</h5>
+                <!-- Status Code Filter -->
+                <div class="btn-group" role="group" aria-label="Timeline status filter">
+                    <a th:href="@{/admin/console(days=${days},page=${page},topPage=${topPage},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='timeline',topGroupBy=${topGroupBy},timelineStatusFilter='')}"
+                       th:classappend="${timelineStatusFilter == ''} ? 'active'"
+                       class="btn btn-outline-secondary btn-sm">All</a>
+                    <a th:href="@{/admin/console(days=${days},page=${page},topPage=${topPage},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='timeline',topGroupBy=${topGroupBy},timelineStatusFilter='2xx')}"
+                       th:classappend="${timelineStatusFilter == '2xx'} ? 'active'"
+                       class="btn btn-outline-success btn-sm">2xx</a>
+                    <a th:href="@{/admin/console(days=${days},page=${page},topPage=${topPage},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='timeline',topGroupBy=${topGroupBy},timelineStatusFilter='3xx')}"
+                       th:classappend="${timelineStatusFilter == '3xx'} ? 'active'"
+                       class="btn btn-outline-info btn-sm">3xx</a>
+                    <a th:href="@{/admin/console(days=${days},page=${page},topPage=${topPage},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='timeline',topGroupBy=${topGroupBy},timelineStatusFilter='4xx')}"
+                       th:classappend="${timelineStatusFilter == '4xx'} ? 'active'"
+                       class="btn btn-outline-warning btn-sm">4xx</a>
+                    <a th:href="@{/admin/console(days=${days},page=${page},topPage=${topPage},statusFilter=${statusFilter},topStatusFilter=${topStatusFilter},topSort=${topSort},tab='timeline',topGroupBy=${topGroupBy},timelineStatusFilter='5xx')}"
+                       th:classappend="${timelineStatusFilter == '5xx'} ? 'active'"
+                       class="btn btn-outline-danger btn-sm">5xx</a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div th:if="${timeline.isEmpty()}" class="alert alert-info">
+                    No timeline data available yet. Statistics will appear after requests to /public/** endpoints are made.
+                </div>
+                <div th:unless="${timeline.isEmpty()}">
+                    <canvas id="timelineChart" style="max-height: 400px;"></canvas>
+                </div>
+            </div>
+        </div>
+        </div>
+
         </div><!-- end tab-content -->
     </div>
+
+    <!-- Chart.js for Timeline -->
+    <script th:if="${tab == 'timeline' and !timeline.isEmpty()}"
+            src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"
+            crossorigin="anonymous"></script>
+    <script th:if="${tab == 'timeline' and !timeline.isEmpty()}">
+        (function () {
+            const labels = /*[[${timeline.![date]}]]*/ [];
+            const data   = /*[[${timeline.![count]}]]*/ [];
+            const ctx = document.getElementById('timelineChart');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Requests',
+                        data: data,
+                        backgroundColor: 'rgba(13, 110, 253, 0.6)',
+                        borderColor: 'rgba(13, 110, 253, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { mode: 'index', intersect: false }
+                    },
+                    scales: {
+                        x: { title: { display: true, text: 'Date' } },
+                        y: { beginAtZero: true, title: { display: true, text: 'Request Count' } }
+                    }
+                }
+            });
+        })();
+    </script>
 </th:block>
 </body>
 </html>
+

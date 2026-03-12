@@ -1,6 +1,7 @@
 package dev.yunseong.website.manage.service;
 
 import dev.yunseong.website.manage.domain.RequestStatistics;
+import dev.yunseong.website.manage.domain.TimelineStat;
 import dev.yunseong.website.manage.domain.UriStat;
 import dev.yunseong.website.manage.repository.RequestStatisticsRepository;
 import lombok.RequiredArgsConstructor;
@@ -104,9 +105,9 @@ public class RequestStatisticsService {
             return switch (topSort != null ? topSort : "count_desc") {
                 case "count_asc" -> requestStatisticsRepository.findTopUrisByCountAscAndStatusCodeBetween(
                         startDate, range[0], range[1], basePageable);
-                case "uri_asc" -> requestStatisticsRepository.findTopUrisSortedByUriAndStatusCodeBetween(
+                case "key_asc" -> requestStatisticsRepository.findTopUrisSortedByUriAndStatusCodeBetween(
                         startDate, range[0], range[1], PageRequest.of(topPage, PAGE_SIZE, Sort.by("uri").ascending()));
-                case "uri_desc" -> requestStatisticsRepository.findTopUrisSortedByUriAndStatusCodeBetween(
+                case "key_desc" -> requestStatisticsRepository.findTopUrisSortedByUriAndStatusCodeBetween(
                         startDate, range[0], range[1], PageRequest.of(topPage, PAGE_SIZE, Sort.by("uri").descending()));
                 default -> requestStatisticsRepository.findTopUrisByRequestCountAndStatusCodeBetween(
                         startDate, range[0], range[1], basePageable);
@@ -114,12 +115,78 @@ public class RequestStatisticsService {
         }
         return switch (topSort != null ? topSort : "count_desc") {
             case "count_asc" -> requestStatisticsRepository.findTopUrisByCountAsc(startDate, basePageable);
-            case "uri_asc" -> requestStatisticsRepository.findTopUrisSortedByUri(
+            case "key_asc" -> requestStatisticsRepository.findTopUrisSortedByUri(
                     startDate, PageRequest.of(topPage, PAGE_SIZE, Sort.by("uri").ascending()));
-            case "uri_desc" -> requestStatisticsRepository.findTopUrisSortedByUri(
+            case "key_desc" -> requestStatisticsRepository.findTopUrisSortedByUri(
                     startDate, PageRequest.of(topPage, PAGE_SIZE, Sort.by("uri").descending()));
             default -> requestStatisticsRepository.findTopUrisByRequestCount(startDate, basePageable);
         };
+    }
+
+    @Transactional(readOnly = true)
+    public Page<UriStat> getTopIpsPageForLastDays(int days, String topSort, String topStatusFilter, int topPage) {
+        LocalDateTime startDate = LocalDateTime.now().minusDays(days);
+        boolean filtered = topStatusFilter != null && !topStatusFilter.isEmpty();
+        Pageable basePageable = PageRequest.of(topPage, PAGE_SIZE);
+        if (filtered) {
+            int[] range = statusCodeRange(topStatusFilter);
+            return switch (topSort != null ? topSort : "count_desc") {
+                case "count_asc" -> requestStatisticsRepository.findTopIpsByCountAscAndStatusCodeBetween(
+                        startDate, range[0], range[1], basePageable);
+                case "key_asc" -> requestStatisticsRepository.findTopIpsSortedByKeyAndStatusCodeBetween(
+                        startDate, range[0], range[1], PageRequest.of(topPage, PAGE_SIZE, Sort.by("ip").ascending()));
+                case "key_desc" -> requestStatisticsRepository.findTopIpsSortedByKeyAndStatusCodeBetween(
+                        startDate, range[0], range[1], PageRequest.of(topPage, PAGE_SIZE, Sort.by("ip").descending()));
+                default -> requestStatisticsRepository.findTopIpsByRequestCountAndStatusCodeBetween(
+                        startDate, range[0], range[1], basePageable);
+            };
+        }
+        return switch (topSort != null ? topSort : "count_desc") {
+            case "count_asc" -> requestStatisticsRepository.findTopIpsByCountAsc(startDate, basePageable);
+            case "key_asc" -> requestStatisticsRepository.findTopIpsSortedByKey(
+                    startDate, PageRequest.of(topPage, PAGE_SIZE, Sort.by("ip").ascending()));
+            case "key_desc" -> requestStatisticsRepository.findTopIpsSortedByKey(
+                    startDate, PageRequest.of(topPage, PAGE_SIZE, Sort.by("ip").descending()));
+            default -> requestStatisticsRepository.findTopIpsByRequestCount(startDate, basePageable);
+        };
+    }
+
+    @Transactional(readOnly = true)
+    public Page<UriStat> getTopUserAgentsPageForLastDays(int days, String topSort, String topStatusFilter, int topPage) {
+        LocalDateTime startDate = LocalDateTime.now().minusDays(days);
+        boolean filtered = topStatusFilter != null && !topStatusFilter.isEmpty();
+        Pageable basePageable = PageRequest.of(topPage, PAGE_SIZE);
+        if (filtered) {
+            int[] range = statusCodeRange(topStatusFilter);
+            return switch (topSort != null ? topSort : "count_desc") {
+                case "count_asc" -> requestStatisticsRepository.findTopUserAgentsByCountAscAndStatusCodeBetween(
+                        startDate, range[0], range[1], basePageable);
+                case "key_asc" -> requestStatisticsRepository.findTopUserAgentsSortedByKeyAndStatusCodeBetween(
+                        startDate, range[0], range[1], PageRequest.of(topPage, PAGE_SIZE, Sort.by("userAgent").ascending()));
+                case "key_desc" -> requestStatisticsRepository.findTopUserAgentsSortedByKeyAndStatusCodeBetween(
+                        startDate, range[0], range[1], PageRequest.of(topPage, PAGE_SIZE, Sort.by("userAgent").descending()));
+                default -> requestStatisticsRepository.findTopUserAgentsByRequestCountAndStatusCodeBetween(
+                        startDate, range[0], range[1], basePageable);
+            };
+        }
+        return switch (topSort != null ? topSort : "count_desc") {
+            case "count_asc" -> requestStatisticsRepository.findTopUserAgentsByCountAsc(startDate, basePageable);
+            case "key_asc" -> requestStatisticsRepository.findTopUserAgentsSortedByKey(
+                    startDate, PageRequest.of(topPage, PAGE_SIZE, Sort.by("userAgent").ascending()));
+            case "key_desc" -> requestStatisticsRepository.findTopUserAgentsSortedByKey(
+                    startDate, PageRequest.of(topPage, PAGE_SIZE, Sort.by("userAgent").descending()));
+            default -> requestStatisticsRepository.findTopUserAgentsByRequestCount(startDate, basePageable);
+        };
+    }
+
+    @Transactional(readOnly = true)
+    public List<TimelineStat> getTimelineForLastDays(int days, String statusFilter) {
+        LocalDateTime startDate = LocalDateTime.now().minusDays(days);
+        if (statusFilter == null || statusFilter.isEmpty()) {
+            return requestStatisticsRepository.findDailyRequestCounts(startDate);
+        }
+        int[] range = statusCodeRange(statusFilter);
+        return requestStatisticsRepository.findDailyRequestCountsAndStatusCodeBetween(startDate, range[0], range[1]);
     }
 
     @Transactional(readOnly = true)
