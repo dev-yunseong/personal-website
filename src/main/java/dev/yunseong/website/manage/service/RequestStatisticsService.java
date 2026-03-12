@@ -14,6 +14,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Date;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -215,7 +216,7 @@ public class RequestStatisticsService {
                         : requestStatisticsRepository.findDailyRequestCounts(startDate);
                 TreeMap<String, Long> weekly = new TreeMap<>();
                 for (Object[] r : rows) {
-                    LocalDate date = (LocalDate) r[0];
+                    LocalDate date = ((Date) r[0]).toLocalDate();
                     LocalDate weekStart = date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
                     String label = weekStart.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
                     weekly.merge(label, ((Number) r[1]).longValue(), Long::sum);
@@ -243,7 +244,7 @@ public class RequestStatisticsService {
                         : requestStatisticsRepository.findDailyRequestCounts(startDate);
                 yield rows.stream()
                         .map(r -> {
-                            LocalDate date = (LocalDate) r[0];
+                            LocalDate date = ((Date) r[0]).toLocalDate();
                             String label = date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
                             return new TimelineStat(label, ((Number) r[1]).longValue());
                         })
