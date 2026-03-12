@@ -406,8 +406,8 @@ class RequestStatisticsServiceTest {
         java.time.LocalDate date1 = LocalDate.of(2024, 1, 1);
         java.time.LocalDate date2 = LocalDate.of(2024, 1, 2);
         List<Object[]> mockRows = List.of(
-                new Object[]{date1, 10L},
-                new Object[]{date2, 20L}
+                new Object[]{java.sql.Date.valueOf(date1), 10L},
+                new Object[]{java.sql.Date.valueOf(date2), 20L}
         );
         when(requestStatisticsRepository.findDailyRequestCounts(any(LocalDateTime.class))).thenReturn(mockRows);
 
@@ -426,7 +426,7 @@ class RequestStatisticsServiceTest {
     void getTimelineForLastDays_WithStatusFilter_UsesFilteredQuery() {
         // Given
         java.time.LocalDate date1 = LocalDate.of(2024, 1, 1);
-        List<Object[]> mockRows = List.of(new Object[]{date1, 5L});
+        List<Object[]> mockRows = List.<Object[]>of(new Object[]{java.sql.Date.valueOf(date1), 5L});
         when(requestStatisticsRepository.findDailyRequestCountsAndStatusCodeBetween(
                 any(LocalDateTime.class), eq(200), eq(299))).thenReturn(mockRows);
 
@@ -446,7 +446,7 @@ class RequestStatisticsServiceTest {
     void getTimelineForLastDays_HourlyResolution_UsesHourlyQuery() {
         // Given
         java.time.LocalDateTime dt = java.time.LocalDateTime.of(2024, 1, 1, 10, 0);
-        List<Object[]> mockRows = List.of(new Object[]{dt, 5L});
+        List<Object[]> mockRows = List.<Object[]>of(new Object[]{dt, 5L});
         when(requestStatisticsRepository.findHourlyRequestCounts(any(LocalDateTime.class))).thenReturn(mockRows);
 
         // When
@@ -463,8 +463,8 @@ class RequestStatisticsServiceTest {
     void getTimelineForLastDays_WeeklyResolution_AggregatesDailyIntoWeeks() {
         // Given - two dates in the same week (Mon 2024-01-01 and Tue 2024-01-02)
         List<Object[]> mockRows = List.of(
-                new Object[]{LocalDate.of(2024, 1, 1), 10L},
-                new Object[]{LocalDate.of(2024, 1, 2), 20L}
+                new Object[]{java.sql.Date.valueOf(LocalDate.of(2024, 1, 1)), 10L},
+                new Object[]{java.sql.Date.valueOf(LocalDate.of(2024, 1, 2)), 20L}
         );
         when(requestStatisticsRepository.findDailyRequestCounts(any(LocalDateTime.class))).thenReturn(mockRows);
 
@@ -481,7 +481,7 @@ class RequestStatisticsServiceTest {
     void getTimelineForLastDays_MonthlyResolution_UsesMonthlyQuery() {
         // Given
         java.time.LocalDateTime dt = java.time.LocalDateTime.of(2024, 1, 1, 0, 0);
-        List<Object[]> mockRows = List.of(new Object[]{dt, 50L});
+        List<Object[]> mockRows = List.<Object[]>of(new Object[]{dt, 50L});
         when(requestStatisticsRepository.findMonthlyRequestCounts(any(LocalDateTime.class))).thenReturn(mockRows);
 
         // When
