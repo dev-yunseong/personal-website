@@ -1,4 +1,6 @@
 package dev.yunseong.website.manage.domain;
 
-public record TimelineStat(String date, long count) {
+import java.sql.Date;
+
+public record TimelineStat(Date date, long count) {
 }
