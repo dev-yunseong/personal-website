@@ -5,19 +5,56 @@ on:
     branches:
       - main
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
 jobs:
-  deploy:
+  build-and-push:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Set up JDK
-        uses: actions/setup-java@v3
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
         with:
-          distribution: 'temurin'
-          java-version: '21'
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha
+            type=raw,value=latest
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          build-args: |
+            GITHUB_USERNAME=${{ github.actor }}
+            GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.0
@@ -31,14 +68,9 @@ jobs:
 
       - name: Run deploy script
         env:
-          GITHUB_USERNAME: ${{ secrets.GITHUB_USER }}
+          GITHUB_USERNAME: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          APPLICATION_USER: ${{ secrets.APPLICATION_USER }}
-          APPLICATION_PW: ${{ secrets.APPLICATION_PW }}
-          DATABASE_USER: ${{ secrets.DATABASE_USER }}
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          DATABASE_PW: ${{ secrets.DATABASE_PW }}
           DEPLOY_USER: ${{ secrets.SERVER_USER }}
           DEPLOY_SERVER: ${{ secrets.SERVER_HOST }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          IMAGE: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
         run: bash deploy.sh
