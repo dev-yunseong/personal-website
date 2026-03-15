@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       layout:decorate="~{layout}"
       th:with="
         pageTitle='Mini Apps | Yunseong',
@@ -26,6 +27,9 @@
     <div class="container px-3 px-md-4">
         <h1 class="my-3 my-md-4">Mini Apps</h1>
         <p class="lead">HTML로 만든 가벼운 앱 모음</p>
+        <a sec:authorize="isAuthenticated()" href="/admin/miniapps/new" class="btn btn-primary mb-3">
+            <i class="bi bi-plus-lg"></i> Add App
+        </a>
 
         <div class="row">
             <div class="col-12 col-sm-6 col-md-4 mb-4" th:each="app : ${miniApps}">
