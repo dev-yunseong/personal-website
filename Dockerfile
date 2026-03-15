@@ -2,14 +2,12 @@
 FROM eclipse-temurin:21-jdk AS build
 WORKDIR /app
 
-# Build args for accessing private GitHub packages
-ARG GITHUB_USERNAME
-ARG GITHUB_TOKEN
-ENV GITHUB_USERNAME=${GITHUB_USERNAME}
-ENV GITHUB_TOKEN=${GITHUB_TOKEN}
-
 COPY . .
-RUN ./gradlew clean build -x test
+RUN --mount=type=secret,id=GITHUB_USERNAME \
+    --mount=type=secret,id=GITHUB_TOKEN \
+    GITHUB_USERNAME=$(cat /run/secrets/GITHUB_USERNAME) \
+    GITHUB_TOKEN=$(cat /run/secrets/GITHUB_TOKEN) \
+    ./gradlew clean build -x test
 
 # Stage 2: Runtime
 FROM eclipse-temurin:21-jre
