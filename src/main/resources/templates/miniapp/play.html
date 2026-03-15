@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}"
+      th:with="
+        pageTitle=${miniApp.title + ' | Yunseong'},
+        pageDescription=${miniApp.description != null ? miniApp.description : miniApp.title + ' - Yunseong의 미니 앱입니다.'},
+        pageKeywords=${miniApp.title + ', 미니앱, 데모'},
+        pageUrl=${'/public/apps/' + miniApp.id}">
+
+<th:block layout:fragment="script">
+    <th:block th:replace="~{fragments/game_player_fragment :: gamePlayerScript}"></th:block>
+</th:block>
+
+<th:block layout:fragment="css">
+    <th:block th:replace="~{fragments/game_player_fragment :: gamePlayerCss}"></th:block>
+</th:block>
+
+<body>
+<th:block layout:fragment="content">
+    <div class="container px-3 px-md-4">
+        <div class="row justify-content-center">
+            <div class="col-12 col-lg-12">
+                <h1 class="my-3 my-md-4" th:text="${miniApp.title}">App Title</h1>
+                <p class="text-muted" th:text="${miniApp.description}" th:if="${miniApp.description != null and !miniApp.description.isEmpty()}"></p>
+
+                <div th:replace="~{fragments/game_player_fragment :: gamePlayer(gameUrl=${miniApp.appUrl})}"></div>
+            </div>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

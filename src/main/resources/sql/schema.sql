@@ -73,3 +73,11 @@ CREATE INDEX idx_content_trgm ON memos USING GIN (content gin_trgm_ops);
 
 -- improve statistics
 ALTER TABLE request_statistics ADD COLUMN status_code SMALLINT;
+
+-- ADD Mini App System
+CREATE TABLE mini_apps (
+    id BIGSERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    app_url VARCHAR(1024) NOT NULL
+);
