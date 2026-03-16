@@ -6,6 +6,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -13,6 +19,8 @@ public class MiniAppAiService {
 
     private final ChatClient openAiChatClient;
     private final ObjectMapper objectMapper;
+
+    private static final Duration FETCH_TIMEOUT = Duration.ofSeconds(10);
 
     // ~2000 tokens for gpt-4o-mini context, leaving room for system + response
     private static final int MAX_HTML_CHARS = 8000;
@@ -33,6 +41,25 @@ public class MiniAppAiService {
             """;
 
     public record MiniAppMetadata(String title, String description) {}
+
+    public MiniAppMetadata generateMetadataFromUrl(String url) throws Exception {
+        HttpClient client = HttpClient.newBuilder()
+                .followRedirects(HttpClient.Redirect.NORMAL)
+                .connectTimeout(FETCH_TIMEOUT)
+                .build();
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .timeout(FETCH_TIMEOUT)
+                .GET()
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        if (response.statusCode() < 200 || response.statusCode() >= 300) {
+            throw new RuntimeException("Failed to fetch URL: HTTP " + response.statusCode());
+        }
+        return generateMetadata(response.body());
+    }
 
     public MiniAppMetadata generateMetadata(String htmlContent) {
         String truncated = htmlContent.length() > MAX_HTML_CHARS
