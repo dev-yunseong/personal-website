@@ -22,6 +22,11 @@
                             <div class="form-text">파일을 업로드하면 기존 URL이 새 파일의 URL로 교체됩니다. URL이 함께 입력된 경우 파일보다 URL이 우선됩니다.</div>
                         </div>
                         <div class="mb-3">
+                            <label for="generateUrl" class="form-label">또는 URL로 AI 이름/설명 생성</label>
+                            <input type="url" class="form-control" id="generateUrl" placeholder="https://example.com/myapp/index.html">
+                            <div class="form-text">파일 업로드 대신 URL을 입력하면 해당 페이지의 내용으로 이름/설명을 생성합니다.</div>
+                        </div>
+                        <div class="mb-3">
                             <button type="button" class="btn btn-outline-secondary btn-sm" id="generateBtn" disabled>
                                 <i class="bi bi-stars"></i> AI로 이름/설명 생성
                             </button>
@@ -54,51 +59,68 @@
         const csrfHeader = /*[[${_csrf.headerName}]]*/ 'X-CSRF-TOKEN';
 
         const fileInput = document.getElementById('htmlFile');
+        const generateUrlInput = document.getElementById('generateUrl');
         const generateBtn = document.getElementById('generateBtn');
         const generateStatus = document.getElementById('generateStatus');
 
-        fileInput.addEventListener('change', function () {
-            generateBtn.disabled = !this.files.length;
-        });
+        function updateGenerateBtn() {
+            generateBtn.disabled = !fileInput.files.length && !generateUrlInput.value.trim();
+        }
+
+        fileInput.addEventListener('change', updateGenerateBtn);
+        generateUrlInput.addEventListener('input', updateGenerateBtn);
+
+        function callGenerateApi(payload) {
+            fetch('/api/admin/miniapps/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    [csrfHeader]: csrfToken
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(res => {
+                if (!res.ok) throw new Error('서버 오류: ' + res.status);
+                return res.json();
+            })
+            .then(data => {
+                if (data.error) {
+                    generateStatus.textContent = '생성 실패: ' + data.error;
+                } else {
+                    document.getElementById('title').value = data.title || '';
+                    document.getElementById('description').value = data.description || '';
+                    generateStatus.textContent = '✓ 생성 완료';
+                }
+            })
+            .catch(err => {
+                generateStatus.textContent = '생성 중 오류가 발생했습니다: ' + err.message;
+            })
+            .finally(() => {
+                generateBtn.disabled = false;
+            });
+        }
 
         generateBtn.addEventListener('click', function () {
+            const url = generateUrlInput.value.trim();
             const file = fileInput.files[0];
-            if (!file) return;
+
+            if (!url && !file) {
+                generateStatus.textContent = 'HTML 파일 또는 URL을 입력해주세요.';
+                return;
+            }
 
             generateBtn.disabled = true;
             generateStatus.textContent = 'AI가 분석 중...';
 
-            const reader = new FileReader();
-            reader.onload = function (e) {
-                fetch('/api/admin/miniapps/generate', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        [csrfHeader]: csrfToken
-                    },
-                    body: JSON.stringify({ content: e.target.result })
-                })
-                .then(res => {
-                    if (!res.ok) throw new Error('서버 오류: ' + res.status);
-                    return res.json();
-                })
-                .then(data => {
-                    if (data.error) {
-                        generateStatus.textContent = '생성 실패: ' + data.error;
-                    } else {
-                        document.getElementById('title').value = data.title || '';
-                        document.getElementById('description').value = data.description || '';
-                        generateStatus.textContent = '✓ 생성 완료';
-                    }
-                })
-                .catch(err => {
-                    generateStatus.textContent = '생성 중 오류가 발생했습니다: ' + err.message;
-                })
-                .finally(() => {
-                    generateBtn.disabled = false;
-                });
-            };
-            reader.readAsText(file);
+            if (url) {
+                callGenerateApi({ url: url });
+            } else {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    callGenerateApi({ content: e.target.result });
+                };
+                reader.readAsText(file);
+            }
         });
     </script>
 </div>
