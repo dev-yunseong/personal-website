@@ -72,8 +72,8 @@ class ChatApplication {
                     if (event.type === 'text') {
                         if (!streamState.hasText) {
                             streamState.hasText = true;
-                            if (toolHistory.length === 0 && toolStatusEl.style.display !== 'none') {
-                                this.hideToolStatus(toolStatusEl);
+                            if (toolHistory.length === 0) {
+                                toolStatusEl.style.display = 'none';
                             }
                         }
                         this.fullResponse += event.content;
@@ -106,10 +106,6 @@ class ChatApplication {
             currentLabel.textContent = toolContent;
         }
         toolStatusEl.style.display = 'block';
-    }
-
-    hideToolStatus(toolStatusEl) {
-        toolStatusEl.style.display = 'none';
     }
 
     finalizeToolStatus(toolStatusEl, toolHistory) {
