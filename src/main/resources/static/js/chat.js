@@ -110,9 +110,6 @@ class ChatApplication {
 
     finalizeToolStatus(toolStatusEl, toolHistory, streamState) {
         const inProgress = toolStatusEl.querySelector('.tool-in-progress');
-        const currentLabel = toolStatusEl.querySelector('.tool-current-label');
-        const dotsEl = toolStatusEl.querySelector('.tool-current-dots');
-
         if (toolHistory.length > 0) {
             toolStatusEl.style.display = 'block';
             if (inProgress) inProgress.style.display = 'none';
@@ -130,8 +127,6 @@ class ChatApplication {
             }
             if (historyEl) historyEl.style.display = 'block';
         } else if (streamState.hasText) {
-            if (currentLabel) currentLabel.textContent = 'Thinking';
-            if (dotsEl) dotsEl.textContent = '...';
             toolStatusEl.style.display = 'none';
         } else {
             toolStatusEl.style.display = 'block';
