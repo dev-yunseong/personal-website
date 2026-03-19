@@ -11,8 +11,9 @@
 <th:block layout:fragment="content">
     <div class="container mt-4">
         <h1 class="mb-2">Admin Console</h1>
-
-        <!-- Time Period Selector -->
+        <div class="mb-3">
+            <a th:href="@{/admin/chat}" class="btn btn-sm btn-outline-secondary">Chat History</a>
+        </div>
         <div class="mb-4 d-flex align-items-center gap-3 flex-wrap">
             <div class="btn-group" role="group" aria-label="Time period">
                 <button class="btn btn-outline-primary btn-sm js-days" th:classappend="${days == 1} ? 'active'" data-days="1" type="button">1일</button>

@@ -81,3 +81,16 @@ CREATE TABLE mini_apps (
     description TEXT,
     app_url VARCHAR(1024) NOT NULL
 );
+
+-- ADD Chat Conversation History
+CREATE TABLE chat_conversations (
+    id BIGSERIAL PRIMARY KEY,
+    ip VARCHAR(45) NOT NULL,
+    user_message TEXT NOT NULL,
+    ai_response TEXT,
+    tools_used VARCHAR(1024),
+    created_at TIMESTAMP DEFAULT now()
+);
+
+CREATE INDEX idx_chat_conversations_ip ON chat_conversations(ip);
+CREATE INDEX idx_chat_conversations_created_at ON chat_conversations(created_at);
