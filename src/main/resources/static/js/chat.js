@@ -103,9 +103,11 @@ class ChatApplication {
 
     finalizeToolStatus(toolStatusEl, toolHistory) {
         const inProgress = toolStatusEl.querySelector('.tool-in-progress');
-        if (inProgress) inProgress.style.display = 'none';
+        const currentLabel = toolStatusEl.querySelector('.tool-current-label');
+        const dotsEl = toolStatusEl.querySelector('.tool-current-dots');
 
         if (toolHistory.length > 0) {
+            if (inProgress) inProgress.style.display = 'none';
             const historyEl = toolStatusEl.querySelector('.tool-history');
             const summaryEl = toolStatusEl.querySelector('.tool-history-summary');
             const listEl = toolStatusEl.querySelector('.tool-history-list');
@@ -120,7 +122,10 @@ class ChatApplication {
             }
             if (historyEl) historyEl.style.display = 'block';
         } else {
-            toolStatusEl.style.display = 'none';
+            if (currentLabel) currentLabel.textContent = 'Thinking';
+            if (dotsEl) dotsEl.textContent = '...';
+            if (inProgress) inProgress.style.display = 'flex';
+            toolStatusEl.style.display = 'block';
         }
     }
 
@@ -149,9 +154,9 @@ class ChatApplication {
         messageElement.classList.add('message', 'llm-message');
 
         const toolStatusHtml = `
-            <div class="tool-status" style="display:none;">
+            <div class="tool-status">
                 <div class="tool-in-progress">
-                    <span class="tool-current-label"></span><span class="tool-current-dots">.</span>
+                    <span class="tool-current-label">Thinking</span><span class="tool-current-dots">.</span>
                 </div>
                 <details class="tool-history" style="display:none;">
                     <summary class="tool-history-summary">사용된 도구 (0)</summary>
