@@ -41,7 +41,7 @@
                     <div class="card-header">
                         <h5 class="mb-0">Visitors</h5>
                     </div>
-                    <div class="list-group list-group-flush" th:if="${!ipList.empty}">
+                    <div class="list-group list-group-flush" th:if="${!ipList.isEmpty()}">
                         <a th:each="entry : ${ipList.content}"
                            th:href="@{/admin/chat(ip=${entry.ip}, page=0, ipPage=${ipPage})}"
                            th:classappend="${entry.ip == selectedIp} ? 'active ip-list-item' : 'ip-list-item'"
@@ -51,7 +51,7 @@
                                    th:text="${#temporals.format(entry.latest, 'yyyy-MM-dd HH:mm')}"></small>
                         </a>
                     </div>
-                    <div class="card-body text-muted" th:if="${ipList.empty}">
+                    <div class="card-body text-muted" th:if="${ipList.isEmpty()}">
                         <small>No conversations yet.</small>
                     </div>
                     <!-- IP list pagination -->
@@ -97,14 +97,16 @@
                               th:text="'Total: ' + ${conversations.totalElements}"></span>
                     </div>
 
-                    <div class="chat-history-box" th:if="${conversations != null and !conversations.empty}">
-                        <div th:each="conv : ${conversations.content}"
-                             th:replace="~{fragments/chat_fragment :: conversationEntry(${conv})}">
-                        </div>
+                    <div class="chat-history-box" th:if="${conversations != null and !conversations.isEmpty()}">
+                        <th:block th:each="conv : ${conversations.content}">
+                            <div th:if="${conv != null}"
+                                 th:replace="~{fragments/chat_fragment :: conversationEntry(${conv})}">
+                            </div>
+                        </th:block>
                     </div>
 
                     <div class="text-center text-muted mt-4"
-                         th:if="${conversations == null or conversations.empty}">
+                         th:if="${conversations == null or conversations.isEmpty()}">
                         <p>No conversations found for this IP.</p>
                     </div>
 
