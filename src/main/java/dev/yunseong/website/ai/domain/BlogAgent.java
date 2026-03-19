@@ -49,7 +49,6 @@ public class BlogAgent {
 
         chatClient = builder.defaultAdvisors(List.of( // LLM 사이에서 intercept 한다.
                         new SimpleLoggerAdvisor(),
-                        PromptChatMemoryAdvisor.builder(chatMemory).build(), // Chat Memory Advisor
                         RetrievalAugmentationAdvisor.builder()
                                 .queryTransformers(RewriteQueryTransformer.builder()
                                         .chatClientBuilder(pureChatClient.mutate())
@@ -59,17 +58,17 @@ public class BlogAgent {
                                         .includeOriginal(false)
                                         .build())
                                 .documentRetriever(VectorStoreDocumentRetriever.builder()
-                                        .similarityThreshold(0.2)
+                                        .similarityThreshold(0.7)
                                         .topK(6)
                                         .vectorStore(vectorStore)
                                         .build())
                                 .queryAugmenter(ContextualQueryAugmenter.builder()
                                         .allowEmptyContext(true)
                                         .build())
-                                .build() // RAG Advisor
+                                .build(), // RAG Advisor
+                        PromptChatMemoryAdvisor.builder(chatMemory).build() // Chat Memory Advisor
                 ))
-                .defaultSystem(DEFAULT_PROMPT)
-                .defaultSystem(BlogTools.BLOG_TOOL_PROMPT)
+                .defaultSystem(String.format("%s\n\n%s", DEFAULT_PROMPT, BlogTools.BLOG_TOOL_PROMPT))
                 .defaultTools(new DateTimeTools(), blogTools)
                 .build();
     }
