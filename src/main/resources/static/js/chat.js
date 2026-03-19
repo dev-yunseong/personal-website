@@ -72,7 +72,7 @@ class ChatApplication {
                     if (event.type === 'text') {
                         if (!streamState.hasText) {
                             streamState.hasText = true;
-                            if (toolHistory.length === 0) {
+                            if (toolHistory.length === 0 && toolStatusEl.style.display !== 'none') {
                                 this.hideToolStatus(toolStatusEl);
                             }
                         }
