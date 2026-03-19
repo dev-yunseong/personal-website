@@ -34,7 +34,7 @@ public class BlogTools {
     - Use 'ls' to explore what's inside the current directory or a given path.
     - Use 'cd' to move between directories.
     - Use 'cat' to read the actual content of a memo.
-    - Use 'search' to find memos by keyword.
+    - Use 'search' to find memos by English keyword.
     
     [WORKING GUIDELINE]
     1. When a user asks about a topic, don't just rely on your memory or RAG context.
@@ -55,7 +55,7 @@ public class BlogTools {
         this.workingDirectory = memoFileService.getRoot();
     }
 
-    @Tool(description = "Search for memos by a keyword. Returns a list of memo full path.")
+    @Tool(description = "Search for memos using an English keyword. Returns a list of memo full path.")
     public List<String> search(String keyword) {
         log.info("search: {}", keyword);
         toolEventPublisher.emitTool("search", keyword);
