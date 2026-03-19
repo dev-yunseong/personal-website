@@ -86,7 +86,7 @@ class ChatApplication {
 
     startEllipsisAnimation(dotsEl) {
         if (!dotsEl) return null;
-        let count = 1;
+        let count = 3;
         return setInterval(() => {
             count = (count % 3) + 1;
             dotsEl.textContent = '.'.repeat(count);
@@ -124,7 +124,6 @@ class ChatApplication {
         } else {
             if (currentLabel) currentLabel.textContent = 'Thinking';
             if (dotsEl) dotsEl.textContent = '...';
-            if (inProgress) inProgress.style.display = 'flex';
             toolStatusEl.style.display = 'block';
         }
     }
@@ -156,7 +155,7 @@ class ChatApplication {
         const toolStatusHtml = `
             <div class="tool-status">
                 <div class="tool-in-progress">
-                    <span class="tool-current-label">Thinking</span><span class="tool-current-dots">.</span>
+                    <span class="tool-current-label">Thinking</span><span class="tool-current-dots">...</span>
                 </div>
                 <details class="tool-history" style="display:none;">
                     <summary class="tool-history-summary">사용된 도구 (0)</summary>
