@@ -43,8 +43,6 @@ public class BlogTools {
     
     [BLOG-SPECIFIC CONTEXT]
     If a user inquires about anything related to the blog, its projects, or past posts, explicitly utilize the navigation tools (ls, cd, cat, search) to provide a grounded and evidence-based response. Do not hallucinate paths; verify them first.
-    
-    Ensure your answers are strictly grounded in the blog's information.
     """;
 
     private MemoDirectory workingDirectory;
@@ -57,6 +55,9 @@ public class BlogTools {
 
     @Tool(description = "Search for memos using an English keyword. Returns a list of memo full path.")
     public List<String> search(String keyword) {
+
+        if (containsKorean(keyword)) throw new IllegalArgumentException("The keyword must be in English.");
+
         log.info("search: {}", keyword);
         toolEventPublisher.emitTool("search", keyword);
         return memoService.searchMemo(keyword, PageRequest.of(0, 10))
@@ -64,6 +65,10 @@ public class BlogTools {
                 .stream()
                 .map(Memo::getName)
                 .collect(Collectors.toList());
+    }
+
+    public boolean containsKorean(String text) {
+        return text.matches(".*[가-힣].*");
     }
 
     @Tool(description = "Get the current directory, similar to 'pwd' in a file system.")
