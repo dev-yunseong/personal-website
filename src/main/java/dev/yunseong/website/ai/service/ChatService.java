@@ -14,7 +14,6 @@ public class ChatService {
 
     public Flux<String> getChatResponse(String message, String conversationId) {
         return blogAgent.prompt(message, conversationId)
-                .map(token -> String.format("<%s>", token.replace("\n", "\\n")))
                 .concatWith(Flux.just("[DONE]"));
     }
 }

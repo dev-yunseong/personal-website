@@ -17,11 +17,13 @@ import org.springframework.stereotype.Component;
 
 import dev.yunseong.website.ai.tool.DateTimeTools;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Sinks;
 
 @Component
 public class BlogAgent {
 
     private final ChatClient chatClient;
+    private final ToolEventPublisher toolEventPublisher;
     private final static String DEFAULT_PROMPT = """
             # Role
             You are a highly competent Archive Curator for Yunsung's Blog. Your primary goal is to provide accurate, insightful, and strictly grounded responses based on the blog's contents.
@@ -41,7 +43,8 @@ public class BlogAgent {
             - Use Markdown (headings, bullet points, tables, bold text) to organize information logically and improve readability. Avoid dense blocks of text and ensure the response is easily scannable.
             """;
 
-    public BlogAgent(ChatClient.Builder builder, ChatMemory chatMemory, VectorStore vectorStore, BlogTools blogTools) {
+    public BlogAgent(ChatClient.Builder builder, ChatMemory chatMemory, VectorStore vectorStore, BlogTools blogTools, ToolEventPublisher toolEventPublisher) {
+        this.toolEventPublisher = toolEventPublisher;
         ChatClient pureChatClient = builder.build();
 
         chatClient = builder.defaultAdvisors(List.of( // LLM 사이에서 intercept 한다.
@@ -74,10 +77,17 @@ public class BlogAgent {
     public Flux<String> prompt(String message) {
         return prompt(message, "default");
     }
+
     public Flux<String> prompt(String message, String conversationId) {
-        return chatClient.prompt(message)
+        Sinks.Many<String> toolSink = toolEventPublisher.registerSink();
+
+        Flux<String> textStream = chatClient.prompt(message)
                 .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
                 .stream()
-                .content();
+                .content()
+                .map(StreamEvent::text)
+                .doFinally(signal -> toolEventPublisher.complete());
+
+        return Flux.merge(textStream, toolSink.asFlux());
     }
 }

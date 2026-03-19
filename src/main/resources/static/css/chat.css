@@ -129,3 +129,66 @@ body {
 .error-message {
     color: #dc3545; /* Red color for errors */
 }
+
+/* Tool status inside LLM message bubble */
+.tool-status {
+    font-size: 0.82rem;
+    color: #6c757d;
+    margin-bottom: 8px;
+    border-left: 3px solid #ced4da;
+    padding-left: 8px;
+}
+
+.tool-in-progress {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.tool-current-label {
+    font-style: italic;
+}
+
+.tool-current-dots {
+    display: inline-block;
+    min-width: 18px;
+    font-style: italic;
+}
+
+.tool-history {
+    margin-top: 4px;
+}
+
+.tool-history summary {
+    cursor: pointer;
+    font-weight: 500;
+    color: #868e96;
+    list-style: none;
+    user-select: none;
+}
+
+.tool-history summary::-webkit-details-marker {
+    display: none;
+}
+
+.tool-history summary::before {
+    content: '▶ ';
+    font-size: 0.7em;
+}
+
+.tool-history[open] summary::before {
+    content: '▼ ';
+}
+
+.tool-history-list {
+    margin: 4px 0 0 0;
+    padding-left: 16px;
+    list-style: disc;
+    color: #868e96;
+    font-size: 0.8rem;
+}
+
+.tool-history-list li {
+    font-family: monospace;
+    line-height: 1.6;
+}
