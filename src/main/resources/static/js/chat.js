@@ -38,7 +38,7 @@ class ChatApplication {
             contentContainer.innerHTML = `<span class="error-message"><strong>Error: Connection failed.</strong></span>`;
         } finally {
             if (ellipsisInterval) clearInterval(ellipsisInterval);
-            this.finalizeToolStatus(toolStatusEl, toolHistory);
+            this.finalizeToolStatus(toolStatusEl, toolHistory, streamState);
         }
     }
 
@@ -108,7 +108,7 @@ class ChatApplication {
         toolStatusEl.style.display = 'block';
     }
 
-    finalizeToolStatus(toolStatusEl, toolHistory) {
+    finalizeToolStatus(toolStatusEl, toolHistory, streamState) {
         const inProgress = toolStatusEl.querySelector('.tool-in-progress');
         const currentLabel = toolStatusEl.querySelector('.tool-current-label');
         const dotsEl = toolStatusEl.querySelector('.tool-current-dots');
@@ -129,10 +129,12 @@ class ChatApplication {
                 });
             }
             if (historyEl) historyEl.style.display = 'block';
-        } else {
+        } else if (streamState.hasText) {
             if (currentLabel) currentLabel.textContent = 'Thinking';
             if (dotsEl) dotsEl.textContent = '...';
             toolStatusEl.style.display = 'none';
+        } else {
+            toolStatusEl.style.display = 'block';
         }
     }
 
