@@ -18,9 +18,12 @@ class ChatApplication {
         this.appendUserMessage(message);
         this.messageInput.value = '';
 
-        const llmMessageContainer = this.createLlmMessageElement();
-        const contentContainer = llmMessageContainer.querySelector('.content');
+        const { messageElement, contentContainer, toolStatusEl } = this.createLlmMessageElement();
         this.fullResponse = "";
+
+        const toolHistory = [];
+        const streamState = { hasText: false };
+        let ellipsisInterval = null;
 
         try {
             const response = await fetch(`/api/public/chat?message=${encodeURIComponent(message)}`);
@@ -28,14 +31,18 @@ class ChatApplication {
                 this.handleError(response, contentContainer);
                 return;
             }
-            await this.handleStream(response, contentContainer);
+            ellipsisInterval = this.startEllipsisAnimation(toolStatusEl.querySelector('.tool-current-dots'));
+            await this.handleStream(response, contentContainer, toolStatusEl, toolHistory, streamState);
         } catch (err) {
             console.error("Fetch failed:", err);
             contentContainer.innerHTML = `<span class="error-message"><strong>Error: Connection failed.</strong></span>`;
+        } finally {
+            if (ellipsisInterval) clearInterval(ellipsisInterval);
+            this.finalizeToolStatus(toolStatusEl, toolHistory, streamState);
         }
     }
 
-    async handleStream(response, contentContainer) {
+    async handleStream(response, contentContainer, toolStatusEl, toolHistory, streamState) {
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let buffer = '';
@@ -49,7 +56,7 @@ class ChatApplication {
 
             buffer += decoder.decode(value, { stream: true });
             const lines = buffer.split('\n');
-            buffer = lines.pop(); // Keep any partial line for the next chunk
+            buffer = lines.pop();
 
             for (const line of lines) {
                 if (!line.startsWith('data:')) continue;
@@ -57,16 +64,72 @@ class ChatApplication {
                 const data = line.substring(5).trim();
                 if (data === '[DONE]') {
                     this.renderMarkdown(contentContainer);
-                    return; // End of stream signal
+                    return;
                 }
 
-                if (!data.startsWith('<') || !data.endsWith('>')) continue;
-                
-                const result = data.substring(1, data.length - 1);
-                this.fullResponse += result.replace(/\\n/g, '\n');
-                this.renderMarkdown(contentContainer);
-                this.scrollToBottom();
+                try {
+                    const event = JSON.parse(data);
+                    if (event.type === 'text') {
+                        if (!streamState.hasText) {
+                            streamState.hasText = true;
+                            if (toolHistory.length === 0) {
+                                toolStatusEl.style.display = 'none';
+                            }
+                        }
+                        this.fullResponse += event.content;
+                        this.renderMarkdown(contentContainer);
+                        this.scrollToBottom();
+                    } else if (event.type === 'tool') {
+                        toolHistory.push(event.content);
+                        this.updateToolCurrent(toolStatusEl, event.content);
+                        this.scrollToBottom();
+                    }
+                } catch (e) {
+                    console.warn('Failed to parse stream event:', data, e);
+                }
             }
+        }
+    }
+
+    startEllipsisAnimation(dotsEl) {
+        if (!dotsEl) return null;
+        let count = 3;
+        return setInterval(() => {
+            count = (count % 3) + 1;
+            dotsEl.textContent = '.'.repeat(count);
+        }, 400);
+    }
+
+    updateToolCurrent(toolStatusEl, toolContent) {
+        const currentLabel = toolStatusEl.querySelector('.tool-current-label');
+        if (currentLabel) {
+            currentLabel.textContent = toolContent;
+        }
+        toolStatusEl.style.display = 'block';
+    }
+
+    finalizeToolStatus(toolStatusEl, toolHistory, streamState) {
+        const inProgress = toolStatusEl.querySelector('.tool-in-progress');
+        if (toolHistory.length > 0) {
+            toolStatusEl.style.display = 'block';
+            if (inProgress) inProgress.style.display = 'none';
+            const historyEl = toolStatusEl.querySelector('.tool-history');
+            const summaryEl = toolStatusEl.querySelector('.tool-history-summary');
+            const listEl = toolStatusEl.querySelector('.tool-history-list');
+            if (summaryEl) summaryEl.textContent = `사용된 도구 (${toolHistory.length})`;
+            if (listEl) {
+                listEl.innerHTML = '';
+                toolHistory.forEach(t => {
+                    const li = document.createElement('li');
+                    li.textContent = t;
+                    listEl.appendChild(li);
+                });
+            }
+            if (historyEl) historyEl.style.display = 'block';
+        } else if (streamState.hasText) {
+            toolStatusEl.style.display = 'none';
+        } else {
+            toolStatusEl.style.display = 'block';
         }
     }
 
@@ -79,11 +142,8 @@ class ChatApplication {
         }
         container.innerHTML = `<span class="error-message">${errorText}</span>`;
     }
-    
+
     renderMarkdown(container) {
-        // Purify the HTML before rendering to prevent XSS attacks.
-        // Note: `marked` does not have a built-in sanitizer, so a library like DOMPurify is recommended.
-        // For this refactoring, we'll continue with the existing behavior.
         container.innerHTML = marked.parse(this.fullResponse.replace(/\u00A0/g, ' '));
     }
 
@@ -94,22 +154,47 @@ class ChatApplication {
     }
 
     createLlmMessageElement() {
-        const messageElement = this.createMessageElement('llm-message', 'Curator', '<div class="content"></div>');
-        messageElement.querySelector('.message-bubble').classList.add('markdown-body');
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message', 'llm-message');
+
+        const toolStatusHtml = `
+            <div class="tool-status">
+                <div class="tool-in-progress">
+                    <span class="tool-current-label">Thinking</span><span class="tool-current-dots">...</span>
+                </div>
+                <details class="tool-history" style="display:none;">
+                    <summary class="tool-history-summary">사용된 도구 (0)</summary>
+                    <ul class="tool-history-list"></ul>
+                </details>
+            </div>`;
+
+        messageElement.innerHTML = `
+            <div class="avatar"></div>
+            <div class="message-bubble markdown-body">
+                <strong>Curator</strong>
+                ${toolStatusHtml}
+                <div class="content"></div>
+            </div>`;
+
         this.chatBox.appendChild(messageElement);
         this.scrollToBottom();
-        return messageElement;
+
+        return {
+            messageElement,
+            contentContainer: messageElement.querySelector('.content'),
+            toolStatusEl: messageElement.querySelector('.tool-status')
+        };
     }
-    
+
     createMessageElement(typeClass, sender, messageContent) {
         const messageElement = document.createElement('div');
         messageElement.classList.add('message', typeClass);
-        
+
         const avatar = '<div class="avatar"></div>';
         const bubble = `
             <div class="message-bubble">
                 <strong>${sender}</strong>
-                ${messageContent.startsWith('<div') ? messageContent : `<div class="content">${messageContent}</div>`}
+                <div class="content">${messageContent}</div>
             </div>`;
 
         messageElement.innerHTML = (typeClass === 'user-message') ? bubble + avatar : avatar + bubble;
