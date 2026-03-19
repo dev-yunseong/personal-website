@@ -22,6 +22,7 @@ class ChatApplication {
         this.fullResponse = "";
 
         const toolHistory = [];
+        const streamState = { hasText: false };
         let ellipsisInterval = null;
 
         try {
@@ -31,7 +32,7 @@ class ChatApplication {
                 return;
             }
             ellipsisInterval = this.startEllipsisAnimation(toolStatusEl.querySelector('.tool-current-dots'));
-            await this.handleStream(response, contentContainer, toolStatusEl, toolHistory);
+            await this.handleStream(response, contentContainer, toolStatusEl, toolHistory, streamState);
         } catch (err) {
             console.error("Fetch failed:", err);
             contentContainer.innerHTML = `<span class="error-message"><strong>Error: Connection failed.</strong></span>`;
@@ -41,7 +42,7 @@ class ChatApplication {
         }
     }
 
-    async handleStream(response, contentContainer, toolStatusEl, toolHistory) {
+    async handleStream(response, contentContainer, toolStatusEl, toolHistory, streamState) {
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let buffer = '';
@@ -69,6 +70,12 @@ class ChatApplication {
                 try {
                     const event = JSON.parse(data);
                     if (event.type === 'text') {
+                        if (!streamState.hasText) {
+                            streamState.hasText = true;
+                            if (toolHistory.length === 0) {
+                                this.hideToolStatus(toolStatusEl);
+                            }
+                        }
                         this.fullResponse += event.content;
                         this.renderMarkdown(contentContainer);
                         this.scrollToBottom();
@@ -101,12 +108,17 @@ class ChatApplication {
         toolStatusEl.style.display = 'block';
     }
 
+    hideToolStatus(toolStatusEl) {
+        toolStatusEl.style.display = 'none';
+    }
+
     finalizeToolStatus(toolStatusEl, toolHistory) {
         const inProgress = toolStatusEl.querySelector('.tool-in-progress');
         const currentLabel = toolStatusEl.querySelector('.tool-current-label');
         const dotsEl = toolStatusEl.querySelector('.tool-current-dots');
 
         if (toolHistory.length > 0) {
+            toolStatusEl.style.display = 'block';
             if (inProgress) inProgress.style.display = 'none';
             const historyEl = toolStatusEl.querySelector('.tool-history');
             const summaryEl = toolStatusEl.querySelector('.tool-history-summary');
@@ -124,7 +136,7 @@ class ChatApplication {
         } else {
             if (currentLabel) currentLabel.textContent = 'Thinking';
             if (dotsEl) dotsEl.textContent = '...';
-            toolStatusEl.style.display = 'block';
+            toolStatusEl.style.display = 'none';
         }
     }
 
