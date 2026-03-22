@@ -12,7 +12,9 @@ import org.springframework.ai.rag.generation.augmentation.ContextualQueryAugment
 import org.springframework.ai.rag.preretrieval.query.expansion.MultiQueryExpander;
 import org.springframework.ai.rag.preretrieval.query.transformation.RewriteQueryTransformer;
 import org.springframework.ai.rag.retrieval.search.VectorStoreDocumentRetriever;
+import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
 import dev.yunseong.website.ai.tool.DateTimeTools;
@@ -43,11 +45,11 @@ public class BlogAgent {
             - Use Markdown (headings, bullet points, tables, bold text) to organize information logically and improve readability. Avoid dense blocks of text and ensure the response is easily scannable.
             """;
 
-    public BlogAgent(ChatClient.Builder builder, ChatMemory chatMemory, VectorStore vectorStore, BlogTools blogTools, ToolEventPublisher toolEventPublisher) {
+    public BlogAgent(ChatClient.Builder builder, ChatMemory chatMemory, VectorStore vectorStore, BlogTools blogTools, ToolEventPublisher toolEventPublisher, @Nullable ToolCallbackProvider mcpToolCallbackProvider) {
         this.toolEventPublisher = toolEventPublisher;
         ChatClient pureChatClient = builder.build();
 
-        chatClient = builder.defaultAdvisors(List.of( // LLM 사이에서 intercept 한다.
+        ChatClient.Builder chatClientBuilder = builder.defaultAdvisors(List.of( // LLM 사이에서 intercept 한다.
                         new SimpleLoggerAdvisor(),
                         RetrievalAugmentationAdvisor.builder()
                                 .queryTransformers(RewriteQueryTransformer.builder()
@@ -69,8 +71,13 @@ public class BlogAgent {
                         PromptChatMemoryAdvisor.builder(chatMemory).build() // Chat Memory Advisor
                 ))
                 .defaultSystem(String.format("%s\n\n%s", DEFAULT_PROMPT, BlogTools.BLOG_TOOL_PROMPT))
-                .defaultTools(new DateTimeTools(), blogTools)
-                .build();
+                .defaultTools(new DateTimeTools(), blogTools);
+
+        if (mcpToolCallbackProvider != null) {
+            chatClientBuilder = chatClientBuilder.defaultToolCallbacks(mcpToolCallbackProvider);
+        }
+
+        chatClient = chatClientBuilder.build();
     }
 
     public Flux<String> prompt(String message) {

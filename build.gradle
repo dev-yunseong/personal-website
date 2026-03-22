@@ -59,6 +59,7 @@ dependencies {
     implementation "org.springframework.ai:spring-ai-rag"
     implementation "org.springframework.ai:spring-ai-markdown-document-reader"
     implementation 'org.springframework.ai:spring-ai-starter-model-chat-memory-repository-jdbc'
+    implementation 'org.springframework.ai:spring-ai-starter-mcp-client'
 
     // mark down
     implementation 'org.commonmark:commonmark:0.25.1'

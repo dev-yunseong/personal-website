@@ -21,3 +21,12 @@ spring:
         dimensions: 1536
         max-document-batch-size: 10000
         table-name: vector_store
+    mcp:
+      client:
+        stdio:
+          connections:
+            tavily-mcp:
+              command: tavily-mcp
+              env:
+                # Required: obtain a free API key at https://app.tavily.com
+                TAVILY_API_KEY: ${TAVILY_API_KEY}
