@@ -3,7 +3,9 @@ class ChatApplication {
         this.chatBox = document.getElementById(chatBoxId);
         this.chatForm = document.getElementById(chatFormId);
         this.messageInput = document.getElementById(messageInputId);
+        this.submitButton = this.chatForm.querySelector('button[type="submit"]');
         this.fullResponse = "";
+        this.isStreaming = false;
     }
 
     initialize() {
@@ -12,11 +14,14 @@ class ChatApplication {
 
     async handleSubmit(e) {
         e.preventDefault();
+        if (this.isStreaming) return;
         const message = this.messageInput.value.trim();
         if (message === '') return;
 
         this.appendUserMessage(message);
         this.messageInput.value = '';
+        this.setInputDisabled(true);
+        this.isStreaming = true;
 
         const { messageElement, contentContainer, toolStatusEl } = this.createLlmMessageElement();
         this.fullResponse = "";
@@ -39,6 +44,8 @@ class ChatApplication {
         } finally {
             if (ellipsisInterval) clearInterval(ellipsisInterval);
             this.finalizeToolStatus(toolStatusEl, toolHistory, streamState);
+            this.setInputDisabled(false);
+            this.isStreaming = false;
         }
     }
 
@@ -109,6 +116,13 @@ class ChatApplication {
             currentLabel.textContent = toolContent;
         }
         toolStatusEl.style.display = 'block';
+    }
+
+    setInputDisabled(disabled) {
+        this.messageInput.disabled = disabled;
+        if (this.submitButton) {
+            this.submitButton.disabled = disabled;
+        }
     }
 
     finalizeToolStatus(toolStatusEl, toolHistory, streamState) {
