@@ -32,7 +32,7 @@ class ChatApplication {
                 return;
             }
             ellipsisInterval = this.startEllipsisAnimation(toolStatusEl.querySelector('.tool-current-dots'));
-            await this.handleStream(response, contentContainer, toolStatusEl, toolHistory, streamState);
+            await this.handleStream(response, messageElement, contentContainer, toolStatusEl, toolHistory, streamState);
         } catch (err) {
             console.error("Fetch failed:", err);
             contentContainer.innerHTML = `<span class="error-message"><strong>Error: Connection failed.</strong></span>`;
@@ -42,7 +42,7 @@ class ChatApplication {
         }
     }
 
-    async handleStream(response, contentContainer, toolStatusEl, toolHistory, streamState) {
+    async handleStream(response, messageElement, contentContainer, toolStatusEl, toolHistory, streamState) {
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let buffer = '';
@@ -82,6 +82,9 @@ class ChatApplication {
                     } else if (event.type === 'tool') {
                         toolHistory.push(event.content);
                         this.updateToolCurrent(toolStatusEl, event.content);
+                        this.scrollToBottom();
+                    } else if (event.type === 'message') {
+                        this.insertSendMessage(messageElement, event.content);
                         this.scrollToBottom();
                     }
                 } catch (e) {
@@ -131,6 +134,18 @@ class ChatApplication {
         } else {
             toolStatusEl.style.display = 'block';
         }
+    }
+
+    insertSendMessage(placeholderElement, content) {
+        const msgEl = document.createElement('div');
+        msgEl.classList.add('message', 'llm-message', 'send-message');
+        msgEl.innerHTML = `
+            <div class="avatar"></div>
+            <div class="message-bubble markdown-body">
+                <strong>Curator</strong>
+                <div class="content">${marked.parse(content.replace(/\u00A0/g, ' '))}</div>
+            </div>`;
+        this.chatBox.insertBefore(msgEl, placeholderElement);
     }
 
     handleError(response, container) {

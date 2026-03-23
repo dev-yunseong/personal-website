@@ -20,6 +20,10 @@ public final class StreamEvent {
         return serialize("tool", content);
     }
 
+    public static String message(String content) {
+        return serialize("message", content);
+    }
+
     private static String serialize(String type, String content) {
         try {
             return MAPPER.writeValueAsString(new EventPayload(type, content));
