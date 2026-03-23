@@ -23,10 +23,8 @@ spring:
         table-name: vector_store
     mcp:
       client:
-        stdio:
+        streamable-http:
           connections:
             tavily-mcp:
-              command: tavily-mcp
-              env:
-                # Required: obtain a free API key at https://app.tavily.com
-                TAVILY_API_KEY: ${TAVILY_API_KEY}
+              # Required: obtain a free API key at https://app.tavily.com
+              url: https://mcp.tavily.com/mcp/?tavilyApiKey=${TAVILY_API_KEY}
