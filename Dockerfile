@@ -22,6 +22,12 @@ RUN --mount=type=secret,id=GITHUB_USERNAME \
 # Stage 2: Runtime
 FROM eclipse-temurin:21-jre
 WORKDIR /app
+
+RUN apt install -y curl \
+    && curl -fsSL https://deb.nodesource.com/setup_23.x -o nodesource_setup.sh \
+    && bash nodesource_setup.sh \
+    && apt install -y nodejs
+
 COPY --from=build /app/build/libs/*.jar app.jar
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
