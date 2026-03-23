@@ -12,7 +12,9 @@ import org.springframework.ai.rag.generation.augmentation.ContextualQueryAugment
 import org.springframework.ai.rag.preretrieval.query.expansion.MultiQueryExpander;
 import org.springframework.ai.rag.preretrieval.query.transformation.RewriteQueryTransformer;
 import org.springframework.ai.rag.retrieval.search.VectorStoreDocumentRetriever;
+import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
 import dev.yunseong.website.ai.tool.DateTimeTools;
@@ -36,6 +38,19 @@ public class BlogAgent {
             2. **Active Information Seeking**: If the current context is insufficient to provide a definitive answer, proactively request more details or specific topics from the user.
             3. **Accuracy over Completion**: It is better to ask for more information than to provide a generic or potentially incorrect response.
             
+            # Information Retrieval Strategy
+            1. **Primary Source (Blog First)**:
+               - Always search Yunseong's Blog as the first source of truth.
+               - If relevant content is found, base your response strictly on that content.
+            
+            2. **Secondary Source (MCP Fallback)**:
+               - If the blog does not contain sufficient or relevant information, use MCP tools to retrieve additional data.
+               - Clearly distinguish when information comes from outside the blog.
+            
+            3. **Transparency with Sources**:
+               - When referencing blog or external content, always include the URL.
+               - If multiple sources are used, list them clearly.
+            
             # Task Execution
             - Analyze the user's request.
             - If information is missing or unclear, formulate a polite question to gather the necessary context.
@@ -43,11 +58,11 @@ public class BlogAgent {
             - Use Markdown (headings, bullet points, tables, bold text) to organize information logically and improve readability. Avoid dense blocks of text and ensure the response is easily scannable.
             """;
 
-    public BlogAgent(ChatClient.Builder builder, ChatMemory chatMemory, VectorStore vectorStore, BlogTools blogTools, ToolEventPublisher toolEventPublisher) {
+    public BlogAgent(ChatClient.Builder builder, ChatMemory chatMemory, VectorStore vectorStore, BlogTools blogTools, ToolEventPublisher toolEventPublisher, @Nullable ToolCallbackProvider mcpToolCallbackProvider) {
         this.toolEventPublisher = toolEventPublisher;
         ChatClient pureChatClient = builder.build();
 
-        chatClient = builder.defaultAdvisors(List.of( // LLM 사이에서 intercept 한다.
+        ChatClient.Builder chatClientBuilder = builder.defaultAdvisors(List.of( // LLM 사이에서 intercept 한다.
                         new SimpleLoggerAdvisor(),
                         RetrievalAugmentationAdvisor.builder()
                                 .queryTransformers(RewriteQueryTransformer.builder()
@@ -69,8 +84,13 @@ public class BlogAgent {
                         PromptChatMemoryAdvisor.builder(chatMemory).build() // Chat Memory Advisor
                 ))
                 .defaultSystem(String.format("%s\n\n%s", DEFAULT_PROMPT, BlogTools.BLOG_TOOL_PROMPT))
-                .defaultTools(new DateTimeTools(), blogTools)
-                .build();
+                .defaultTools(new DateTimeTools(), blogTools);
+
+        if (mcpToolCallbackProvider != null) {
+            chatClientBuilder = chatClientBuilder.defaultToolCallbacks(mcpToolCallbackProvider);
+        }
+
+        chatClient = chatClientBuilder.build();
     }
 
     public Flux<String> prompt(String message) {

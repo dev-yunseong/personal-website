@@ -21,3 +21,16 @@ spring:
         dimensions: 1536
         max-document-batch-size: 10000
         table-name: vector_store
+    mcp:
+      client:
+        enabled: true
+        type: SYNC
+        stdio:
+          connections:
+            tavily:
+              command: npx
+              args:
+                - "-y"
+                - "tavily-mcp@latest"
+              env:
+                TAVILY_API_KEY: ${TAVILY_API_KEY:}
