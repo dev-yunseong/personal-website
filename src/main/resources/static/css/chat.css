@@ -192,3 +192,9 @@ body {
     font-family: monospace;
     line-height: 1.6;
 }
+
+/* Send-message blocks inserted during streaming */
+.send-message .message-bubble {
+    border-left: 3px solid #adb5bd;
+    background: #f8f9fa;
+}

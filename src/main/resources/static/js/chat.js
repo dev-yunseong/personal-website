@@ -3,7 +3,9 @@ class ChatApplication {
         this.chatBox = document.getElementById(chatBoxId);
         this.chatForm = document.getElementById(chatFormId);
         this.messageInput = document.getElementById(messageInputId);
+        this.submitButton = this.chatForm.querySelector('button[type="submit"]');
         this.fullResponse = "";
+        this.isStreaming = false;
     }
 
     initialize() {
@@ -12,11 +14,14 @@ class ChatApplication {
 
     async handleSubmit(e) {
         e.preventDefault();
+        if (this.isStreaming) return;
         const message = this.messageInput.value.trim();
         if (message === '') return;
 
         this.appendUserMessage(message);
         this.messageInput.value = '';
+        this.setInputDisabled(true);
+        this.isStreaming = true;
 
         const { messageElement, contentContainer, toolStatusEl } = this.createLlmMessageElement();
         this.fullResponse = "";
@@ -32,17 +37,19 @@ class ChatApplication {
                 return;
             }
             ellipsisInterval = this.startEllipsisAnimation(toolStatusEl.querySelector('.tool-current-dots'));
-            await this.handleStream(response, contentContainer, toolStatusEl, toolHistory, streamState);
+            await this.handleStream(response, messageElement, contentContainer, toolStatusEl, toolHistory, streamState);
         } catch (err) {
             console.error("Fetch failed:", err);
             contentContainer.innerHTML = `<span class="error-message"><strong>Error: Connection failed.</strong></span>`;
         } finally {
             if (ellipsisInterval) clearInterval(ellipsisInterval);
             this.finalizeToolStatus(toolStatusEl, toolHistory, streamState);
+            this.setInputDisabled(false);
+            this.isStreaming = false;
         }
     }
 
-    async handleStream(response, contentContainer, toolStatusEl, toolHistory, streamState) {
+    async handleStream(response, messageElement, contentContainer, toolStatusEl, toolHistory, streamState) {
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let buffer = '';
@@ -83,6 +90,9 @@ class ChatApplication {
                         toolHistory.push(event.content);
                         this.updateToolCurrent(toolStatusEl, event.content);
                         this.scrollToBottom();
+                    } else if (event.type === 'message') {
+                        this.insertSendMessage(messageElement, event.content);
+                        this.scrollToBottom();
                     }
                 } catch (e) {
                     console.warn('Failed to parse stream event:', data, e);
@@ -108,6 +118,13 @@ class ChatApplication {
         toolStatusEl.style.display = 'block';
     }
 
+    setInputDisabled(disabled) {
+        this.messageInput.disabled = disabled;
+        if (this.submitButton) {
+            this.submitButton.disabled = disabled;
+        }
+    }
+
     finalizeToolStatus(toolStatusEl, toolHistory, streamState) {
         const inProgress = toolStatusEl.querySelector('.tool-in-progress');
         if (toolHistory.length > 0) {
@@ -131,6 +148,18 @@ class ChatApplication {
         } else {
             toolStatusEl.style.display = 'block';
         }
+    }
+
+    insertSendMessage(placeholderElement, content) {
+        const msgEl = document.createElement('div');
+        msgEl.classList.add('message', 'llm-message', 'send-message');
+        msgEl.innerHTML = `
+            <div class="avatar"></div>
+            <div class="message-bubble markdown-body">
+                <strong>Curator</strong>
+                <div class="content">${marked.parse(content.replace(/\u00A0/g, ' '))}</div>
+            </div>`;
+        this.chatBox.insertBefore(msgEl, placeholderElement);
     }
 
     handleError(response, container) {

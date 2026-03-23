@@ -29,6 +29,17 @@ public class ToolEventPublisher {
         }
     }
 
+    public void emitMessage(String content) {
+        Sinks.Many<String> sink = currentSink.get();
+        if (sink == null) {
+            return;
+        }
+        Sinks.EmitResult result = sink.tryEmitNext(StreamEvent.message(content));
+        if (result.isFailure()) {
+            log.warn("Failed to emit message event: {}", result);
+        }
+    }
+
     public void complete() {
         Sinks.Many<String> sink = currentSink.getAndSet(null);
         if (sink != null) {
