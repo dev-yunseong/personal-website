@@ -4,6 +4,7 @@ import java.util.List;
 
 import dev.yunseong.website.ai.tool.BlogTools;
 import dev.yunseong.website.ai.tool.SendMessageTool;
+import dev.yunseong.website.ai.tool.ContentTools;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.PromptChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
@@ -59,7 +60,7 @@ public class BlogAgent {
             - Use Markdown (headings, bullet points, tables, bold text) to organize information logically and improve readability. Avoid dense blocks of text and ensure the response is easily scannable.
             """;
 
-    public BlogAgent(ChatClient.Builder builder, ChatMemory chatMemory, VectorStore vectorStore, BlogTools blogTools, SendMessageTool sendMessageTool, ToolEventPublisher toolEventPublisher, @Nullable ToolCallbackProvider mcpToolCallbackProvider) {
+    public BlogAgent(ChatClient.Builder builder, ChatMemory chatMemory, VectorStore vectorStore, BlogTools blogTools, ContentTools contentTools, SendMessageTool sendMessageTool, ToolEventPublisher toolEventPublisher, @Nullable ToolCallbackProvider mcpToolCallbackProvider) {
         this.toolEventPublisher = toolEventPublisher;
         ChatClient pureChatClient = builder.build();
 
@@ -85,7 +86,7 @@ public class BlogAgent {
                         PromptChatMemoryAdvisor.builder(chatMemory).build() // Chat Memory Advisor
                 ))
                 .defaultSystem(String.format("%s\n\n%s", DEFAULT_PROMPT, BlogTools.BLOG_TOOL_PROMPT))
-                .defaultTools(new DateTimeTools(), blogTools, sendMessageTool);
+                .defaultTools(new DateTimeTools(), blogTools, contentTools, sendMessageTool);
 
         if (mcpToolCallbackProvider != null) {
             chatClientBuilder = chatClientBuilder.defaultToolCallbacks(mcpToolCallbackProvider);
