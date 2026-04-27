@@ -1,6 +1,7 @@
 package dev.yunseong.website.ai.domain;
 
 import java.util.List;
+import java.util.Map;
 
 import dev.yunseong.website.ai.tool.BlogTools;
 import dev.yunseong.website.ai.tool.ContentTools;
@@ -103,6 +104,7 @@ public class BlogAgent {
 
         Flux<String> textStream = chatClient.prompt(message)
                 .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
+                .toolContext(Map.of(BlogTools.CONVERSATION_ID_KEY, conversationId))
                 .stream()
                 .content()
                 .map(StreamEvent::text)
