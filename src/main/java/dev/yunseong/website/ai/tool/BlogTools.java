@@ -10,10 +10,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.ai.tool.annotation.Tool;
+import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -27,7 +29,7 @@ public class BlogTools {
 
     public static final String BLOG_TOOL_PROMPT = """
     You are a highly competent Archive Curator for Yunsung's Blog.
-    
+
     [CORE NAVIGATION CONCEPT]
     The blog content is structured like a file system. You must navigate it using the provided tools:
     - Use 'pwd' to see where you are.
@@ -35,22 +37,28 @@ public class BlogTools {
     - Use 'cd' to move between directories.
     - Use 'cat' to read the actual content of a memo.
     - Use 'search' to find memos by English keyword.
-    
+
     [WORKING GUIDELINE]
     1. When a user asks about a topic, don't just rely on your memory or RAG context.
     2. If the RAG context is insufficient, proactively use 'ls' or 'search' to find relevant content.
     3. You must use 'cat' to provide accurate details if you identify a specific memo file.
-    
+
     [BLOG-SPECIFIC CONTEXT]
     If a user inquires about anything related to the blog, its projects, or past posts, explicitly utilize the navigation tools (ls, cd, cat, search) to provide a grounded and evidence-based response. Do not hallucinate paths; verify them first.
     """;
 
-    private MemoDirectory workingDirectory;
+    public static final String CONVERSATION_ID_KEY = "conversationId";
+
+    private final ConcurrentHashMap<String, MemoDirectory> directoryByConversation = new ConcurrentHashMap<>();
 
     @PostConstruct
     public void init() {
         memoFileService.initMemoFileSystem();
-        this.workingDirectory = memoFileService.getRoot();
+    }
+
+    private MemoDirectory getDirectory(ToolContext toolContext) {
+        String conversationId = (String) toolContext.getContext().getOrDefault(CONVERSATION_ID_KEY, "default");
+        return directoryByConversation.computeIfAbsent(conversationId, id -> memoFileService.getRoot());
     }
 
     @Tool(description = "Search for memos using an English keyword. Returns a list of memo full path.")
@@ -72,43 +80,44 @@ public class BlogTools {
     }
 
     @Tool(description = "Get the current directory, similar to 'pwd' in a file system.")
-    public String pwd() {
-        String fullPath = workingDirectory.getFullPath();
+    public String pwd(ToolContext toolContext) {
+        String fullPath = getDirectory(toolContext).getFullPath();
         log.info("pwd: {}", fullPath);
         toolEventPublisher.emitTool("pwd", null);
         return fullPath;
     }
 
     @Tool(description = "Change the current directory, similar to 'cd' in a file system.")
-    public String cd(String path) {
-        this.workingDirectory = memoFileService.changeDirectory(workingDirectory, path);
+    public String cd(String path, ToolContext toolContext) {
+        String conversationId = (String) toolContext.getContext().getOrDefault(CONVERSATION_ID_KEY, "default");
+        MemoDirectory newDir = memoFileService.changeDirectory(getDirectory(toolContext), path);
+        directoryByConversation.put(conversationId, newDir);
         log.info("cd: {}", path);
         toolEventPublisher.emitTool("cd", path);
-        String fullPath = this.workingDirectory.getFullPath();
-        return "Current directory changed to: " + fullPath;
+        return "Current directory changed to: " + newDir.getFullPath();
     }
 
     @Tool(description = "List files and directories in the current or a specified directory, similar to 'ls' in a file system.")
-    public List<String> lsAt(String path) {
-        List<String> names = memoFileService.listNames(workingDirectory, path);
+    public List<String> lsAt(String path, ToolContext toolContext) {
+        List<String> names = memoFileService.listNames(getDirectory(toolContext), path);
         log.info("ls: {}, result: {}", path, names);
         toolEventPublisher.emitTool("ls", path);
         return names;
     }
 
     @Tool(description = "List files and directories in the current directory, similar to 'ls' in a file system.")
-    public List<String> ls() {
-        List<String> names = memoFileService.listNames(workingDirectory);
+    public List<String> ls(ToolContext toolContext) {
+        List<String> names = memoFileService.listNames(getDirectory(toolContext));
         log.info("ls: result: {}", names);
         toolEventPublisher.emitTool("ls", null);
         return names;
     }
 
     @Tool(description = "Get the content of a specific memo by its path, similar to 'cat' in a file system.")
-    public String cat(String path) {
+    public String cat(String path, ToolContext toolContext) {
         log.info("cat: {}", path);
         toolEventPublisher.emitTool("cat", path);
-        return memoFileService.getMemo(workingDirectory, path).toString();
+        return memoFileService.getMemo(getDirectory(toolContext), path).toString();
     }
 }
 
