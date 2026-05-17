@@ -9,23 +9,12 @@
         pageKeywords='미니앱, 데모, 웹 앱, 개발',
         pageUrl='/public/apps'">
 
-<th:block layout:fragment="css">
-    <style>
-        .app-card {
-            transition: transform 0.2s;
-            cursor: pointer;
-        }
-        .app-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-        }
-    </style>
-</th:block>
+<th:block layout:fragment="css"></th:block>
 
 <body>
 <th:block layout:fragment="content">
     <div class="container px-3 px-md-4">
-        <h1 class="my-3 my-md-4">Mini Apps</h1>
+        <h1 class="page-title">Mini Apps</h1>
         <a sec:authorize="isAuthenticated()" href="/admin/miniapps" class="btn btn-primary mb-3">
           <i class="bi bi-plus-lg"></i> Manage Mini App
         </a>

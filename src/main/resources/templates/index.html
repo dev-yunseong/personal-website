@@ -13,16 +13,12 @@
     <!-- Prism.js CSS for syntax highlighting - GitHub style theme -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism-themes/1.9.0/prism-ghcolors.min.css">
     <link rel="stylesheet" th:href="@{/css/memo-view.css}">
+    <link rel="stylesheet" th:href="@{/css/home.css}">
 </th:block>
 
 <body>
 <th:block layout:fragment="content">
-    <!-- Jumbotron -->
-    <div class="p-3 p-md-5 mb-4 bg-dark text-white rounded-3 shadow-lg">
-        <div class="container-fluid py-3 py-md-5">
-            <h1 class="display-5 fw-bold">Yunseong</h1>
-        </div>
-    </div>
+    <div th:replace="~{fragments/home_hero_fragment :: homeHero}"></div>
 
     <!-- Search Bar -->
     <div class="container px-3 px-md-4 mb-4">

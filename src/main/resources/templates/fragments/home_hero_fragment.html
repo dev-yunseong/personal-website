@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<body>
+<section th:fragment="homeHero" class="home-hero" aria-labelledby="home-hero-title">
+    <div class="home-hero__portrait-wrap">
+        <img class="home-hero__portrait"
+             th:src="${profileImageUrl != null and !#strings.isEmpty(profileImageUrl) ? profileImageUrl : '/images/profile-placeholder.svg'}"
+             src="/images/profile-placeholder.svg"
+             alt="Yunseong profile image">
+    </div>
+    <div class="home-hero__content">
+        <h1 id="home-hero-title" class="home-hero__title">Yunseong Jeong</h1>
+        <p class="home-hero__role">Developer</p>
+    </div>
+</section>
+</body>
+</html>

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 600" role="img" aria-labelledby="title desc">
+  <title id="title">Profile image placeholder</title>
+  <desc id="desc">A geometric placeholder for Yunseong profile image.</desc>
+  <rect width="480" height="600" fill="#f6f8fa"/>
+  <circle cx="240" cy="214" r="86" fill="#334155"/>
+  <path d="M116 448c14-84 62-132 124-132s110 48 124 132c4 22-12 42-36 42H152c-24 0-40-20-36-42Z" fill="#334155"/>
+</svg>
