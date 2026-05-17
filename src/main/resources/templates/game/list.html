@@ -8,38 +8,13 @@
         pageKeywords='프로젝트, 게임, 데모, 웹 프로젝트, 개발',
         pageUrl='/public/projects'">
 
-<th:block layout:fragment="css">
-    <style>
-        .game-card {
-            transition: transform 0.2s;
-            cursor: pointer;
-        }
-        .game-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-        }
-        .game-thumbnail {
-            width: 32px;
-            height: 32px;
-            margin-right: 10px;
-            object-fit: cover;
-            display: none;
-        }
-        .game-thumbnail.loaded {
-            display: block;
-        }
-        .game-title-container {
-            display: flex;
-            align-items: center;
-        }
-    </style>
-</th:block>
+<th:block layout:fragment="css"></th:block>
 
 <body>
 <th:block layout:fragment="content">
     <div class="container px-3 px-md-4">
-        <h1 class="my-3 my-md-4">Projects</h1>
-        <p class="lead">Choose a project to explore</p>
+        <h1 class="page-title">Projects</h1>
+        <p class="page-subtitle">Choose a project to explore</p>
         
         <div class="row">
             <div class="col-12 col-sm-6 col-md-4 mb-4" th:each="game : ${games}">

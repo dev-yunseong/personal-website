@@ -3,6 +3,7 @@ package dev.yunseong.website.global.controller;
 import dev.yunseong.website.blog.domain.Memo;
 import dev.yunseong.website.blog.service.MemoService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,8 +16,12 @@ public class MainController {
 
     private final MemoService memoService;
 
+    @Value("${app.profile-image-url:}")
+    private String profileImageUrl;
+
     @GetMapping
     public String index(Model model) {
+        model.addAttribute("profileImageUrl", profileImageUrl);
         try {
             Memo memo = memoService.getMemo("/README");
             model.addAttribute("memo", memo);
@@ -27,4 +32,3 @@ public class MainController {
         return "index";
     }
 }
-

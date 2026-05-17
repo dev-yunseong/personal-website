@@ -20,3 +20,4 @@ spring:
 
 app:
   base-url: ${BASE_URL:https://yunseong.dev}
+  profile-image-url: ${PROFILE_IMAGE_URL:https://s3.yunseong.dev/agent-artifacts/profile-yunseong.jpg}
