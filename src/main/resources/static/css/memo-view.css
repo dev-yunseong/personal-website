@@ -1,8 +1,8 @@
 /* 1. 코드 블록 컨테이너: 그림자 제거 및 미세 조정 */
 .markdown-body pre {
-  background-color: #f6f8fa !important;
-  border: 1px solid #d0d7de !important;
-  border-radius: 6px !important;
+  background-color: #ece8de !important;
+  border: 1px solid #171717 !important;
+  border-radius: 0 !important;
   padding: 16px !important;
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace !important;
   font-size: 13.6px !important; /* 가독성 좋은 크기 */
@@ -50,6 +50,6 @@ pre[class*="language-"] {
 .token.entity,
 .token.url,
 .language-css .token.string,
-.style .token.string { color: #24292f !important; background: none !important; } /* 연산자 */
+.style .token.string { color: #171717 !important; background: none !important; } /* 연산자 */
 
-.token.punctuation { color: #24292f !important; } /* 괄호, 쉼표 등 */
+.token.punctuation { color: #171717 !important; } /* 괄호, 쉼표 등 */

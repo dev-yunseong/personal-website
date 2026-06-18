@@ -18,8 +18,8 @@
         <a sec:authorize="isAuthenticated()" href="/admin/miniapps" class="btn btn-primary mb-3">
           <i class="bi bi-plus-lg"></i> Manage Mini App
         </a>
-        <div class="row">
-            <div class="col-12 col-sm-6 col-md-4 mb-4" th:each="app : ${miniApps}">
+        <div class="row g-3">
+            <div class="col-12 col-sm-6 col-lg-4" th:each="app : ${miniApps}">
                 <a th:href="@{/public/apps/{id}(id=${app.id})}" class="text-decoration-none">
                     <div class="card app-card h-100 shadow">
                         <div class="card-body">
