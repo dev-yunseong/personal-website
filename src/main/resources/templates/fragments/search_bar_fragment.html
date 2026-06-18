@@ -4,7 +4,7 @@
 <div th:fragment="searchBar" class="search-container">
     <form th:action="@{/public/search}" method="get" class="d-flex">
         <input type="text" id="search-input" name="keyword" class="form-control me-2" placeholder="Search memos..." autocomplete="off">
-        <button type="submit" class="btn btn-secondary">Search</button>
+        <button type="submit" class="btn btn-secondary"><i class="bi bi-search" aria-hidden="true"></i> Search</button>
     </form>
     <div id="autocomplete-suggestions" class="autocomplete-suggestions list-group"></div>
 </div>

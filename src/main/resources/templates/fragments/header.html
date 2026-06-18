@@ -8,29 +8,32 @@
 <div th:fragment="header">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark site-navbar">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/">Yunseong</a>
+            <a class="navbar-brand" href="/">
+                <span class="navbar-brand__name">Yunseong</span>
+                <span class="navbar-brand__meta">dev / archive</span>
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav w-100">
                     <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="/">Home</a>
+                        <a class="nav-link" href="/">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="/public/memos">Blog</a>
+                        <a class="nav-link" href="/public/memos">Blog</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="/public/projects">Projects</a>
+                        <a class="nav-link" href="/public/projects">Projects</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="/public/apps">Mini Apps</a>
+                        <a class="nav-link" href="/public/apps">Mini Apps</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="/public/chat">Curator</a>
+                        <a class="nav-link" href="/public/chat">Curator</a>
                     </li>
                     <li class="nav-item ms-auto" sec:authorize="isAuthenticated()">
-                        <a class="nav-link active" aria-current="page" href="/admin/console">
+                        <a class="nav-link" href="/admin/console">
                             <i class="bi bi-speedometer2"></i> Console
                         </a>
                     </li>

@@ -16,8 +16,8 @@
         <h1 class="page-title">Projects</h1>
         <p class="page-subtitle">Choose a project to explore</p>
         
-        <div class="row">
-            <div class="col-12 col-sm-6 col-md-4 mb-4" th:each="game : ${games}">
+        <div class="row g-3">
+            <div class="col-12 col-sm-6 col-lg-4" th:each="game : ${games}">
                 <a th:href="@{/public/projects/{id}(id=${game.id})}" class="text-decoration-none">
                     <div class="card game-card h-100 shadow">
                         <div class="card-body">

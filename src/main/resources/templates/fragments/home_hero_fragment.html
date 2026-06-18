@@ -3,6 +3,7 @@
 
 <body>
 <section th:fragment="homeHero" class="home-hero" aria-labelledby="home-hero-title">
+    <div class="home-hero__index" aria-hidden="true">01</div>
     <div class="home-hero__portrait-wrap">
         <img class="home-hero__portrait"
              th:src="${profileImageUrl != null and !#strings.isEmpty(profileImageUrl) ? profileImageUrl : '/images/profile-placeholder.svg'}"
@@ -10,8 +11,13 @@
              alt="Yunseong profile image">
     </div>
     <div class="home-hero__content">
+        <p class="home-hero__eyebrow">Software Engineer · Busan, KR</p>
         <h1 id="home-hero-title" class="home-hero__title">Yunseong Jeong</h1>
-        <p class="home-hero__role">Developer</p>
+        <p class="home-hero__role">I bridge theory and practice to design AI, game, and backend systems, relentlessly pursuing great architecture.</p>
+        <div class="home-hero__links" aria-label="Explore the website">
+            <a href="/public/memos">Read notes <i class="bi bi-arrow-up-right"></i></a>
+            <a href="/public/projects">View projects <i class="bi bi-arrow-up-right"></i></a>
+        </div>
     </div>
 </section>
 </body>
