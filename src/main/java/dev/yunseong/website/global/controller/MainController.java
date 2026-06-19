@@ -1,7 +1,7 @@
 package dev.yunseong.website.global.controller;
 
-import dev.yunseong.website.blog.domain.Memo;
-import dev.yunseong.website.blog.service.MemoService;
+import dev.yunseong.website.global.domain.ProfileLoadResult;
+import dev.yunseong.website.global.service.ProfileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequiredArgsConstructor
 public class MainController {
 
-    private final MemoService memoService;
+    private final ProfileService profileService;
 
     @Value("${app.profile-image-url:}")
     private String profileImageUrl;
@@ -22,13 +22,9 @@ public class MainController {
     @GetMapping
     public String index(Model model) {
         model.addAttribute("profileImageUrl", profileImageUrl);
-        try {
-            Memo memo = memoService.getMemo("/README");
-            model.addAttribute("memo", memo);
-        } catch (IllegalArgumentException e) {
-            model.addAttribute("memo", null);
-        }
-        
+        ProfileLoadResult profileResult = profileService.getProfile();
+        model.addAttribute("profile", profileResult.profile());
+        model.addAttribute("profileStatus", profileResult.status());
         return "index";
     }
 }

@@ -1,22 +1,184 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
 <body>
-<section th:fragment="homeHero" class="home-hero" aria-labelledby="home-hero-title">
-    <div class="home-hero__index" aria-hidden="true">01</div>
-    <div class="home-hero__portrait-wrap">
-        <img class="home-hero__portrait"
-             th:src="${profileImageUrl != null and !#strings.isEmpty(profileImageUrl) ? profileImageUrl : '/images/profile-placeholder.svg'}"
-             src="/images/profile-placeholder.svg"
-             alt="Yunseong profile image">
+<section th:fragment="homeHero" class="home-profile" aria-labelledby="home-hero-title">
+    <div class="home-hero">
+        <div class="home-hero__index" aria-hidden="true">01</div>
+        <div class="home-hero__portrait-wrap">
+            <img class="home-hero__portrait"
+                 th:src="${profileImageUrl != null and !#strings.isEmpty(profileImageUrl) ? profileImageUrl : '/images/profile-placeholder.svg'}"
+                 src="/images/profile-placeholder.svg"
+                 alt="Yunseong profile image">
+        </div>
+        <div class="home-hero__content" th:if="${profile != null}">
+            <p class="home-hero__eyebrow">
+                <span th:text="${profile.headline ?: 'Software Engineer'}">Software Engineer</span>
+                <span th:if="${profile.location != null}" th:text="${' · ' + profile.location}"> · Busan, KR</span>
+            </p>
+            <h1 id="home-hero-title" class="home-hero__title" th:text="${profile.name}">Yunseong Jeong</h1>
+            <p class="home-hero__role" th:text="${profile.about}">
+                I bridge theory and practice to design AI, game, and backend systems.
+            </p>
+            <nav class="home-hero__links" aria-label="Contact links" th:if="${!profile.contacts.isEmpty()}">
+                <a th:each="contact : ${profile.contacts}"
+                   th:href="${contact.url}"
+                   th:text="${contact.label + ' ↗'}"
+                   th:target="${#strings.startsWith(contact.url, 'http') ? '_blank' : null}"
+                   th:rel="${#strings.startsWith(contact.url, 'http') ? 'noopener noreferrer' : null}">
+                    Contact ↗
+                </a>
+            </nav>
+        </div>
+        <div class="home-hero__content home-profile-error" th:if="${profile == null}" role="status">
+            <p class="home-hero__eyebrow">Profile unavailable</p>
+            <h1 id="home-hero-title" class="home-profile-error__title">Profile could not be displayed.</h1>
+            <p class="home-hero__role" th:if="${profileStatus != null and profileStatus.name() == 'MISSING'}">
+                The profile memo has not been created yet.
+            </p>
+            <p class="home-hero__role" th:if="${profileStatus != null and profileStatus.name() == 'INVALID'}">
+                The profile memo contains invalid YAML and must be corrected.
+            </p>
+            <div class="home-hero__links" sec:authorize="isAuthenticated()">
+                <a th:if="${profileStatus != null and profileStatus.name() == 'MISSING'}"
+                   href="/admin/memos/new?category=/profile">Create profile memo <i class="bi bi-arrow-up-right"></i></a>
+                <a th:if="${profileStatus != null and profileStatus.name() == 'INVALID'}"
+                   href="/public/search?keyword=profile">Find profile memo <i class="bi bi-arrow-up-right"></i></a>
+            </div>
+        </div>
     </div>
-    <div class="home-hero__content">
-        <p class="home-hero__eyebrow">Software Engineer · Busan, KR</p>
-        <h1 id="home-hero-title" class="home-hero__title">Yunseong Jeong</h1>
-        <p class="home-hero__role">I bridge theory and practice to design AI, game, and backend systems, relentlessly pursuing great architecture.</p>
-        <div class="home-hero__links" aria-label="Explore the website">
-            <a href="/public/memos">Read notes <i class="bi bi-arrow-up-right"></i></a>
-            <a href="/public/projects">View projects <i class="bi bi-arrow-up-right"></i></a>
+
+    <div class="profile-resume" th:if="${profile != null}">
+        <section class="profile-section" th:if="${!profile.projects.isEmpty()}" aria-labelledby="profile-projects">
+            <header class="profile-section__header">
+                <span class="profile-section__number">02</span>
+                <h2 id="profile-projects">Selected projects</h2>
+            </header>
+            <div class="profile-section__content profile-projects">
+                <article class="profile-project" th:each="project, projectStat : ${profile.projects}">
+                    <div class="profile-project__index"
+                         th:text="${#numbers.formatInteger(projectStat.count, 2)}">01</div>
+                    <div class="profile-project__main">
+                        <div class="profile-project__heading">
+                            <h3>
+                                <a th:if="${project.url != null}" th:href="${project.url}" th:text="${project.name}">Project</a>
+                                <span th:if="${project.url == null}" th:text="${project.name}">Project</span>
+                            </h3>
+                            <p class="profile-project__period" th:if="${project.period != null}">
+                                <span th:text="${project.period.start}">2026-02</span>
+                                <span th:if="${project.period.ongoing()}"> — Present</span>
+                                <span th:if="${!project.period.ongoing() and project.period.end != project.period.start}"
+                                      th:text="${' — ' + project.period.end}"> — 2026-03</span>
+                            </p>
+                        </div>
+                        <p class="profile-project__role" th:if="${project.role != null}" th:text="${project.role}">Role</p>
+                        <ul class="profile-project__highlights" th:if="${!project.highlights.isEmpty()}">
+                            <li th:each="highlight : ${project.highlights}" th:text="${highlight}">Project outcome</li>
+                        </ul>
+                        <ul class="profile-project__technologies" th:if="${!project.technologies.isEmpty()}"
+                            aria-label="Technologies">
+                            <li th:each="technology : ${project.technologies}" th:text="${technology}">Spring Boot</li>
+                        </ul>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <section class="profile-section" th:if="${!profile.awards.isEmpty()}" aria-labelledby="profile-awards">
+            <header class="profile-section__header">
+                <span class="profile-section__number">03</span>
+                <h2 id="profile-awards">Awards</h2>
+            </header>
+            <div class="profile-section__content profile-rows">
+                <article class="profile-row" th:each="award : ${profile.awards}">
+                    <p class="profile-row__date" th:text="${award.date}">2026</p>
+                    <div>
+                        <h3>
+                            <a th:if="${award.url != null}" th:href="${award.url}" th:text="${award.name}">Award</a>
+                            <span th:if="${award.url == null}" th:text="${award.name}">Award</span>
+                        </h3>
+                        <p class="profile-row__meta">
+                            <strong th:if="${award.result != null}" th:text="${award.result}">Winner</strong>
+                            <span th:if="${award.organization != null}" th:text="${award.organization}">Organization</span>
+                        </p>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <section class="profile-section" th:if="${!profile.education.isEmpty()}" aria-labelledby="profile-education">
+            <header class="profile-section__header">
+                <span class="profile-section__number">04</span>
+                <h2 id="profile-education">Education</h2>
+            </header>
+            <div class="profile-section__content profile-rows">
+                <article class="profile-row" th:each="item : ${profile.education}">
+                    <p class="profile-row__date" th:if="${item.period != null}">
+                        <span th:text="${item.period.start}">2025-04</span>
+                        <span th:if="${item.period.ongoing()}"> — Present</span>
+                        <span th:if="${!item.period.ongoing() and item.period.end != item.period.start}"
+                              th:text="${' — ' + item.period.end}"> — 2025-11</span>
+                    </p>
+                    <div>
+                        <h3>
+                            <a th:if="${item.url != null}" th:href="${item.url}" th:text="${item.name}">Education</a>
+                            <span th:if="${item.url == null}" th:text="${item.name}">Education</span>
+                        </h3>
+                        <p class="profile-row__meta" th:if="${item.description != null}" th:text="${item.description}">
+                            Description
+                        </p>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <div class="profile-credentials"
+             th:if="${!profile.certificates.isEmpty() or !profile.assessments.isEmpty()}">
+            <section class="profile-credential" th:if="${!profile.certificates.isEmpty()}"
+                     aria-labelledby="profile-certificates">
+                <header class="profile-credential__header">
+                    <span class="profile-section__number">05</span>
+                    <h2 id="profile-certificates">Certificates</h2>
+                </header>
+                <div class="profile-credential__rows">
+                    <article class="profile-credential__row" th:each="certificate : ${profile.certificates}">
+                        <div>
+                            <h3>
+                                <a th:if="${certificate.url != null}" th:href="${certificate.url}"
+                                   th:text="${certificate.name}">Certificate</a>
+                                <span th:if="${certificate.url == null}" th:text="${certificate.name}">Certificate</span>
+                            </h3>
+                            <p th:if="${certificate.issuer != null}" th:text="${certificate.issuer}">Issuer</p>
+                        </div>
+                        <time th:text="${certificate.issuedAt}">2026-06-12</time>
+                    </article>
+                </div>
+            </section>
+
+            <section class="profile-credential" th:if="${!profile.assessments.isEmpty()}"
+                     aria-labelledby="profile-assessments">
+                <header class="profile-credential__header">
+                    <span class="profile-section__number">06</span>
+                    <h2 id="profile-assessments">Assessments</h2>
+                </header>
+                <div class="profile-credential__rows">
+                    <article class="profile-credential__row" th:each="assessment : ${profile.assessments}">
+                        <div>
+                            <h3>
+                                <a th:if="${assessment.url != null}" th:href="${assessment.url}"
+                                   th:text="${assessment.name}">Assessment</a>
+                                <span th:if="${assessment.url == null}" th:text="${assessment.name}">Assessment</span>
+                            </h3>
+                            <p>
+                                <strong th:if="${assessment.score != null}" th:text="${assessment.score}">717</strong>
+                                <span th:if="${assessment.level != null}" th:text="${assessment.level}">Level 4</span>
+                            </p>
+                        </div>
+                        <time th:text="${assessment.assessedAt}">2026-06-15</time>
+                    </article>
+                </div>
+            </section>
         </div>
     </div>
 </section>
