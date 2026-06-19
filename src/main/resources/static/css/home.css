@@ -15,7 +15,7 @@
 .profile-section__number {
   color: var(--site-sage);
   font-family: var(--site-mono);
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   font-weight: 600;
 }
 
@@ -45,7 +45,7 @@
 .home-hero__eyebrow {
   color: var(--site-accent);
   font-family: var(--site-mono);
-  font-size: 0.68rem;
+  font-size: 0.82rem;
   font-weight: 600;
   letter-spacing: 0.07em;
   margin: 0 0 1.1rem;
@@ -96,7 +96,7 @@
   border-bottom: 1px solid var(--site-ink);
   color: var(--site-ink);
   font-family: var(--site-mono);
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   font-weight: 600;
   letter-spacing: 0.04em;
   padding-bottom: 0.25rem;
@@ -173,7 +173,7 @@
 
 .profile-project__index {
   color: var(--site-accent);
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   font-weight: 600;
   padding-top: 0.35rem;
 }
@@ -212,14 +212,15 @@
 .profile-project__period {
   color: var(--site-muted);
   flex: 0 0 auto;
-  font-size: 0.68rem;
+  font-size: 0.8rem;
+  line-height: 1.5;
   margin: 0;
   text-transform: uppercase;
 }
 
 .profile-project__role {
   color: var(--site-sage);
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   font-weight: 600;
   letter-spacing: 0.04em;
   margin: 0.35rem 0 0;
@@ -228,6 +229,8 @@
 
 .profile-project__highlights {
   color: var(--site-muted);
+  font-size: 1rem;
+  line-height: 1.7;
   margin: 1rem 0 0;
   max-width: 720px;
   padding-left: 1.1rem;
@@ -248,7 +251,7 @@
 
 .profile-project__technologies li {
   color: var(--site-accent);
-  font-size: 0.65rem;
+  font-size: 0.78rem;
   font-weight: 600;
   letter-spacing: 0.035em;
   text-transform: uppercase;
@@ -281,14 +284,14 @@
 
 .profile-row__date {
   color: var(--site-accent);
-  font-size: 0.68rem;
+  font-size: 0.8rem;
   font-weight: 600;
   margin: 0.25rem 0 0;
   text-transform: uppercase;
 }
 
 .profile-row h3 {
-  font-size: clamp(1rem, 2.2vw, 1.3rem);
+  font-size: clamp(1.08rem, 2.2vw, 1.35rem);
   line-height: 1.35;
 }
 
@@ -296,7 +299,8 @@
   color: var(--site-muted);
   display: flex;
   flex-wrap: wrap;
-  font-size: 0.68rem;
+  font-size: 0.8rem;
+  line-height: 1.55;
   gap: 0.4rem 1rem;
   margin: 0.45rem 0 0;
 }
@@ -344,14 +348,15 @@
 }
 
 .profile-credential__row h3 {
-  font-size: 1rem;
+  font-size: 1.1rem;
   line-height: 1.35;
 }
 
 .profile-credential__row p,
 .profile-credential__row time {
   color: var(--site-muted);
-  font-size: 0.65rem;
+  font-size: 0.78rem;
+  line-height: 1.5;
   margin: 0.35rem 0 0;
   text-transform: uppercase;
 }
