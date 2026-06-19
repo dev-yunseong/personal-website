@@ -1,28 +1,89 @@
-function initMemoEditor() {
-    document.getElementById('writeTab').addEventListener('click', function() {
-        document.getElementById('writePane').style.display = 'block';
-        document.getElementById('previewPane').style.display = 'none';
-        document.getElementById('writeTab').classList.add('active');
-        document.getElementById('previewTab').classList.remove('active');
-    });
+function initMemoEditor(options = {}) {
+    const profileMemo = Boolean(options.profileMemo);
+    const content = document.getElementById('content');
+    const writeTab = document.getElementById('writeTab');
+    const previewTab = document.getElementById('previewTab');
+    const writePane = document.getElementById('writePane');
+    const previewPane = document.getElementById('previewPane');
+    const validationStatus = document.getElementById('profileValidationStatus');
 
-    document.getElementById('previewTab').addEventListener('click', function() {
-        document.getElementById('writePane').style.display = 'none';
-        const previewPane = document.getElementById('previewPane');
-        previewPane.style.display = 'block';
-        previewPane.innerHTML = '<span class="text-muted">Loading preview...</span>';
-        document.getElementById('previewTab').classList.add('active');
-        document.getElementById('writeTab').classList.remove('active');
-
+    function csrfHeaders() {
         const token = document.querySelector('meta[name="_csrf"]').getAttribute('content');
         const header = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+        return { [header]: token };
+    }
+
+    function showValidation(message, state) {
+        if (!validationStatus) return;
+
+        validationStatus.textContent = message;
+        validationStatus.classList.remove('alert-secondary', 'alert-info', 'alert-success', 'alert-danger');
+        validationStatus.classList.add(`alert-${state}`);
+    }
+
+    async function validateProfileYaml(target = validationStatus) {
+        if (target) {
+            target.style.display = 'block';
+            target.textContent = 'Validating profile YAML...';
+            target.classList?.remove('alert-secondary', 'alert-success', 'alert-danger');
+            target.classList?.add('alert-info');
+        }
 
         const formData = new FormData();
-        formData.append('content', document.getElementById('content').value);
+        formData.append('content', content.value);
+
+        try {
+            const response = await fetch('/admin/memos/profile/validate', {
+                method: 'POST',
+                headers: csrfHeaders(),
+                body: formData
+            });
+            const result = await response.json();
+            const state = result.valid ? 'success' : 'danger';
+
+            showValidation(result.message, state);
+            if (target && target !== validationStatus) {
+                target.textContent = result.message;
+                target.className = `alert alert-${state}`;
+            }
+            return result.valid;
+        } catch (error) {
+            const message = `Validation failed: ${error.message}`;
+            showValidation(message, 'danger');
+            if (target && target !== validationStatus) {
+                target.textContent = message;
+                target.className = 'alert alert-danger';
+            }
+            return false;
+        }
+    }
+
+    writeTab.addEventListener('click', function() {
+        writePane.style.display = 'block';
+        previewPane.style.display = 'none';
+        writeTab.classList.add('active');
+        previewTab.classList.remove('active');
+    });
+
+    previewTab.addEventListener('click', async function() {
+        writePane.style.display = 'none';
+        previewPane.style.display = 'block';
+        previewTab.classList.add('active');
+        writeTab.classList.remove('active');
+
+        if (profileMemo) {
+            await validateProfileYaml(previewPane);
+            return;
+        }
+
+        previewPane.innerHTML = '<span class="text-muted">Loading preview...</span>';
+
+        const formData = new FormData();
+        formData.append('content', content.value);
 
         fetch('/admin/memos/preview', {
             method: 'POST',
-            headers: { [header]: token },
+            headers: csrfHeaders(),
             body: formData
         })
         .then(response => response.text())
@@ -42,10 +103,10 @@ function initMemoEditor() {
             const mermaidBlocks = previewPane.querySelectorAll('code.language-mermaid');
             if (window.mermaid && mermaidBlocks.length > 0) {
                 mermaidBlocks.forEach((code) => {
-                    const content = code.textContent;
+                    const blockContent = code.textContent;
                     const div = document.createElement('div');
                     div.className = 'mermaid';
-                    div.textContent = content;
+                    div.textContent = blockContent;
                     if (code.parentElement && code.parentElement.tagName === 'PRE') {
                         code.parentElement.replaceWith(div);
                     } else {
@@ -54,8 +115,8 @@ function initMemoEditor() {
                 });
                 try {
                     await mermaid.run({ querySelector: '#previewPane .mermaid' });
-                } catch (e) {
-                    console.error('Mermaid error:', e);
+                } catch (error) {
+                    console.error('Mermaid error:', error);
                 }
             }
         })
@@ -64,4 +125,15 @@ function initMemoEditor() {
             previewPane.innerHTML = '<span class="text-danger">Failed to load preview.</span>';
         });
     });
+
+    if (profileMemo) {
+        previewTab.textContent = 'Validate YAML';
+        let validationTimer;
+        content.addEventListener('input', function() {
+            showValidation('Profile YAML changed. Waiting to validate...', 'secondary');
+            window.clearTimeout(validationTimer);
+            validationTimer = window.setTimeout(() => validateProfileYaml(), 500);
+        });
+        validateProfileYaml();
+    }
 }
