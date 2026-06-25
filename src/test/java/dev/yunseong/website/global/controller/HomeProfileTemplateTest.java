@@ -1,5 +1,6 @@
 package dev.yunseong.website.global.controller;
 
+import dev.yunseong.website.blog.domain.Memo;
 import dev.yunseong.website.global.domain.Profile;
 import dev.yunseong.website.global.domain.ProfileLoadResult;
 import org.junit.jupiter.api.Test;
@@ -7,6 +8,7 @@ import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -77,6 +79,34 @@ class HomeProfileTemplateTest {
         String html = templateEngine.process("fragments/home_hero_fragment", context);
 
         assertTrue(html.contains("contains invalid YAML"));
+    }
+
+    @Test
+    void recentMemosSection_RendersRecentMemoLinks() {
+        Context context = new Context();
+        context.setVariable("recentMemos", List.of(
+                new Memo(10L, "/notes/recent", "Recent content", LocalDateTime.now(), LocalDateTime.of(2026, 6, 25, 10, 30)),
+                new Memo(11L, "/dev/spring", "Spring content", LocalDateTime.now(), LocalDateTime.of(2026, 6, 24, 10, 30))
+        ));
+
+        String html = templateEngine.process("fragments/home_recent_memos_fragment", context);
+
+        assertTrue(html.contains("Recent memos"));
+        assertTrue(html.contains("/public/memos/10"));
+        assertTrue(html.contains("recent"));
+        assertTrue(html.contains("/notes"));
+        assertTrue(html.contains("2026-06-25"));
+        assertTrue(html.contains("/public/memos"));
+    }
+
+    @Test
+    void recentMemosSection_RendersEmptyState() {
+        Context context = new Context();
+        context.setVariable("recentMemos", List.of());
+
+        String html = templateEngine.process("fragments/home_recent_memos_fragment", context);
+
+        assertTrue(html.contains("No public memos yet."));
     }
 
     private SpringTemplateEngine templateEngine() {

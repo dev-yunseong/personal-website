@@ -48,5 +48,7 @@ public interface MemoRepository extends JpaRepository<Memo, Long> {
     Page<Memo> findAllByPath(String path, Pageable pageable);
     Page<Memo> findAllByNameStartingWith(String name, Pageable pageable);
 
+    Page<Memo> findAllByNameNot(String name, Pageable pageable);
+
     List<Memo> findAllByUpdatedAtGreaterThan(LocalDateTime time);
 }
