@@ -1,5 +1,6 @@
 package dev.yunseong.website.global.controller;
 
+import dev.yunseong.website.blog.service.MemoService;
 import dev.yunseong.website.global.domain.Profile;
 import dev.yunseong.website.global.domain.ProfileLoadResult;
 import dev.yunseong.website.global.service.ProfileService;
@@ -21,6 +22,9 @@ class MainControllerTest {
     private ProfileService profileService;
 
     @Mock
+    private MemoService memoService;
+
+    @Mock
     private Model model;
 
     @InjectMocks
@@ -31,6 +35,7 @@ class MainControllerTest {
         // Given
         Profile profile = profile();
         when(profileService.getProfile()).thenReturn(ProfileLoadResult.available(profile));
+        when(memoService.getRecentMemos(3)).thenReturn(List.of());
 
         // When
         String result = mainController.index(model);
@@ -39,12 +44,14 @@ class MainControllerTest {
         assertEquals("index", result);
         verify(model).addAttribute("profile", profile);
         verify(model).addAttribute("profileStatus", ProfileLoadResult.Status.AVAILABLE);
+        verify(model).addAttribute("recentMemos", List.of());
     }
 
     @Test
     void index_ExposesMissingProfileState() {
         // Given
         when(profileService.getProfile()).thenReturn(ProfileLoadResult.missing());
+        when(memoService.getRecentMemos(3)).thenReturn(List.of());
 
         // When
         String result = mainController.index(model);
@@ -53,17 +60,20 @@ class MainControllerTest {
         assertEquals("index", result);
         verify(model).addAttribute("profile", null);
         verify(model).addAttribute("profileStatus", ProfileLoadResult.Status.MISSING);
+        verify(model).addAttribute("recentMemos", List.of());
     }
 
     @Test
     void index_ExposesInvalidProfileState() {
         when(profileService.getProfile()).thenReturn(ProfileLoadResult.invalid());
+        when(memoService.getRecentMemos(3)).thenReturn(List.of());
 
         String result = mainController.index(model);
 
         assertEquals("index", result);
         verify(model).addAttribute("profile", null);
         verify(model).addAttribute("profileStatus", ProfileLoadResult.Status.INVALID);
+        verify(model).addAttribute("recentMemos", List.of());
     }
 
     private Profile profile() {

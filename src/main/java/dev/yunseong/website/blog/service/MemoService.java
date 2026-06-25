@@ -10,6 +10,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -43,6 +44,12 @@ public class MemoService {
     @Transactional(readOnly = true)
     public Page<Memo> getMemos(Pageable pageable) {
         return memoRepository.findAll(pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Memo> getRecentMemos(int limit) {
+        PageRequest pageRequest = PageRequest.of(0, limit, Sort.by("updatedAt").descending());
+        return memoRepository.findAllByNameNot("/profile", pageRequest).getContent();
     }
 
     @Transactional(readOnly = true)

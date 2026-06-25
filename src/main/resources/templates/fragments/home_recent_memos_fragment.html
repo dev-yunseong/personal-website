@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<body>
+<section th:fragment="recentMemosSection" class="home-recent-memos" aria-labelledby="home-recent-memos-title">
+    <div class="home-recent-memos__header">
+        <span class="profile-section__number">Latest</span>
+        <div>
+            <h2 id="home-recent-memos-title">Recent memos</h2>
+            <a class="home-recent-memos__all" href="/public/memos">View all <i class="bi bi-arrow-up-right"></i></a>
+        </div>
+    </div>
+
+    <div class="home-recent-memos__list" th:if="${!#lists.isEmpty(recentMemos)}">
+        <a class="home-recent-memo"
+           th:each="memo, memoStat : ${recentMemos}"
+           th:href="${'/public/memos/' + memo.id}">
+            <span class="home-recent-memo__index" th:text="${#numbers.formatInteger(memoStat.count, 2)}">01</span>
+            <span class="home-recent-memo__main">
+                <span class="home-recent-memo__title" th:text="${memo.title}">Memo title</span>
+                <span class="home-recent-memo__meta">
+                    <span th:text="${memo.path}">/path</span>
+                    <time th:if="${memo.updatedAt != null}"
+                          th:datetime="${#temporals.format(memo.updatedAt, 'yyyy-MM-dd''T''HH:mm:ss')}"
+                          th:text="${#temporals.format(memo.updatedAt, 'yyyy-MM-dd')}">2026-06-25</time>
+                </span>
+            </span>
+            <i class="bi bi-arrow-up-right home-recent-memo__arrow" aria-hidden="true"></i>
+        </a>
+    </div>
+
+    <p class="home-recent-memos__empty" th:if="${#lists.isEmpty(recentMemos)}">
+        No public memos yet.
+    </p>
+</section>
+</body>
+</html>
