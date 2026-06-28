@@ -53,7 +53,7 @@
         <section class="profile-section" th:if="${!profile.projects.isEmpty()}" aria-labelledby="profile-projects">
             <header class="profile-section__header">
                 <span class="profile-section__number">02</span>
-                <h2 id="profile-projects">Selected projects</h2>
+                <h2 id="profile-projects">Selected projects &amp; experience</h2>
             </header>
             <div class="profile-section__content profile-projects">
                 <article class="profile-project" th:each="project, projectStat : ${profile.projects}">
