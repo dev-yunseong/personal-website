@@ -108,6 +108,65 @@ class MemoServiceTest {
     }
 
     @Test
+    void getPublicMemos_ShouldExcludePrivateMemos() {
+        // Given
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Memo> page = new PageImpl<>(List.of(javaMemo));
+        when(memoRepository.findPublic(pageable)).thenReturn(page);
+
+        // When
+        Page<Memo> result = memoService.getPublicMemos(pageable);
+
+        // Then
+        assertThat(result.getContent()).containsExactly(javaMemo);
+        verify(memoRepository).findPublic(pageable);
+    }
+
+    @Test
+    void getPublicMemosByCategory_ShouldExcludePrivateMemos() {
+        // Given
+        String category = "/java";
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Memo> page = new PageImpl<>(List.of(javaSpringMemo));
+        when(memoRepository.findPublicByPath(eq("/java/"), any(PageRequest.class))).thenReturn(page);
+
+        // When
+        Page<Memo> result = memoService.getPublicMemos(category, pageable);
+
+        // Then
+        assertThat(result.getContent()).containsExactly(javaSpringMemo);
+        verify(memoRepository).findPublicByPath(eq("/java/"), any(PageRequest.class));
+    }
+
+    @Test
+    void getPublicMemoById_ShouldExcludePrivateMemos() {
+        // Given
+        when(memoRepository.findPublicById(1L)).thenReturn(Optional.of(javaMemo));
+
+        // When
+        Memo result = memoService.getPublicMemo(1L);
+
+        // Then
+        assertEquals(javaMemo, result);
+        verify(memoRepository).findPublicById(1L);
+    }
+
+    @Test
+    void searchPublicMemo_ShouldExcludePrivateMemos() {
+        // Given
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Memo> page = new PageImpl<>(List.of(javaMemo));
+        when(memoRepository.findPublicByQuery("java", pageable)).thenReturn(page);
+
+        // When
+        Page<Memo> result = memoService.searchPublicMemo("java", pageable);
+
+        // Then
+        assertThat(result.getContent()).containsExactly(javaMemo);
+        verify(memoRepository).findPublicByQuery("java", pageable);
+    }
+
+    @Test
     void saveMemo_ShouldSaveAndReturnId() {
         // Given
         when(memoRepository.save(any(Memo.class))).thenAnswer(invocation -> {

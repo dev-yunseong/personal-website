@@ -17,6 +17,17 @@ public interface MemoRepository extends JpaRepository<Memo, Long> {
             value = """
         SELECT *
         FROM memos
+        WHERE id = :id
+          AND name NOT LIKE '/private%'
+        """,
+            nativeQuery = true
+    )
+    Optional<Memo> findPublicById(Long id);
+
+    @Query(
+            value = """
+        SELECT *
+        FROM memos
         WHERE name LIKE CONCAT('%', :query, '%')
         ORDER BY updated_at DESC
         """,
@@ -28,6 +39,24 @@ public interface MemoRepository extends JpaRepository<Memo, Long> {
             nativeQuery = true
     )
     Page<Memo> findByQuery(String query, Pageable pageable);
+
+    @Query(
+            value = """
+        SELECT *
+        FROM memos
+        WHERE name LIKE CONCAT('%', :query, '%')
+          AND name NOT LIKE '/private%'
+        ORDER BY updated_at DESC
+        """,
+            countQuery = """
+        SELECT count(*)
+        FROM memos
+        WHERE name LIKE CONCAT('%', :query, '%')
+          AND name NOT LIKE '/private%'
+        """,
+            nativeQuery = true
+    )
+    Page<Memo> findPublicByQuery(String query, Pageable pageable);
 
     @Query(
             value = """
@@ -46,6 +75,43 @@ public interface MemoRepository extends JpaRepository<Memo, Long> {
             nativeQuery = true
     )
     Page<Memo> findAllByPath(String path, Pageable pageable);
+
+    @Query(
+            value = """
+        SELECT *
+        FROM memos
+        WHERE (name ~ CONCAT('^', :path, '[^/]+$')
+           OR name = RTRIM(:path, '/'))
+          AND name NOT LIKE '/private%'
+        ORDER BY updated_at DESC
+        """,
+            countQuery = """
+        SELECT count(*)
+        FROM memos
+        WHERE (name ~ CONCAT('^', :path, '[^/]+$')
+           OR name = RTRIM(:path, '/'))
+          AND name NOT LIKE '/private%'
+        """,
+            nativeQuery = true
+    )
+    Page<Memo> findPublicByPath(String path, Pageable pageable);
+
+    @Query(
+            value = """
+        SELECT *
+        FROM memos
+        WHERE name NOT LIKE '/private%'
+        ORDER BY updated_at DESC
+        """,
+            countQuery = """
+        SELECT count(*)
+        FROM memos
+        WHERE name NOT LIKE '/private%'
+        """,
+            nativeQuery = true
+    )
+    Page<Memo> findPublic(Pageable pageable);
+
     Page<Memo> findAllByNameStartingWith(String name, Pageable pageable);
 
     List<Memo> findAllByUpdatedAtGreaterThan(LocalDateTime time);

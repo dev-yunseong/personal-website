@@ -26,6 +26,8 @@ import java.util.List;
 @Table(name = "memos")
 public class Memo {
 
+    public static final String PRIVATE_PREFIX = "/private";
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -96,6 +98,10 @@ public class Memo {
         if (lastSlash <= 0)
             return "/";
         return name.substring(0, lastSlash);
+    }
+
+    public boolean isPrivate() {
+        return name != null && name.startsWith(PRIVATE_PREFIX);
     }
 
     public Memo(String name, String content) {

@@ -21,6 +21,10 @@ public class MemoService {
         return memoRepository.findByQuery(query, pageable);
     }
 
+    public Page<Memo> searchPublicMemo(String query, Pageable pageable) {
+        return memoRepository.findPublicByQuery(query, pageable);
+    }
+
     public long saveMemo(String title, String content) {
         Memo memo = new Memo(title, content);
         memoRepository.save(memo);
@@ -39,13 +43,22 @@ public class MemoService {
     }
 
     @Transactional(readOnly = true)
+    public Page<Memo> getPublicMemos(Pageable pageable) {
+        return memoRepository.findPublic(pageable);
+    }
+
+    @Transactional(readOnly = true)
     public Page<Memo> getMemos(String category, Pageable pageable) {
-        if (!category.endsWith("/")) {
-            category = String.format("%s/", category);
-        }
-        PageRequest pageRequest = PageRequest
-                .of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by("created_at").descending());
+        category = normalizeCategory(category);
+        PageRequest pageRequest = getCategoryPageRequest(pageable);
         return memoRepository.findAllByPath(category, pageRequest);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Memo> getPublicMemos(String category, Pageable pageable) {
+        category = normalizeCategory(category);
+        PageRequest pageRequest = getCategoryPageRequest(pageable);
+        return memoRepository.findPublicByPath(category, pageRequest);
     }
 
     @Transactional(readOnly = true)
@@ -54,9 +67,27 @@ public class MemoService {
                 .orElseThrow(() -> new IllegalArgumentException("Memo Not Found"));
     }
 
+    @Transactional(readOnly = true)
+    public Memo getPublicMemo(long memoId) {
+        return memoRepository.findPublicById(memoId)
+                .orElseThrow(() -> new IllegalArgumentException("Memo Not Found"));
+    }
+
     public void updateMemo(long memoId, String title, String content) {
         Memo memo = getMemo(memoId);
         memo.setName(title);
         memo.setContent(content);
+    }
+
+    private String normalizeCategory(String category) {
+        if (!category.endsWith("/")) {
+            return String.format("%s/", category);
+        }
+        return category;
+    }
+
+    private PageRequest getCategoryPageRequest(Pageable pageable) {
+        return PageRequest
+                .of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by("created_at").descending());
     }
 }
