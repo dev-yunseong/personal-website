@@ -1,6 +1,6 @@
 package dev.yunseong.website.blog.service;
 
-import dev.yunseong.website.blog.annotation.FilterVisibleMemos;
+import dev.yunseong.website.blog.annotation.FilterVisibleContent;
 import dev.yunseong.website.blog.domain.Memo;
 import dev.yunseong.website.blog.repository.MemoRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,12 +18,12 @@ public class MemoService {
 
     private final MemoRepository memoRepository;
 
-    @FilterVisibleMemos
+    @FilterVisibleContent
     public Page<Memo> searchMemo(String query, Pageable pageable) {
         return memoRepository.findByQuery(query, pageable);
     }
 
-    @FilterVisibleMemos
+    @FilterVisibleContent
     public Page<Memo> searchPublicMemo(String query, Pageable pageable) {
         return memoRepository.findPublicByQuery(query, pageable);
     }
@@ -34,26 +34,26 @@ public class MemoService {
         return memo.getId();
     }
 
-    @FilterVisibleMemos
+    @FilterVisibleContent
     @Transactional(readOnly = true)
     public Memo getMemo(String name) {
         return memoRepository.findByName(name)
                 .orElseThrow(() -> new IllegalArgumentException("Memo Not Found"));
     }
 
-    @FilterVisibleMemos
+    @FilterVisibleContent
     @Transactional(readOnly = true)
     public Page<Memo> getMemos(Pageable pageable) {
         return memoRepository.findAll(pageable);
     }
 
-    @FilterVisibleMemos
+    @FilterVisibleContent
     @Transactional(readOnly = true)
     public Page<Memo> getPublicMemos(Pageable pageable) {
         return memoRepository.findPublic(pageable);
     }
 
-    @FilterVisibleMemos
+    @FilterVisibleContent
     @Transactional(readOnly = true)
     public Page<Memo> getMemos(String category, Pageable pageable) {
         category = normalizeCategory(category);
@@ -61,7 +61,7 @@ public class MemoService {
         return memoRepository.findAllByPath(category, pageRequest);
     }
 
-    @FilterVisibleMemos
+    @FilterVisibleContent
     @Transactional(readOnly = true)
     public Page<Memo> getPublicMemos(String category, Pageable pageable) {
         category = normalizeCategory(category);
@@ -69,14 +69,14 @@ public class MemoService {
         return memoRepository.findPublicByPath(category, pageRequest);
     }
 
-    @FilterVisibleMemos
+    @FilterVisibleContent
     @Transactional(readOnly = true)
     public Memo getMemo(long memoId) {
         return memoRepository.findById(memoId)
                 .orElseThrow(() -> new IllegalArgumentException("Memo Not Found"));
     }
 
-    @FilterVisibleMemos
+    @FilterVisibleContent
     @Transactional(readOnly = true)
     public Memo getPublicMemo(long memoId) {
         return memoRepository.findPublicById(memoId)

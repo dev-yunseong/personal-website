@@ -1,5 +1,6 @@
 package dev.yunseong.website.blog.aspect;
 
+import dev.yunseong.website.blog.domain.CategoryNode;
 import dev.yunseong.website.blog.domain.Memo;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.junit.jupiter.api.AfterEach;
@@ -20,9 +21,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-class MemoVisibilityAspectTest {
+class ContentVisibilityAspectTest {
 
-    private final MemoVisibilityAspect aspect = new MemoVisibilityAspect();
+    private final ContentVisibilityAspect aspect = new ContentVisibilityAspect();
 
     @AfterEach
     void tearDown() {
@@ -30,14 +31,14 @@ class MemoVisibilityAspectTest {
     }
 
     @Test
-    void filterVisibleMemos_WhenAnonymous_FiltersPrivateMemoFromList() throws Throwable {
+    void filterVisibleContent_WhenAnonymous_FiltersPrivateMemoFromList() throws Throwable {
         // Given
         Memo publicMemo = new Memo(1L, "/public/note", "public", null, null);
         Memo privateMemo = new Memo(2L, "/private/note", "private", null, null);
         ProceedingJoinPoint joinPoint = joinPoint(List.of(publicMemo, privateMemo));
 
         // When
-        Object result = aspect.filterVisibleMemos(joinPoint);
+        Object result = aspect.filterVisibleContent(joinPoint);
 
         // Then
         List<?> resultList = (List<?>) result;
@@ -46,7 +47,7 @@ class MemoVisibilityAspectTest {
     }
 
     @Test
-    void filterVisibleMemos_WhenAnonymous_FiltersPrivateMemoFromPage() throws Throwable {
+    void filterVisibleContent_WhenAnonymous_FiltersPrivateMemoFromPage() throws Throwable {
         // Given
         Memo publicMemo = new Memo(1L, "/public/note", "public", null, null);
         Memo privateMemo = new Memo(2L, "/private/note", "private", null, null);
@@ -54,7 +55,7 @@ class MemoVisibilityAspectTest {
         ProceedingJoinPoint joinPoint = joinPoint(page);
 
         // When
-        Object result = aspect.filterVisibleMemos(joinPoint);
+        Object result = aspect.filterVisibleContent(joinPoint);
 
         // Then
         Page<?> resultPage = (Page<?>) result;
@@ -64,14 +65,14 @@ class MemoVisibilityAspectTest {
     }
 
     @Test
-    void filterVisibleMemos_WhenAnonymous_FiltersPrivateMemoFromSet() throws Throwable {
+    void filterVisibleContent_WhenAnonymous_FiltersPrivateMemoFromSet() throws Throwable {
         // Given
         Memo publicMemo = new Memo(1L, "/public/note", "public", null, null);
         Memo privateMemo = new Memo(2L, "/private/note", "private", null, null);
         ProceedingJoinPoint joinPoint = joinPoint(new LinkedHashSet<>(List.of(publicMemo, privateMemo)));
 
         // When
-        Object result = aspect.filterVisibleMemos(joinPoint);
+        Object result = aspect.filterVisibleContent(joinPoint);
 
         // Then
         Set<?> resultSet = (Set<?>) result;
@@ -80,17 +81,17 @@ class MemoVisibilityAspectTest {
     }
 
     @Test
-    void filterVisibleMemos_WhenAnonymous_ThrowsForPrivateMemo() throws Throwable {
+    void filterVisibleContent_WhenAnonymous_ThrowsForPrivateMemo() throws Throwable {
         // Given
         Memo privateMemo = new Memo(2L, "/private/note", "private", null, null);
         ProceedingJoinPoint joinPoint = joinPoint(privateMemo);
 
         // When & Then
-        assertThrows(IllegalArgumentException.class, () -> aspect.filterVisibleMemos(joinPoint));
+        assertThrows(IllegalArgumentException.class, () -> aspect.filterVisibleContent(joinPoint));
     }
 
     @Test
-    void filterVisibleMemos_WhenAuthenticated_ReturnsOriginalResult() throws Throwable {
+    void filterVisibleContent_WhenAuthenticated_ReturnsOriginalResult() throws Throwable {
         // Given
         TestingAuthenticationToken authentication = new TestingAuthenticationToken("user", "password", "ROLE_USER");
         SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -98,10 +99,56 @@ class MemoVisibilityAspectTest {
         ProceedingJoinPoint joinPoint = joinPoint(memos);
 
         // When
-        Object result = aspect.filterVisibleMemos(joinPoint);
+        Object result = aspect.filterVisibleContent(joinPoint);
 
         // Then
         assertSame(memos, result);
+    }
+
+    @Test
+    void filterVisibleContent_WhenAnonymous_FiltersPrivateCategoryPathStrings() throws Throwable {
+        // Given
+        ProceedingJoinPoint joinPoint = joinPoint(List.of("/public", "/private", "/private/notes"));
+
+        // When
+        Object result = aspect.filterVisibleContent(joinPoint);
+
+        // Then
+        List<?> resultList = (List<?>) result;
+        assertThat(resultList).hasSize(1);
+        assertThat(resultList.getFirst()).isEqualTo("/public");
+    }
+
+    @Test
+    void filterVisibleContent_WhenAnonymous_FiltersPrivateCategoryNodes() throws Throwable {
+        // Given
+        CategoryNode publicNode = new CategoryNode("public", "/public", 1);
+        CategoryNode privateNode = new CategoryNode("private", "/private", 1);
+        ProceedingJoinPoint joinPoint = joinPoint(List.of(publicNode, privateNode));
+
+        // When
+        Object result = aspect.filterVisibleContent(joinPoint);
+
+        // Then
+        List<?> resultList = (List<?>) result;
+        assertThat(resultList).hasSize(1);
+        assertThat(resultList.getFirst()).isSameAs(publicNode);
+    }
+
+    @Test
+    void filterVisibleContent_WhenAnonymous_FiltersNestedPrivateCategoryNodes() throws Throwable {
+        // Given
+        CategoryNode publicNode = new CategoryNode("public", "/public", 1);
+        publicNode.addChild(new CategoryNode("notes", "/public/notes", 2));
+        publicNode.addChild(new CategoryNode("private", "/private", 1));
+        ProceedingJoinPoint joinPoint = joinPoint(List.of(publicNode));
+
+        // When
+        aspect.filterVisibleContent(joinPoint);
+
+        // Then
+        assertThat(publicNode.getChildren()).hasSize(1);
+        assertThat(publicNode.getChildren().getFirst().getFullPath()).isEqualTo("/public/notes");
     }
 
     private ProceedingJoinPoint joinPoint(Object result) throws Throwable {

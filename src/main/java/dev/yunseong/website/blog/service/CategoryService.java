@@ -1,5 +1,6 @@
 package dev.yunseong.website.blog.service;
 
+import dev.yunseong.website.blog.annotation.FilterVisibleContent;
 import dev.yunseong.website.blog.domain.CategoryNode;
 import dev.yunseong.website.blog.domain.Memo;
 import dev.yunseong.website.blog.repository.MemoRepository;
@@ -15,6 +16,7 @@ public class CategoryService {
 
     private final MemoRepository memoRepository;
 
+    @FilterVisibleContent
     public List<String> getCategories() {
         Set<String> categories = new HashSet<>();
         memoRepository.findAll()
@@ -23,10 +25,12 @@ public class CategoryService {
         return categories.stream().sorted().toList();
     }
 
+    @FilterVisibleContent
     public List<CategoryNode> getCategoryTree() {
         return getCategoryTree(memoRepository.findAll().stream());
     }
 
+    @FilterVisibleContent
     public List<CategoryNode> getPublicCategoryTree() {
         return getCategoryTree(memoRepository.findAll().stream()
                 .filter(memo -> !memo.isPrivate()));

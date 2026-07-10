@@ -1,5 +1,6 @@
 package dev.yunseong.website.blog.aspect;
 
+import dev.yunseong.website.blog.domain.CategoryNode;
 import dev.yunseong.website.blog.domain.Memo;
 import dev.yunseong.website.global.util.AuthenticationUtil;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -19,10 +20,10 @@ import java.util.stream.StreamSupport;
 
 @Aspect
 @Component
-public class MemoVisibilityAspect {
+public class ContentVisibilityAspect {
 
-    @Around("@annotation(dev.yunseong.website.blog.annotation.FilterVisibleMemos)")
-    public Object filterVisibleMemos(ProceedingJoinPoint joinPoint) throws Throwable {
+    @Around("@annotation(dev.yunseong.website.blog.annotation.FilterVisibleContent)")
+    public Object filterVisibleContent(ProceedingJoinPoint joinPoint) throws Throwable {
         Object result = joinPoint.proceed();
 
         if (AuthenticationUtil.isAuthenticated()) {
@@ -38,6 +39,14 @@ public class MemoVisibilityAspect {
                 throw new IllegalArgumentException("Memo Not Found");
             }
             return memo;
+        }
+
+        if (result instanceof CategoryNode categoryNode) {
+            if (isPrivateCategory(categoryNode)) {
+                throw new IllegalArgumentException("Category Not Found");
+            }
+            filterChildCategories(categoryNode);
+            return categoryNode;
         }
 
         if (result instanceof Page<?> page) {
@@ -73,7 +82,42 @@ public class MemoVisibilityAspect {
 
     private List<?> filterIterable(Iterable<?> iterable) {
         return StreamSupport.stream(iterable.spliterator(), false)
-                .filter(item -> !(item instanceof Memo memo) || !memo.isPrivate())
+                .filter(this::isVisible)
+                .peek(this::filterNestedContent)
                 .toList();
+    }
+
+    private boolean isVisible(Object item) {
+        if (item instanceof Memo memo) {
+            return !memo.isPrivate();
+        }
+        if (item instanceof CategoryNode categoryNode) {
+            return !isPrivateCategory(categoryNode);
+        }
+        if (item instanceof String path) {
+            return !path.startsWith(Memo.PRIVATE_PREFIX);
+        }
+        return true;
+    }
+
+    private void filterNestedContent(Object item) {
+        if (item instanceof CategoryNode categoryNode) {
+            filterChildCategories(categoryNode);
+        }
+    }
+
+    private void filterChildCategories(CategoryNode categoryNode) {
+        categoryNode.getChildren().removeIf(child -> {
+            if (isPrivateCategory(child)) {
+                return true;
+            }
+            filterChildCategories(child);
+            return false;
+        });
+    }
+
+    private boolean isPrivateCategory(CategoryNode categoryNode) {
+        return categoryNode.getFullPath() != null
+                && categoryNode.getFullPath().startsWith(Memo.PRIVATE_PREFIX);
     }
 }
