@@ -34,50 +34,48 @@ public class ContentVisibilityAspect {
     }
 
     private Object filter(Object result) {
-        if (result instanceof Memo memo) {
-            if (memo.isPrivate()) {
-                throw new IllegalArgumentException("Memo Not Found");
-            }
-            return memo;
-        }
+        return switch (result) {
+            case null -> null;
+            case Memo memo -> filterMemo(memo);
+            case CategoryNode categoryNode -> filterCategoryNode(categoryNode);
+            case Page<?> page -> filterPage(page);
+            case Slice<?> slice -> filterSlice(slice);
+            case Set<?> set -> new LinkedHashSet<>(filterIterable(set));
+            case Collection<?> collection -> filterIterable(collection);
+            case Iterable<?> iterable -> filterIterable(iterable);
+            default -> result;
+        };
+    }
 
-        if (result instanceof CategoryNode categoryNode) {
-            if (isPrivateCategory(categoryNode)) {
-                throw new IllegalArgumentException("Category Not Found");
-            }
-            filterChildCategories(categoryNode);
-            return categoryNode;
+    private Memo filterMemo(Memo memo) {
+        if (memo.isPrivate()) {
+            throw new IllegalArgumentException("Memo Not Found");
         }
+        return memo;
+    }
 
-        if (result instanceof Page<?> page) {
-            List<?> visible = filterIterable(page.getContent());
-            if (visible.size() == page.getNumberOfElements()) {
-                return page;
-            }
-            return new PageImpl<>(visible, page.getPageable(), visible.size());
+    private CategoryNode filterCategoryNode(CategoryNode categoryNode) {
+        if (isPrivateCategory(categoryNode)) {
+            throw new IllegalArgumentException("Category Not Found");
         }
+        filterChildCategories(categoryNode);
+        return categoryNode;
+    }
 
-        if (result instanceof Slice<?> slice) {
-            List<?> visible = filterIterable(slice.getContent());
-            if (visible.size() == slice.getNumberOfElements()) {
-                return slice;
-            }
-            return new SliceImpl<>(visible, slice.getPageable(), slice.hasNext());
+    private Page<?> filterPage(Page<?> page) {
+        List<?> visible = filterIterable(page.getContent());
+        if (visible.size() == page.getNumberOfElements()) {
+            return page;
         }
+        return new PageImpl<>(visible, page.getPageable(), visible.size());
+    }
 
-        if (result instanceof Set<?> set) {
-            return new LinkedHashSet<>(filterIterable(set));
+    private Slice<?> filterSlice(Slice<?> slice) {
+        List<?> visible = filterIterable(slice.getContent());
+        if (visible.size() == slice.getNumberOfElements()) {
+            return slice;
         }
-
-        if (result instanceof Collection<?> collection) {
-            return filterIterable(collection);
-        }
-
-        if (result instanceof Iterable<?> iterable) {
-            return filterIterable(iterable);
-        }
-
-        return result;
+        return new SliceImpl<>(visible, slice.getPageable(), slice.hasNext());
     }
 
     private List<?> filterIterable(Iterable<?> iterable) {
@@ -88,16 +86,13 @@ public class ContentVisibilityAspect {
     }
 
     private boolean isVisible(Object item) {
-        if (item instanceof Memo memo) {
-            return !memo.isPrivate();
-        }
-        if (item instanceof CategoryNode categoryNode) {
-            return !isPrivateCategory(categoryNode);
-        }
-        if (item instanceof String path) {
-            return !path.startsWith(Memo.PRIVATE_PREFIX);
-        }
-        return true;
+        return switch (item) {
+            case null -> true;
+            case Memo memo -> !memo.isPrivate();
+            case CategoryNode categoryNode -> !isPrivateCategory(categoryNode);
+            case String path -> !path.startsWith(Memo.PRIVATE_PREFIX);
+            default -> true;
+        };
     }
 
     private void filterNestedContent(Object item) {
