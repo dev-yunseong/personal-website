@@ -65,7 +65,7 @@ public class MemoService {
     @Transactional(readOnly = true)
     public List<Memo> getRecentMemos(int limit) {
         PageRequest pageRequest = PageRequest.of(0, limit, Sort.by("updatedAt").descending());
-        return memoRepository.findAllByNameNot("/profile", pageRequest).getContent();
+        return memoRepository.findRecentPublicMemos("/profile", pageRequest).getContent();
     }
 
     @Transactional(readOnly = true)

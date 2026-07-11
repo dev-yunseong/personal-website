@@ -67,7 +67,7 @@ public class ContentVisibilityAspect {
         if (visible.size() == page.getNumberOfElements()) {
             return page;
         }
-        return new PageImpl<>(visible, page.getPageable(), visible.size());
+        return new PageImpl<>(visible, page.getPageable(), page.getTotalElements());
     }
 
     private Slice<?> filterSlice(Slice<?> slice) {

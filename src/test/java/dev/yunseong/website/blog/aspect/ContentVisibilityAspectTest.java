@@ -51,7 +51,7 @@ class ContentVisibilityAspectTest {
         // Given
         Memo publicMemo = new Memo(1L, "/public/note", "public", null, null);
         Memo privateMemo = new Memo(2L, "/private/note", "private", null, null);
-        Page<Memo> page = new PageImpl<>(List.of(publicMemo, privateMemo), PageRequest.of(0, 10), 2);
+        Page<Memo> page = new PageImpl<>(List.of(publicMemo, privateMemo), PageRequest.of(0, 10), 10);
         ProceedingJoinPoint joinPoint = joinPoint(page);
 
         // When
@@ -61,7 +61,7 @@ class ContentVisibilityAspectTest {
         Page<?> resultPage = (Page<?>) result;
         assertThat(resultPage.getContent()).hasSize(1);
         assertThat(resultPage.getContent().getFirst()).isSameAs(publicMemo);
-        assertThat(resultPage.getTotalElements()).isEqualTo(1);
+        assertThat(resultPage.getTotalElements()).isEqualTo(10);
     }
 
     @Test

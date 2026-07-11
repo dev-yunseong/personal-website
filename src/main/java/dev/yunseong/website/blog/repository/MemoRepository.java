@@ -101,7 +101,8 @@ public interface MemoRepository extends JpaRepository<Memo, Long> {
 
     Page<Memo> findAllByNameStartingWith(String name, Pageable pageable);
 
-    Page<Memo> findAllByNameNot(String name, Pageable pageable);
+    @Query("SELECT m FROM Memo m WHERE m.name <> :excludedName AND m.name NOT LIKE '/private%'")
+    Page<Memo> findRecentPublicMemos(String excludedName, Pageable pageable);
 
     List<Memo> findAllByUpdatedAtGreaterThan(LocalDateTime time);
 }
