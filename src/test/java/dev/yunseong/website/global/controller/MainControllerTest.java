@@ -1,7 +1,9 @@
 package dev.yunseong.website.global.controller;
 
-import dev.yunseong.website.blog.domain.Memo;
 import dev.yunseong.website.blog.service.MemoService;
+import dev.yunseong.website.global.domain.Profile;
+import dev.yunseong.website.global.domain.ProfileLoadResult;
+import dev.yunseong.website.global.service.ProfileService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -9,11 +11,15 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.ui.Model;
 
+import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class MainControllerTest {
+
+    @Mock
+    private ProfileService profileService;
 
     @Mock
     private MemoService memoService;
@@ -25,29 +31,63 @@ class MainControllerTest {
     private MainController mainController;
 
     @Test
-    void index_LoadsReadmeMemo() {
+    void index_LoadsAvailableProfile() {
         // Given
-        Memo memo = new Memo("/README", "Test content");
-        when(memoService.getMemo("/README")).thenReturn(memo);
+        Profile profile = profile();
+        when(profileService.getProfile()).thenReturn(ProfileLoadResult.available(profile));
+        when(memoService.getRecentMemos(3)).thenReturn(List.of());
 
         // When
         String result = mainController.index(model);
 
         // Then
         assertEquals("index", result);
-        verify(model).addAttribute("memo", memo);
+        verify(model).addAttribute("profile", profile);
+        verify(model).addAttribute("profileStatus", ProfileLoadResult.Status.AVAILABLE);
+        verify(model).addAttribute("recentMemos", List.of());
     }
 
     @Test
-    void index_HandlesReadmeMemoNotFound() {
+    void index_ExposesMissingProfileState() {
         // Given
-        when(memoService.getMemo("/README")).thenThrow(new IllegalArgumentException("Memo not found"));
+        when(profileService.getProfile()).thenReturn(ProfileLoadResult.missing());
+        when(memoService.getRecentMemos(3)).thenReturn(List.of());
 
         // When
         String result = mainController.index(model);
 
         // Then
         assertEquals("index", result);
-        verify(model).addAttribute("memo", null);
+        verify(model).addAttribute("profile", null);
+        verify(model).addAttribute("profileStatus", ProfileLoadResult.Status.MISSING);
+        verify(model).addAttribute("recentMemos", List.of());
+    }
+
+    @Test
+    void index_ExposesInvalidProfileState() {
+        when(profileService.getProfile()).thenReturn(ProfileLoadResult.invalid());
+        when(memoService.getRecentMemos(3)).thenReturn(List.of());
+
+        String result = mainController.index(model);
+
+        assertEquals("index", result);
+        verify(model).addAttribute("profile", null);
+        verify(model).addAttribute("profileStatus", ProfileLoadResult.Status.INVALID);
+        verify(model).addAttribute("recentMemos", List.of());
+    }
+
+    private Profile profile() {
+        return new Profile(
+                "Yunseong Jeong",
+                "Software Engineer",
+                "Busan, KR",
+                "About",
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of()
+        );
     }
 }

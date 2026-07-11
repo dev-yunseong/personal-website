@@ -19,11 +19,9 @@
         <h1 class="page-title">Blog</h1>
 
         <!-- Search Bar -->
-        <div class="row justify-content-center mb-4">
-            <div class="col-md-8">
-                <div th:replace="~{fragments/search_bar_fragment :: searchBar}"></div>
-                <div th:replace="~{fragments/search_bar_fragment :: searchBarScript}"></div>
-            </div>
+        <div class="mb-4">
+            <div th:replace="~{fragments/search_bar_fragment :: searchBar}"></div>
+            <div th:replace="~{fragments/search_bar_fragment :: searchBarScript}"></div>
         </div>
 
         <div th:if="${keyword != null}">

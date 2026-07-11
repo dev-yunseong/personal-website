@@ -5,6 +5,7 @@ import dev.yunseong.website.blog.repository.MemoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -12,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -73,6 +75,30 @@ class MemoServiceTest {
         
         // Verify the path is normalized with trailing slash
         verify(memoRepository).findAllByPath(eq("/java/"), any(PageRequest.class));
+    }
+
+    @Test
+    void getRecentMemos_ShouldLimitSortByUpdatedAtAndExcludeProfileMemo() {
+        // Given
+        Memo recentMemo = new Memo(4L, "/notes/recent", "Recent content", LocalDateTime.now(), LocalDateTime.now());
+        Page<Memo> page = new PageImpl<>(List.of(recentMemo));
+        when(memoRepository.findAllByNameNot(eq("/profile"), any(PageRequest.class))).thenReturn(page);
+
+        // When
+        List<Memo> result = memoService.getRecentMemos(3);
+
+        // Then
+        assertThat(result).containsExactly(recentMemo);
+
+        ArgumentCaptor<PageRequest> pageRequestCaptor = ArgumentCaptor.forClass(PageRequest.class);
+        verify(memoRepository).findAllByNameNot(eq("/profile"), pageRequestCaptor.capture());
+
+        PageRequest pageRequest = pageRequestCaptor.getValue();
+        assertThat(pageRequest.getPageNumber()).isZero();
+        assertThat(pageRequest.getPageSize()).isEqualTo(3);
+        assertThat(pageRequest.getSort().getOrderFor("updatedAt"))
+                .extracting(Sort.Order::getDirection)
+                .isEqualTo(Sort.Direction.DESC);
     }
 
     @Test

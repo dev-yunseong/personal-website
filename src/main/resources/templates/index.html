@@ -20,22 +20,13 @@
 <th:block layout:fragment="content">
     <div th:replace="~{fragments/home_hero_fragment :: homeHero}"></div>
 
-    <!-- Search Bar -->
-    <div class="container px-3 px-md-4 mb-4">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-              <div th:replace="~{fragments/search_bar_fragment :: searchBar}"></div>
-              <div th:replace="~{fragments/search_bar_fragment :: searchBarScript}"></div>
-            </div>
-        </div>
-    </div>
+    <div class="home-content">
+        <div th:replace="~{fragments/home_recent_memos_fragment :: recentMemosSection}"></div>
 
-    <!-- Memo Section -->
-    <div class="container px-3 px-md-4">
-        <div class="row justify-content-center">
-            <div class="col-12 col-lg-10">
-                <div th:replace="~{fragments/memo_fragment :: memoFragment}"></div>
-            </div>
+        <!-- Search Bar -->
+        <div class="home-search">
+            <div th:replace="~{fragments/search_bar_fragment :: searchBar}"></div>
+            <div th:replace="~{fragments/search_bar_fragment :: searchBarScript}"></div>
         </div>
     </div>
 </th:block>

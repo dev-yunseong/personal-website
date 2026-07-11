@@ -1,0 +1,161 @@
+name: Yunseong Jeong
+headline: Software Engineer
+location: Busan, KR
+
+about: >-
+  I'm a developer who cares about well-structured code and good software design.
+  I'm especially interested in building solid architecture by combining theory
+  and hands-on experience.
+
+contacts:
+  - label: GitHub
+    url: https://github.com/dev-yunseong
+  - label: Email
+    url: mailto:me@yunseong.dev
+  - label: LinkedIn
+    url: https://www.linkedin.com/in/yunseong-jeong-062a36357
+
+projects:
+  - name: Metropolitan Ring Road System
+    url: /public/memos/134
+    role: Research & Optimization
+    period:
+      start: "2026-02"
+      end: "2026-02"
+    highlights:
+      - 군중 밀집 지역에서 발생하는 압사 사고 예방을 위한 보행 흐름 최적화 시스템 연구
+      - 도시 보행로를 그래프 구조로 모델링하고 길의 방향을 최적화하여 이동 충돌 최소화
+      - Quantum Annealing 기반 조합 최적화 문제로 경로 방향 결정
+      - Small-world network 구조를 활용한 효율적인 도시 이동 흐름 설계
+    technologies:
+      - Quantum Annealing
+      - Graph Optimization
+      - Small-world Network
+
+  - name: Maechuri
+    url: /public/memos/70
+    role: Full-stack & AI
+    period:
+      start: "2025-12"
+      end: "2026-03"
+    highlights:
+      - LLM·RAG 기반으로 AI 용의자와 자유롭게 대화하며 사건을 추리하는 웹 게임 개발
+      - Agent와 RAG 기반 파이프라인으로 매일 새로운 사건 시나리오 자동 생성
+      - IP·Fingerprint·Cookie 기반 클라이언트 식별로 LLM API 비용 및 어뷰징 방지 Rate Limiting 구현
+      - 이미지 생성 모델을 활용해 게임 내 시각 리소스를 자동 생성하는 AI 디자인 파이프라인 구축
+    technologies:
+      - LLM
+      - RAG
+      - Spring Boot
+      - React
+
+  - name: Arcane Casters
+    url: /public/memos/34
+    role: Game Server & Architecture
+    period:
+      start: "2025-04"
+      end:
+    highlights:
+      - Spring Boot 서버와 Unity WebGL 클라이언트로 구현한 실시간 멀티플레이 카드 게임
+      - CI/CD 자동화, 애자일 협업, 데이터-로직 분리로 효율적 개발 환경 구축
+      - 서버용 게임 엔진 구조를 직접 설계·구현하여 물리, 입력, 동기화, WebSocket 통신을 안정적으로 처리
+    technologies:
+      - Spring Boot
+      - Unity WebGL
+      - WebSocket
+
+  - name: 두도지
+    url: /public/memos/35
+    role: Android & Backend
+    period:
+      start: "2025-01"
+      end: "2025-09"
+    highlights:
+      - 도보 여행에 게임 요소를 접목한 안드로이드 앱 개발
+      - EGL·OpenGL ES로 안개 렌더링 엔진 구현
+      - Hilt·Flow·MVVM·Clean Architecture 앱 구조 설계
+      - Spring Security·Nginx HTTPS·요청 필터링으로 서버 보안 강화
+    technologies:
+      - Android
+      - OpenGL ES
+      - Spring Security
+
+  - name: Awake
+    url: http://awake25.com/
+    role: LLM & Flutter
+    period:
+      start: "2024-05"
+      end: "2024-12"
+    highlights:
+      - 졸음 운전 방지용 LLM 챗봇 및 Flutter 앱 개발
+      - 3개 해커톤에서 수상, Android 기술과 LLM, 음성 기반 인터페이스 경험
+    technologies:
+      - Flutter
+      - LLM
+      - Voice Interface
+
+awards:
+  - name: Quantum Infinity for You in Pusan National University 2026
+    result: 1등
+    date: "2026"
+    organization: Pusan National University
+  - name: PNU AI Booster
+    result: 우수팀
+    date: "2025"
+    organization: Pusan National University
+  - name: 2025 CSE TECHWEEK 바이브코딩을 활용한 해커톤 대회
+    result: 2등
+    date: "2025"
+  - name: 제4회 PNU Coding Challenge
+    result: 장려상
+    date: "2025"
+  - name: 부산 디지털 혁신 아카데미 해커톤
+    result: 혁신상
+    date: "2024"
+  - name: 제5회 PNU 창의 융합 해커톤
+    result: 최우수상
+    date: "2024"
+  - name: 제11회 대한민국 SW 융합 해커톤
+    result: 우수상
+    date: "2024"
+  - name: 공공 빅데이터 활용 경진대회
+    result: 장려상
+    date: "2024"
+  - name: 어드벤처디자인 우수사례 역량강화 발표회
+    result: 우수상
+    date: "2021"
+
+education:
+  - name: AI·SW 마에스트로 17기
+    period:
+      start: "2026-05"
+      end:
+  - name: Quantum Infinity for you - Quantum Universe Expo Series
+    period:
+      start: "2026-02"
+      end: "2026-02"
+    description: Tohoku University
+    url: https://www.openbadge-global.com/api/v1.0/openBadge/v2/Wallet/Public/GetAssertionShare/NU90SWFtQWFzVmt4NjZiTklPMHNwdz09
+  - name: 카카오테크캠퍼스 3기
+    period:
+      start: "2025-04"
+      end: "2025-11"
+  - name: 부산대학교 정보컴퓨터공학부
+    period:
+      start: "2021-03"
+      end:
+
+certificates:
+  - name: 정보처리기사
+    issuedAt: "2026-06-12"
+    issuer: 한국산업인력공단
+    url: https://mo.q-net.or.kr/share.do?bdgId=CPX6m9ilbQtU8CUt2BQbQZ
+  - name: SQLD
+    issuedAt: "2026-03-27"
+    issuer: 한국데이터산업진흥원
+
+assessments:
+  - name: TOPCIT
+    score: "717"
+    level: Level 4
+    assessedAt: "2026-06-15"

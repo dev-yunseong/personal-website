@@ -20,7 +20,8 @@
                     <form th:action="@{/admin/memos}" method="post">
                         <div class="mb-3">
                             <label for="title" class="form-label">Title</label>
-                            <input type="text" class="form-control" id="title" name="title" th:value="${category}">
+                            <input type="text" class="form-control" id="title" name="title" th:value="${category}"
+                                   th:readonly="${isProfileMemo}">
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Content</label>
@@ -33,17 +34,27 @@
                                 </li>
                             </ul>
                             <div id="writePane">
-                                <textarea class="form-control font-monospace" id="content" name="content" rows="20"></textarea>
+                                <textarea class="form-control font-monospace" id="content" name="content" rows="20"
+                                          th:text="${content}"></textarea>
+                                <div id="profileValidationStatus"
+                                     class="alert mt-3 mb-0"
+                                     th:classappend="${validationError != null ? 'alert-danger' : 'alert-secondary'}"
+                                     th:style="${isProfileMemo ? '' : 'display: none;'}"
+                                     role="status"
+                                     aria-live="polite"
+                                     th:text="${validationError != null ? validationError : 'Profile YAML has not been validated yet.'}">
+                                    Profile YAML has not been validated yet.
+                                </div>
                             </div>
                             <div id="previewPane" class="border rounded p-3 markdown-body" style="display: none; min-height: 400px;"></div>
                         </div>
-                        <div class="mb-3">
+                        <div class="mb-3" th:if="${!isProfileMemo}">
                             <label for="fileUpload" class="form-label">Upload File</label>
                             <input type="file" class="form-control" id="fileUpload">
                             <div class="form-text">Upload an image, video, or other file to insert into your memo</div>
                             <div id="uploadStatus" class="mt-2"></div>
                         </div>
-                        <div class="mb-3">
+                        <div class="mb-3" th:if="${!isProfileMemo}">
                             <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="isGameProject" name="isGameProject" value="true">
                                 <label class="form-check-label" for="isGameProject">
@@ -51,7 +62,7 @@
                                 </label>
                             </div>
                         </div>
-                        <div class="mb-3" id="gameProjectForm" style="display: none;">
+                        <div class="mb-3" id="gameProjectForm" th:if="${!isProfileMemo}" style="display: none;">
                             <label for="gameUrl" class="form-label">Project URL</label>
                             <input type="url" class="form-control" id="gameUrl" name="gameUrl" placeholder="https://example.com">
                             <div class="form-text">Enter the URL where the project can be accessed</div>
@@ -63,19 +74,23 @@
                     </form>
                     <div th:replace="~{fragments/mermaid_katex_parser.html :: parser}"></div>
                     <script th:src="@{/js/memo-editor.js}"></script>
-                    <script>
-                        initMemoEditor();
+                    <script th:inline="javascript">
+                        initMemoEditor({profileMemo: /*[[${isProfileMemo}]]*/ false});
 
-                        document.getElementById('isGameProject').addEventListener('change', function() {
-                            const gameProjectForm = document.getElementById('gameProjectForm');
-                            if (this.checked) {
-                                gameProjectForm.style.display = 'block';
-                            } else {
-                                gameProjectForm.style.display = 'none';
-                            }
-                        });
+                        const gameProjectCheckbox = document.getElementById('isGameProject');
+                        if (gameProjectCheckbox) {
+                            gameProjectCheckbox.addEventListener('change', function() {
+                                const gameProjectForm = document.getElementById('gameProjectForm');
+                                if (this.checked) {
+                                    gameProjectForm.style.display = 'block';
+                                } else {
+                                    gameProjectForm.style.display = 'none';
+                                }
+                            });
+                        }
 
-                        document.getElementById('fileUpload').addEventListener('change', function(e) {
+                        const fileUpload = document.getElementById('fileUpload');
+                        if (fileUpload) fileUpload.addEventListener('change', function(e) {
                             const file = e.target.files[0];
                             if (!file) return;
 
