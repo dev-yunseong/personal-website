@@ -300,6 +300,20 @@ class MemoServiceTest {
     }
 
     @Test
+    void softDeleteMemo_ShouldMoveMemoToPrivateDeletedPathWithTimestamp() {
+        // Given
+        when(memoRepository.findById(2L)).thenReturn(Optional.of(javaSpringMemo));
+
+        // When
+        Memo result = memoService.softDeleteMemo(2L);
+
+        // Then
+        assertEquals(javaSpringMemo, result);
+        assertThat(javaSpringMemo.getName())
+                .matches("/private/deleted/\\d{8}T\\d{9}-java_spring");
+    }
+
+    @Test
     void getMemoByName_ShouldReturnMemo() {
         // Given
         when(memoRepository.findByName("/java")).thenReturn(Optional.of(javaMemo));

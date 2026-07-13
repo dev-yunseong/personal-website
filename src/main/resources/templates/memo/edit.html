@@ -70,9 +70,19 @@
                                    th:value="${gameProject != null ? gameProject.gameUrl : ''}">
                             <div class="form-text">Enter the URL where the project can be accessed</div>
                         </div>
-                        <div class="d-flex justify-content-end">
-                            <a href="javascript:history.back()" class="btn btn-secondary me-2">Cancel</a>
-                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        <div class="d-flex justify-content-between align-items-center gap-2">
+                            <button type="submit"
+                                    class="btn btn-outline-danger"
+                                    th:if="${!isProfileMemo}"
+                                    th:formaction="@{/admin/memos/delete/{id}(id=${memo.id})}"
+                                    formmethod="post"
+                                    onclick="return confirm('Delete this memo? It will be moved to deleted memos.');">
+                                <i class="bi bi-trash"></i> Delete
+                            </button>
+                            <div class="ms-auto">
+                                <a href="javascript:history.back()" class="btn btn-secondary me-2">Cancel</a>
+                                <button type="submit" class="btn btn-primary">Save Changes</button>
+                            </div>
                         </div>
                     </form>
                     <div th:replace="~{fragments/mermaid_katex_parser.html :: parser}"></div>

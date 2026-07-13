@@ -117,6 +117,12 @@ public class AdminMemoController {
         return String.format("redirect:/public/memos/%d", memoId);
     }
 
+    @PostMapping("/delete/{id}")
+    public String deleteMemo(@PathVariable("id") long memoId) {
+        memoService.softDeleteMemo(memoId);
+        return "redirect:/public/memos";
+    }
+
     private GameProject getFirstGameProject(Memo memo) {
         return memo.getGameProjects().isEmpty() ? null : memo.getGameProjects().get(0);
     }
