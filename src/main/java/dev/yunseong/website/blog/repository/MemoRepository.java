@@ -101,6 +101,9 @@ public interface MemoRepository extends JpaRepository<Memo, Long> {
 
     Page<Memo> findAllByNameStartingWith(String name, Pageable pageable);
 
+    @Query("SELECT m FROM Memo m WHERE m.name LIKE CONCAT(:prefix, '%') AND m.name NOT LIKE CONCAT(:excludedPrefix, '%')")
+    Page<Memo> findAllByNamePrefixExcludingPrefix(String prefix, String excludedPrefix, Pageable pageable);
+
     @Query("SELECT m FROM Memo m WHERE m.name <> :excludedName AND m.name NOT LIKE '/private%'")
     Page<Memo> findRecentPublicMemos(String excludedName, Pageable pageable);
 

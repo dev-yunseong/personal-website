@@ -47,9 +47,17 @@ public class RagSyncService {
             return;
         }
 
-        log.info("[RAG Sync] Found {} memos to save.", unsavedMemos.size());
+        List<Memo> publicMemos = unsavedMemos.stream()
+                .filter(memo -> !memo.isPrivate())
+                .toList();
+
+        log.info("[RAG Sync] Found {} memos to save, {} public memos to index.", unsavedMemos.size(), publicMemos.size());
         deleteByMemos(unsavedMemos);
-        saveMemos(unsavedMemos);
+        if (publicMemos.isEmpty()) {
+            log.info("[RAG Sync] No public memos to save.");
+            return;
+        }
+        saveMemos(publicMemos);
         log.info("[RAG Sync] Finished saving unsaved memos to vector store.");
     }
 

@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.Map;
 
 import dev.yunseong.website.ai.tool.BlogTools;
+import dev.yunseong.website.blog.service.MemoService;
+import dev.yunseong.website.ai.tool.CuratorMemoryTools;
 import dev.yunseong.website.ai.tool.SendMessageTool;
 import dev.yunseong.website.ai.tool.ContentTools;
 import org.springframework.ai.chat.client.ChatClient;
@@ -28,6 +30,7 @@ import reactor.core.publisher.Sinks;
 public class BlogAgent {
 
     private final ChatClient chatClient;
+    private final MemoService memoService;
     private final ToolEventPublisher toolEventPublisher;
     private final static String DEFAULT_PROMPT = """
             # Role
@@ -61,7 +64,10 @@ public class BlogAgent {
             - Use Markdown (headings, bullet points, tables, bold text) to organize information logically and improve readability. Avoid dense blocks of text and ensure the response is easily scannable.
             """;
 
-    public BlogAgent(ChatClient.Builder builder, ChatMemory chatMemory, VectorStore vectorStore, BlogTools blogTools, ContentTools contentTools, SendMessageTool sendMessageTool, ToolEventPublisher toolEventPublisher, @Nullable ToolCallbackProvider mcpToolCallbackProvider) {
+    private final static String BASE_SYSTEM_PROMPT = String.format("%s\n\n%s\n\n%s", DEFAULT_PROMPT, BlogTools.BLOG_TOOL_PROMPT, CuratorMemoryTools.CURATOR_MEMORY_PROMPT);
+
+    public BlogAgent(ChatClient.Builder builder, ChatMemory chatMemory, VectorStore vectorStore, BlogTools blogTools, ContentTools contentTools, CuratorMemoryTools curatorMemoryTools, SendMessageTool sendMessageTool, MemoService memoService, ToolEventPublisher toolEventPublisher, @Nullable ToolCallbackProvider mcpToolCallbackProvider) {
+        this.memoService = memoService;
         this.toolEventPublisher = toolEventPublisher;
         ChatClient pureChatClient = builder.build();
 
@@ -86,14 +92,24 @@ public class BlogAgent {
                                 .build(), // RAG Advisor
                         PromptChatMemoryAdvisor.builder(chatMemory).build() // Chat Memory Advisor
                 ))
-                .defaultSystem(String.format("%s\n\n%s", DEFAULT_PROMPT, BlogTools.BLOG_TOOL_PROMPT))
-                .defaultTools(new DateTimeTools(), blogTools, contentTools, sendMessageTool);
+                .defaultTools(new DateTimeTools(), blogTools, contentTools, curatorMemoryTools, sendMessageTool);
 
         if (mcpToolCallbackProvider != null) {
             chatClientBuilder = chatClientBuilder.defaultToolCallbacks(mcpToolCallbackProvider);
         }
 
         chatClient = chatClientBuilder.build();
+    }
+
+    private String buildSystemPrompt() {
+        return memoService.findMemoWithoutVisibilityFilter(CuratorMemoryTools.AGENTS_MEMORY_PATH)
+                .map(memo -> """
+                        %s
+
+                        # Curator AGENTS.md Memory
+                        %s
+                        """.formatted(BASE_SYSTEM_PROMPT, memo.getContent()))
+                .orElse(BASE_SYSTEM_PROMPT);
     }
 
     public Flux<String> prompt(String message) {
@@ -104,6 +120,7 @@ public class BlogAgent {
         Sinks.Many<String> toolSink = toolEventPublisher.registerSink();
 
         Flux<String> textStream = chatClient.prompt(message)
+                .system(buildSystemPrompt())
                 .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
                 .toolContext(Map.of(BlogTools.CONVERSATION_ID_KEY, conversationId))
                 .stream()
