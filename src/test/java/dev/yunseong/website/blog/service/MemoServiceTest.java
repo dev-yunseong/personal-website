@@ -210,6 +210,96 @@ class MemoServiceTest {
     }
 
     @Test
+    void upsertMemo_WhenMemoExists_ShouldUpdateContent() {
+        // Given
+        when(memoRepository.findByName("/private/curator/preferences")).thenReturn(Optional.of(javaMemo));
+
+        // When
+        Memo result = memoService.upsertMemo("/private/curator/preferences", "Updated memory");
+
+        // Then
+        assertEquals(javaMemo, result);
+        assertEquals("Updated memory", javaMemo.getContent());
+        verify(memoRepository).findByName("/private/curator/preferences");
+    }
+
+    @Test
+    void upsertMemo_WhenMemoDoesNotExist_ShouldCreateMemo() {
+        // Given
+        when(memoRepository.findByName("/private/curator/preferences")).thenReturn(Optional.empty());
+        when(memoRepository.save(any(Memo.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // When
+        Memo result = memoService.upsertMemo("/private/curator/preferences", "New memory");
+
+        // Then
+        assertEquals("/private/curator/preferences", result.getName());
+        assertEquals("New memory", result.getContent());
+        verify(memoRepository).save(any(Memo.class));
+    }
+
+    @Test
+    void getMemosByNamePrefix_ShouldUseUpdatedAtSortAndLimit() {
+        // Given
+        Page<Memo> page = new PageImpl<>(List.of(javaMemo));
+        when(memoRepository.findAllByNameStartingWith(eq("/private/curator/"), any(PageRequest.class))).thenReturn(page);
+
+        // When
+        List<Memo> result = memoService.getMemosByNamePrefix("/private/curator/", 25);
+
+        // Then
+        assertThat(result).containsExactly(javaMemo);
+
+        ArgumentCaptor<PageRequest> pageRequestCaptor = ArgumentCaptor.forClass(PageRequest.class);
+        verify(memoRepository).findAllByNameStartingWith(eq("/private/curator/"), pageRequestCaptor.capture());
+
+        PageRequest pageRequest = pageRequestCaptor.getValue();
+        assertThat(pageRequest.getPageSize()).isEqualTo(25);
+        assertThat(pageRequest.getSort().getOrderFor("updatedAt"))
+                .extracting(Sort.Order::getDirection)
+                .isEqualTo(Sort.Direction.DESC);
+    }
+
+    @Test
+    void getMemosByNamePrefixExcludingPrefix_ShouldExcludePrefixAndUseUpdatedAtSortAndLimit() {
+        // Given
+        Page<Memo> page = new PageImpl<>(List.of(javaMemo));
+        when(memoRepository.findAllByNamePrefixExcludingPrefix(
+                eq("/private/curator/"), eq("/private/curator/deleted/"), any(PageRequest.class)))
+                .thenReturn(page);
+
+        // When
+        List<Memo> result = memoService.getMemosByNamePrefixExcludingPrefix(
+                "/private/curator/", "/private/curator/deleted/", 25);
+
+        // Then
+        assertThat(result).containsExactly(javaMemo);
+
+        ArgumentCaptor<PageRequest> pageRequestCaptor = ArgumentCaptor.forClass(PageRequest.class);
+        verify(memoRepository).findAllByNamePrefixExcludingPrefix(
+                eq("/private/curator/"), eq("/private/curator/deleted/"), pageRequestCaptor.capture());
+
+        PageRequest pageRequest = pageRequestCaptor.getValue();
+        assertThat(pageRequest.getPageSize()).isEqualTo(25);
+        assertThat(pageRequest.getSort().getOrderFor("updatedAt"))
+                .extracting(Sort.Order::getDirection)
+                .isEqualTo(Sort.Direction.DESC);
+    }
+
+    @Test
+    void moveMemo_ShouldRenameMemo() {
+        // Given
+        when(memoRepository.findByName("/private/curator/preferences")).thenReturn(Optional.of(javaMemo));
+
+        // When
+        Memo result = memoService.moveMemo("/private/curator/preferences", "/private/curator/deleted/20260713T175500000-preferences");
+
+        // Then
+        assertEquals(javaMemo, result);
+        assertEquals("/private/curator/deleted/20260713T175500000-preferences", javaMemo.getName());
+    }
+
+    @Test
     void getMemoByName_ShouldReturnMemo() {
         // Given
         when(memoRepository.findByName("/java")).thenReturn(Optional.of(javaMemo));

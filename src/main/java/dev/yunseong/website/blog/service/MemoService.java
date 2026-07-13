@@ -37,6 +37,39 @@ public class MemoService {
         return memo.getId();
     }
 
+    public Memo upsertMemo(String name, String content) {
+        return memoRepository.findByName(name)
+                .map(memo -> {
+                    memo.setContent(content);
+                    return memo;
+                })
+                .orElseGet(() -> memoRepository.save(new Memo(name, content)));
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<Memo> findMemoWithoutVisibilityFilter(String name) {
+        return memoRepository.findByName(name);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Memo> getMemosByNamePrefix(String prefix, int limit) {
+        PageRequest pageRequest = PageRequest.of(0, limit, Sort.by("updatedAt").descending());
+        return memoRepository.findAllByNameStartingWith(prefix, pageRequest).getContent();
+    }
+
+    @Transactional(readOnly = true)
+    public List<Memo> getMemosByNamePrefixExcludingPrefix(String prefix, String excludedPrefix, int limit) {
+        PageRequest pageRequest = PageRequest.of(0, limit, Sort.by("updatedAt").descending());
+        return memoRepository.findAllByNamePrefixExcludingPrefix(prefix, excludedPrefix, pageRequest).getContent();
+    }
+
+    public Memo moveMemo(String sourceName, String targetName) {
+        Memo memo = memoRepository.findByName(sourceName)
+                .orElseThrow(() -> new IllegalArgumentException("Memo Not Found"));
+        memo.setName(targetName);
+        return memo;
+    }
+
     @FilterVisibleContent
     @Transactional(readOnly = true)
     public Memo getMemo(String name) {
