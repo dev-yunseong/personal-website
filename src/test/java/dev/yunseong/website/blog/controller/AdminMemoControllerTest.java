@@ -130,6 +130,14 @@ class AdminMemoControllerTest {
     }
 
     @Test
+    void deleteMemo_ShouldSoftDeleteAndRedirectToPublicMemoList() {
+        String view = controller.deleteMemo(2L);
+
+        assertEquals("redirect:/public/memos", view);
+        verify(memoService).softDeleteMemo(2L);
+    }
+
+    @Test
     void validateProfile_ReturnsActionableResult() {
         ResponseEntity<Map<String, Object>> valid = controller.validateProfile("valid");
 

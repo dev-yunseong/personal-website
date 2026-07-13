@@ -27,6 +27,7 @@ import java.util.List;
 public class Memo {
 
     public static final String PRIVATE_PREFIX = "/private";
+    public static final String DELETED_PREFIX = PRIVATE_PREFIX + "/deleted";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -102,6 +103,10 @@ public class Memo {
 
     public boolean isPrivate() {
         return name != null && name.startsWith(PRIVATE_PREFIX);
+    }
+
+    public boolean isDeleted() {
+        return name != null && name.startsWith(DELETED_PREFIX);
     }
 
     public Memo(String name, String content) {

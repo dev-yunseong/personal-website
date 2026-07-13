@@ -11,6 +11,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,6 +20,10 @@ import java.util.Optional;
 @Transactional
 @RequiredArgsConstructor
 public class MemoService {
+
+    public static final String DELETED_MEMO_ROOT = Memo.DELETED_PREFIX;
+
+    private static final DateTimeFormatter DELETED_TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmssSSS");
 
     private final MemoRepository memoRepository;
 
@@ -68,6 +74,19 @@ public class MemoService {
                 .orElseThrow(() -> new IllegalArgumentException("Memo Not Found"));
         memo.setName(targetName);
         return memo;
+    }
+
+    public Memo softDeleteMemo(long memoId) {
+        Memo memo = getMemo(memoId);
+        memo.setName(buildDeletedMemoName(memo));
+        return memo;
+    }
+
+    private String buildDeletedMemoName(Memo memo) {
+        String normalizedName = memo.getName() == null ? "memo-" + memo.getId() : memo.getName();
+        String deletedName = normalizedName.replaceAll("^/+", "").replace('/', '_');
+        String timestamp = LocalDateTime.now().format(DELETED_TIMESTAMP_FORMATTER);
+        return DELETED_MEMO_ROOT + "/" + timestamp + "-" + deletedName;
     }
 
     @FilterVisibleContent
