@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.util.comparator.Comparators;
 
+import dev.yunseong.website.blog.domain.Memo;
 import dev.yunseong.website.blog.domain.MemoDirectory;
 import dev.yunseong.website.blog.domain.MemoFile;
 import dev.yunseong.website.blog.domain.MemoMeta;
@@ -185,5 +187,30 @@ class MemoFileServiceTest {
 
         assertEquals(1, y.getFiles().size());
         assertEquals("file3", y.getFiles().get(0).getName());
+    }
+
+    @Test
+    void initMemoFileSystem_shouldExcludePrivateMemos() {
+        List<MemoMeta> mockMemoMetas = Arrays.asList(
+                new MemoMeta(1L, "/public/file1"),
+                new MemoMeta(2L, "/private/secret"),
+                new MemoMeta(3L, "/private/nested/secret2")
+        );
+        when(memoFileRepository.findAllMemoMeta()).thenReturn(mockMemoMetas);
+
+        memoFileService.initMemoFileSystem();
+
+        assertEquals(List.of(".", "public"), memoFileService.listNames(memoFileService.root));
+        assertThrows(IllegalArgumentException.class, () -> memoFileService.changeDirectory(memoFileService.root, "private"));
+    }
+
+    @Test
+    void getMemo_shouldRejectPrivateMemo() {
+        MemoDirectory root = new MemoDirectory();
+        MemoFile privateFile = new MemoFile(1L, "secret", root);
+        root.getFiles().add(privateFile);
+        when(memoRepository.findById(1L)).thenReturn(Optional.of(new Memo(1L, "/private/secret", "secret", null, null)));
+
+        assertThrows(IllegalArgumentException.class, () -> memoFileService.getMemo(root, "secret.md"));
     }
 }

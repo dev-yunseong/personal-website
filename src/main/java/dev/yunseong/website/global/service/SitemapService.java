@@ -82,7 +82,7 @@ public class SitemapService {
         
         do {
             Pageable pageable = PageRequest.of(page, pageSize);
-            memoPage = memoService.getMemos(pageable);
+            memoPage = memoService.getPublicMemos(pageable);
             allMemos.addAll(memoPage.getContent());
             page++;
         } while (memoPage.hasNext());

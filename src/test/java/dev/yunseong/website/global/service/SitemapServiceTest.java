@@ -58,7 +58,7 @@ class SitemapServiceTest {
     @Test
     void generateSitemap_IncludesRootUrl() {
         // Given
-        when(memoService.getMemos(any(Pageable.class)))
+        when(memoService.getPublicMemos(any(Pageable.class)))
             .thenReturn(new PageImpl<>(Arrays.asList()));
         when(gameProjectService.getAllGameProjects())
             .thenReturn(Arrays.asList());
@@ -76,7 +76,7 @@ class SitemapServiceTest {
     @Test
     void generateSitemap_IncludesPublicMemosListPage() {
         // Given
-        when(memoService.getMemos(any(Pageable.class)))
+        when(memoService.getPublicMemos(any(Pageable.class)))
             .thenReturn(new PageImpl<>(Arrays.asList()));
         when(gameProjectService.getAllGameProjects())
             .thenReturn(Arrays.asList());
@@ -91,7 +91,7 @@ class SitemapServiceTest {
     @Test
     void generateSitemap_IncludesPublicProjectsListPage() {
         // Given
-        when(memoService.getMemos(any(Pageable.class)))
+        when(memoService.getPublicMemos(any(Pageable.class)))
             .thenReturn(new PageImpl<>(Arrays.asList()));
         when(gameProjectService.getAllGameProjects())
             .thenReturn(Arrays.asList());
@@ -107,7 +107,7 @@ class SitemapServiceTest {
     void generateSitemap_IncludesAllMemos() {
         // Given
         Page<Memo> memoPage = new PageImpl<>(Arrays.asList(testMemo1, testMemo2));
-        when(memoService.getMemos(any(Pageable.class)))
+        when(memoService.getPublicMemos(any(Pageable.class)))
             .thenReturn(memoPage);
         when(gameProjectService.getAllGameProjects())
             .thenReturn(Arrays.asList());
@@ -125,7 +125,7 @@ class SitemapServiceTest {
     @Test
     void generateSitemap_IncludesAllProjects() {
         // Given
-        when(memoService.getMemos(any(Pageable.class)))
+        when(memoService.getPublicMemos(any(Pageable.class)))
             .thenReturn(new PageImpl<>(Arrays.asList()));
         when(gameProjectService.getAllGameProjects())
             .thenReturn(Arrays.asList(testGame1, testGame2));
@@ -152,7 +152,7 @@ class SitemapServiceTest {
         when(secondPage.getContent()).thenReturn(secondPageContent);
         when(secondPage.hasNext()).thenReturn(false);
         
-        when(memoService.getMemos(any(Pageable.class)))
+        when(memoService.getPublicMemos(any(Pageable.class)))
             .thenReturn(firstPage)
             .thenReturn(secondPage);
         when(gameProjectService.getAllGameProjects())
@@ -169,7 +169,7 @@ class SitemapServiceTest {
     @Test
     void generateSitemap_EscapesSpecialCharacters() {
         // Given - Create a base URL with special characters that need escaping
-        when(memoService.getMemos(any(Pageable.class)))
+        when(memoService.getPublicMemos(any(Pageable.class)))
             .thenReturn(new PageImpl<>(Arrays.asList()));
         when(gameProjectService.getAllGameProjects())
             .thenReturn(Arrays.asList());

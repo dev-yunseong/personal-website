@@ -1,11 +1,14 @@
 package dev.yunseong.website.blog.service;
 
+import dev.yunseong.website.blog.annotation.FilterVisibleContent;
 import dev.yunseong.website.blog.domain.CategoryNode;
+import dev.yunseong.website.blog.domain.Memo;
 import dev.yunseong.website.blog.repository.MemoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -13,6 +16,7 @@ public class CategoryService {
 
     private final MemoRepository memoRepository;
 
+    @FilterVisibleContent
     public List<String> getCategories() {
         Set<String> categories = new HashSet<>();
         memoRepository.findAll()
@@ -21,10 +25,20 @@ public class CategoryService {
         return categories.stream().sorted().toList();
     }
 
+    @FilterVisibleContent
     public List<CategoryNode> getCategoryTree() {
+        return getCategoryTree(memoRepository.findAll().stream());
+    }
+
+    @FilterVisibleContent
+    public List<CategoryNode> getPublicCategoryTree() {
+        return getCategoryTree(memoRepository.findAll().stream()
+                .filter(memo -> !memo.isPrivate()));
+    }
+
+    private List<CategoryNode> getCategoryTree(Stream<Memo> memos) {
         Set<String> allPaths = new HashSet<>();
-        memoRepository.findAll()
-                .forEach(memo -> allPaths.add(memo.getPath()));
+        memos.forEach(memo -> allPaths.add(memo.getPath()));
 
         // Build tree structure
         Map<String, CategoryNode> nodeMap = new HashMap<>();

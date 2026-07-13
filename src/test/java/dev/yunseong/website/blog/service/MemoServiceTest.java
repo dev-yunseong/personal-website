@@ -78,11 +78,11 @@ class MemoServiceTest {
     }
 
     @Test
-    void getRecentMemos_ShouldLimitSortByUpdatedAtAndExcludeProfileMemo() {
+    void getRecentMemos_ShouldLimitSortByUpdatedAtAndExcludeProfileAndPrivateMemos() {
         // Given
         Memo recentMemo = new Memo(4L, "/notes/recent", "Recent content", LocalDateTime.now(), LocalDateTime.now());
         Page<Memo> page = new PageImpl<>(List.of(recentMemo));
-        when(memoRepository.findAllByNameNot(eq("/profile"), any(PageRequest.class))).thenReturn(page);
+        when(memoRepository.findRecentPublicMemos(eq("/profile"), any(PageRequest.class))).thenReturn(page);
 
         // When
         List<Memo> result = memoService.getRecentMemos(3);
@@ -91,7 +91,7 @@ class MemoServiceTest {
         assertThat(result).containsExactly(recentMemo);
 
         ArgumentCaptor<PageRequest> pageRequestCaptor = ArgumentCaptor.forClass(PageRequest.class);
-        verify(memoRepository).findAllByNameNot(eq("/profile"), pageRequestCaptor.capture());
+        verify(memoRepository).findRecentPublicMemos(eq("/profile"), pageRequestCaptor.capture());
 
         PageRequest pageRequest = pageRequestCaptor.getValue();
         assertThat(pageRequest.getPageNumber()).isZero();
@@ -131,6 +131,65 @@ class MemoServiceTest {
 
         // Then: Should not add another trailing slash
         verify(memoRepository).findAllByPath(eq("/java/"), any(PageRequest.class));
+    }
+
+    @Test
+    void getPublicMemos_ShouldExcludePrivateMemos() {
+        // Given
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Memo> page = new PageImpl<>(List.of(javaMemo));
+        when(memoRepository.findPublic(pageable)).thenReturn(page);
+
+        // When
+        Page<Memo> result = memoService.getPublicMemos(pageable);
+
+        // Then
+        assertThat(result.getContent()).containsExactly(javaMemo);
+        verify(memoRepository).findPublic(pageable);
+    }
+
+    @Test
+    void getPublicMemosByCategory_ShouldExcludePrivateMemos() {
+        // Given
+        String category = "/java";
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Memo> page = new PageImpl<>(List.of(javaSpringMemo));
+        when(memoRepository.findPublicByPath(eq("/java/"), any(PageRequest.class))).thenReturn(page);
+
+        // When
+        Page<Memo> result = memoService.getPublicMemos(category, pageable);
+
+        // Then
+        assertThat(result.getContent()).containsExactly(javaSpringMemo);
+        verify(memoRepository).findPublicByPath(eq("/java/"), any(PageRequest.class));
+    }
+
+    @Test
+    void getPublicMemoById_ShouldExcludePrivateMemos() {
+        // Given
+        when(memoRepository.findPublicById(1L)).thenReturn(Optional.of(javaMemo));
+
+        // When
+        Memo result = memoService.getPublicMemo(1L);
+
+        // Then
+        assertEquals(javaMemo, result);
+        verify(memoRepository).findPublicById(1L);
+    }
+
+    @Test
+    void searchPublicMemo_ShouldExcludePrivateMemos() {
+        // Given
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Memo> page = new PageImpl<>(List.of(javaMemo));
+        when(memoRepository.findPublicByQuery("java", pageable)).thenReturn(page);
+
+        // When
+        Page<Memo> result = memoService.searchPublicMemo("java", pageable);
+
+        // Then
+        assertThat(result.getContent()).containsExactly(javaMemo);
+        verify(memoRepository).findPublicByQuery("java", pageable);
     }
 
     @Test

@@ -1,5 +1,6 @@
 package dev.yunseong.website.blog.service;
 
+import dev.yunseong.website.blog.annotation.FilterVisibleContent;
 import dev.yunseong.website.blog.domain.Memo;
 import dev.yunseong.website.blog.repository.MemoRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,8 +21,14 @@ public class MemoService {
 
     private final MemoRepository memoRepository;
 
+    @FilterVisibleContent
     public Page<Memo> searchMemo(String query, Pageable pageable) {
         return memoRepository.findByQuery(query, pageable);
+    }
+
+    @FilterVisibleContent
+    public Page<Memo> searchPublicMemo(String query, Pageable pageable) {
+        return memoRepository.findPublicByQuery(query, pageable);
     }
 
     public long saveMemo(String title, String content) {
@@ -30,12 +37,14 @@ public class MemoService {
         return memo.getId();
     }
 
+    @FilterVisibleContent
     @Transactional(readOnly = true)
     public Memo getMemo(String name) {
         return memoRepository.findByName(name)
                 .orElseThrow(() -> new IllegalArgumentException("Memo Not Found"));
     }
 
+    @FilterVisibleContent
     @Transactional(readOnly = true)
     public Optional<Memo> findMemo(String name) {
         return memoRepository.findByName(name);
@@ -46,25 +55,45 @@ public class MemoService {
         return memoRepository.findAll(pageable);
     }
 
+    @FilterVisibleContent
+    @Transactional(readOnly = true)
+    public Page<Memo> getPublicMemos(Pageable pageable) {
+        return memoRepository.findPublic(pageable);
+    }
+
+    @FilterVisibleContent
     @Transactional(readOnly = true)
     public List<Memo> getRecentMemos(int limit) {
         PageRequest pageRequest = PageRequest.of(0, limit, Sort.by("updatedAt").descending());
-        return memoRepository.findAllByNameNot("/profile", pageRequest).getContent();
+        return memoRepository.findRecentPublicMemos("/profile", pageRequest).getContent();
     }
 
     @Transactional(readOnly = true)
     public Page<Memo> getMemos(String category, Pageable pageable) {
-        if (!category.endsWith("/")) {
-            category = String.format("%s/", category);
-        }
-        PageRequest pageRequest = PageRequest
-                .of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by("created_at").descending());
+        category = normalizeCategory(category);
+        PageRequest pageRequest = getCategoryPageRequest(pageable);
         return memoRepository.findAllByPath(category, pageRequest);
     }
 
+    @FilterVisibleContent
+    @Transactional(readOnly = true)
+    public Page<Memo> getPublicMemos(String category, Pageable pageable) {
+        category = normalizeCategory(category);
+        PageRequest pageRequest = getCategoryPageRequest(pageable);
+        return memoRepository.findPublicByPath(category, pageRequest);
+    }
+
+    @FilterVisibleContent
     @Transactional(readOnly = true)
     public Memo getMemo(long memoId) {
         return memoRepository.findById(memoId)
+                .orElseThrow(() -> new IllegalArgumentException("Memo Not Found"));
+    }
+
+    @FilterVisibleContent
+    @Transactional(readOnly = true)
+    public Memo getPublicMemo(long memoId) {
+        return memoRepository.findPublicById(memoId)
                 .orElseThrow(() -> new IllegalArgumentException("Memo Not Found"));
     }
 
@@ -72,5 +101,17 @@ public class MemoService {
         Memo memo = getMemo(memoId);
         memo.setName(title);
         memo.setContent(content);
+    }
+
+    private String normalizeCategory(String category) {
+        if (!category.endsWith("/")) {
+            return String.format("%s/", category);
+        }
+        return category;
+    }
+
+    private PageRequest getCategoryPageRequest(Pageable pageable) {
+        return PageRequest
+                .of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by("created_at").descending());
     }
 }

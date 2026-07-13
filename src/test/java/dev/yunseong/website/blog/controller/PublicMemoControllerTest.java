@@ -12,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.ui.Model;
 
 import java.util.Collections;
@@ -40,11 +41,11 @@ class PublicMemoControllerTest {
         // Given
         Pageable pageable = PageRequest.of(0, 10);
         Page<Memo> memos = new PageImpl<>(Collections.emptyList());
-        when(memoService.getMemos(pageable)).thenReturn(memos);
-        when(categoryService.getCategoryTree()).thenReturn(Collections.emptyList());
+        when(memoService.getPublicMemos(pageable)).thenReturn(memos);
+        when(categoryService.getPublicCategoryTree()).thenReturn(Collections.emptyList());
 
         // When
-        String result = publicMemoController.blog(model, null, pageable);
+        String result = publicMemoController.blog(model, null, pageable, null);
 
         // Then
         assertEquals("blog", result);
@@ -59,11 +60,11 @@ class PublicMemoControllerTest {
         String category = "Java";
         Pageable pageable = PageRequest.of(0, 10);
         Page<Memo> memos = new PageImpl<>(Collections.emptyList());
-        when(memoService.getMemos(category, pageable)).thenReturn(memos);
-        when(categoryService.getCategoryTree()).thenReturn(Collections.emptyList());
+        when(memoService.getPublicMemos(category, pageable)).thenReturn(memos);
+        when(categoryService.getPublicCategoryTree()).thenReturn(Collections.emptyList());
 
         // When
-        String result = publicMemoController.blog(model, category, pageable);
+        String result = publicMemoController.blog(model, category, pageable, null);
 
         // Then
         assertEquals("blog", result);
@@ -79,11 +80,11 @@ class PublicMemoControllerTest {
         Pageable pageable = PageRequest.of(0, 10);
         Page<Memo> memos = new PageImpl<>(Collections.emptyList());
         
-        when(memoService.getMemo(memoId)).thenReturn(memo);
-        when(memoService.getMemos(memo.getName(), pageable)).thenReturn(memos);
+        when(memoService.getPublicMemo(memoId)).thenReturn(memo);
+        when(memoService.getPublicMemos(memo.getName(), pageable)).thenReturn(memos);
 
         // When
-        String result = publicMemoController.showMemo(memoId, model, pageable);
+        String result = publicMemoController.showMemo(memoId, model, pageable, null);
 
         // Then
         assertEquals("memo/view", result);
@@ -91,4 +92,43 @@ class PublicMemoControllerTest {
         verify(model).addAttribute("memos", memos);
         verify(model).addAttribute(eq("pageDescription"), anyString());
     }
+    @Test
+    void blog_WhenAuthenticated_LoadsAllMemos() {
+        // Given
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Memo> memos = new PageImpl<>(Collections.emptyList());
+        TestingAuthenticationToken authentication = new TestingAuthenticationToken("user", "password", "ROLE_USER");
+        when(memoService.getMemos(pageable)).thenReturn(memos);
+        when(categoryService.getCategoryTree()).thenReturn(Collections.emptyList());
+
+        // When
+        String result = publicMemoController.blog(model, null, pageable, authentication);
+
+        // Then
+        assertEquals("blog", result);
+        verify(model).addAttribute("memos", memos);
+        verify(memoService).getMemos(pageable);
+        verify(memoService, never()).getPublicMemos(pageable);
+    }
+
+    @Test
+    void showMemo_WhenAuthenticated_LoadsPrivateMemo() {
+        // Given
+        Long memoId = 1L;
+        Memo memo = new Memo("/private/Note", "Private content");
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Memo> memos = new PageImpl<>(Collections.emptyList());
+        TestingAuthenticationToken authentication = new TestingAuthenticationToken("user", "password", "ROLE_USER");
+        when(memoService.getMemo(memoId)).thenReturn(memo);
+        when(memoService.getMemos(memo.getName(), pageable)).thenReturn(memos);
+
+        // When
+        String result = publicMemoController.showMemo(memoId, model, pageable, authentication);
+
+        // Then
+        assertEquals("memo/view", result);
+        verify(memoService).getMemo(memoId);
+        verify(memoService, never()).getPublicMemo(memoId);
+    }
+
 }

@@ -33,6 +33,9 @@ public class MemoFileService {
 
         for (MemoMeta memoMeta : memoMetas) {
             String fullPath = memoMeta.fullPath(); // e.g., "/category/subcategory/filename.md"
+            if (fullPath.startsWith(Memo.PRIVATE_PREFIX)) {
+                continue;
+            }
             // Remove leading slash if any
             if (fullPath.startsWith("/")) {
                 fullPath = fullPath.substring(1);
@@ -64,8 +67,12 @@ public class MemoFileService {
 
     public Memo getMemo(MemoDirectory workingDirectory, String path) {
         MemoFile memoFile = workingDirectory.getFile(path);
-        return memoRepository.findById(memoFile.getMemoId())
+        Memo memo = memoRepository.findById(memoFile.getMemoId())
                 .orElseThrow(() -> new IllegalArgumentException("Memo not found"));
+        if (memo.isPrivate()) {
+            throw new IllegalArgumentException("Memo not found");
+        }
+        return memo;
     }
 
     public MemoDirectory changeDirectory(MemoDirectory workingDirectory, String path) {
