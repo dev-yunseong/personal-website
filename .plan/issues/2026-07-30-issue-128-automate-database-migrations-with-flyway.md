@@ -19,7 +19,8 @@ Support both the existing production database and a new empty database.
 
 - Production already has the schema accumulated in `sql/schema.sql`.
 - Hibernate schema generation is disabled.
-- Existing production data must remain intact.
+- Existing production data must remain intact; its current schema and seed are
+  baselined through V2.
 - Flyway migrations become immutable after deployment.
 
 ## Approach (Checklist)
@@ -33,9 +34,9 @@ Support both the existing production database and a new empty database.
 - **Expected output:** Flyway dependency resolves; application tests remain green; migration files have valid ordered names.
 
 ## Risks & Rollback
-- **Risks:** Existing production schema may differ from the V1 snapshot. `baseline-on-migrate` trusts that schema and starts applying at V2.
+- **Risks:** Existing production schema may differ from the V2 baseline. `baseline-on-migrate` trusts that schema and starts applying at V3.
 - **Rollback steps:** Revert application/config changes before first Flyway deployment. After a migration runs, restore the database from backup or add a forward corrective migration; never edit an applied migration.
 
 ## Open Questions
 
-- Confirm production schema matches the former `sql/schema.sql` before first deployment.
+- Confirm production schema and profile seed match the V2 baseline before first deployment.
