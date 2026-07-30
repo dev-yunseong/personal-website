@@ -63,6 +63,9 @@
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="tab-btn-timeline" data-tab="timeline" role="tab" type="button">Timeline</button>
             </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-btn-distribution" data-tab="distribution" role="tab" type="button">Distribution</button>
+            </li>
         </ul>
 
         <div class="tab-content">
@@ -155,6 +158,9 @@
             </div>
         </div>
         </div>
+
+        <!-- Distribution Tab -->
+        <div th:replace="~{console/fragments/distribution :: distribution}"></div>
 
         </div><!-- end tab-content -->
     </div>
@@ -378,6 +384,7 @@
             if (tabName === 'top')      loadTop();
             if (tabName === 'history')  loadHistory();
             if (tabName === 'timeline') loadTimeline();
+            if (tabName === 'distribution') window.loadDistribution(STATE.days);
         }
 
         // ── XSS helper ────────────────────────────────────────────────
@@ -397,6 +404,7 @@
                 if (STATE.tab === 'top')      loadTop();
                 if (STATE.tab === 'history')  loadHistory();
                 if (STATE.tab === 'timeline') loadTimeline();
+                if (STATE.tab === 'distribution') window.loadDistribution(STATE.days);
             });
         });
 
