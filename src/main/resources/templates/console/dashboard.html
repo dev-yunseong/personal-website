@@ -78,6 +78,9 @@
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="tab-btn-distribution" data-tab="distribution" role="tab" type="button">Distribution</button>
             </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-btn-geo" data-tab="geo" role="tab" type="button">Countries</button>
+            </li>
         </ul>
 
         <div class="tab-content">
@@ -183,6 +186,8 @@
         <div th:replace="~{console/fragments/content :: contentTab}"></div>
         <!-- Distribution Tab -->
         <div th:replace="~{console/fragments/distribution :: distribution}"></div>
+        <!-- Countries Tab -->
+        <div th:replace="~{console/fragments/geo :: geo}"></div>
 
         </div><!-- end tab-content -->
     </div>
@@ -411,6 +416,7 @@
             if (tabName === 'visitors') loadVisitors(STATE.days);
             if (tabName === 'content')  loadContentStats(STATE.days);
             if (tabName === 'distribution') window.loadDistribution(STATE.days);
+            if (tabName === 'geo' && window.loadGeo) window.loadGeo(STATE.days);
         }
 
         // ── XSS helper ────────────────────────────────────────────────
@@ -435,6 +441,7 @@
                 if (STATE.tab === 'visitors') loadVisitors(STATE.days);
                 if (STATE.tab === 'content')  loadContentStats(STATE.days);
                 if (STATE.tab === 'distribution') window.loadDistribution(STATE.days);
+                if (STATE.tab === 'geo' && window.loadGeo) window.loadGeo(STATE.days);
             });
         });
 

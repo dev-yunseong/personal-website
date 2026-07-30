@@ -108,3 +108,14 @@ SET is_bot = TRUE
 WHERE user_agent IS NULL
    OR btrim(user_agent) = ''
    OR user_agent ~* 'bot|crawl|spider|slurp|curl|wget|python-requests|httpx|scrapy|okhttp|java/|go-http-client|libwww-perl|headlesschrome|facebookexternalhit|feedfetcher|monitoring|uptime';
+
+-- ADD Country Code To Statistics
+-- Resolved from ip at insert time, so reads are a plain GROUP BY country_code.
+ALTER TABLE request_statistics ADD COLUMN country_code CHAR(2);
+
+CREATE INDEX idx_request_statistics_country_code ON request_statistics(country_code);
+
+-- Existing rows cannot be backfilled in SQL: the mapping lives in the MaxMind
+-- database. After deploying, press "Backfill" on the console dashboard
+-- Countries tab (POST /api/admin/console/geo/backfill). It is chunked and safe
+-- to repeat; only rows whose country_code is still null are written.

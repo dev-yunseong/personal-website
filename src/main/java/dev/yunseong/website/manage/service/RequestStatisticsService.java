@@ -36,7 +36,8 @@ public class RequestStatisticsService {
     private static final int PAGE_SIZE = 10;
 
     private final RequestStatisticsRepository requestStatisticsRepository;
-    
+    private final GeoIpCountryResolver geoIpCountryResolver;
+
     // In-memory storage for request statistics
     private final Queue<RequestStatistics> requestQueue = new ConcurrentLinkedDeque<>();
 
@@ -46,9 +47,11 @@ public class RequestStatisticsService {
             return;
         }
         boolean isBot = BotDetector.isBot(userAgent);
-        requestQueue.add(new RequestStatistics(uri, method, referer, userAgent, ipAddress, statusCode, isBot, durationMs));
-        log.debug("Recorded request: {} {} {} bot={} {}ms (total in memory: {})",
-                method, uri, statusCode, isBot, durationMs, requestQueue.size());
+        // Resolved here, not on read: a local mmdb lookup, so reads stay a plain GROUP BY.
+        String countryCode = geoIpCountryResolver.resolveCountryCode(ipAddress);
+        requestQueue.add(new RequestStatistics(uri, method, referer, userAgent, ipAddress, statusCode, isBot, durationMs, countryCode));
+        log.debug("Recorded request: {} {} {} bot={} {}ms country={} (total in memory: {})",
+                method, uri, statusCode, isBot, durationMs, countryCode, requestQueue.size());
     }
 
     /**
