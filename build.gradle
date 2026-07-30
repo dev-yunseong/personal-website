@@ -67,7 +67,9 @@ dependencies {
 
     // database
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.flywaydb:flyway-core'
     runtimeOnly 'org.postgresql:postgresql'
+    runtimeOnly 'org.flywaydb:flyway-database-postgresql'
 
     // geo ip (local MaxMind GeoLite2 lookup, no external call on the request path)
     implementation 'com.maxmind.geoip2:geoip2:4.2.1'
@@ -88,4 +90,5 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+    systemProperty 'spring.flyway.enabled', 'false'
 }

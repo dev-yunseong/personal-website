@@ -1,4 +1,3 @@
--- Manually run this seed after schema.sql.
 -- Re-running updates the template memo without creating a duplicate.
 INSERT INTO memos (name, content, created_at, updated_at)
 VALUES (
