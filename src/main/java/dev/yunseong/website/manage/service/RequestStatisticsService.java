@@ -1,5 +1,6 @@
 package dev.yunseong.website.manage.service;
 
+import dev.yunseong.website.manage.domain.BotDetector;
 import dev.yunseong.website.manage.domain.RequestStatistics;
 import dev.yunseong.website.manage.domain.TimelineStat;
 import dev.yunseong.website.manage.domain.UriStat;
@@ -39,17 +40,27 @@ public class RequestStatisticsService {
     // In-memory storage for request statistics
     private final Queue<RequestStatistics> requestQueue = new ConcurrentLinkedDeque<>();
 
-    public void recordRequest(String uri, String method, String referer, String userAgent, String ipAddress) {
-        recordRequest(uri, method, referer, userAgent, ipAddress, null);
+    public void recordRequest(String uri, String method, String referer, String userAgent, String ipAddress,
+                              Integer statusCode, Integer durationMs) {
+        if (!isCollectedUri(uri)) {
+            return;
+        }
+        boolean isBot = BotDetector.isBot(userAgent);
+        requestQueue.add(new RequestStatistics(uri, method, referer, userAgent, ipAddress, statusCode, isBot, durationMs));
+        log.debug("Recorded request: {} {} {} bot={} {}ms (total in memory: {})",
+                method, uri, statusCode, isBot, durationMs, requestQueue.size());
     }
 
-    public void recordRequest(String uri, String method, String referer, String userAgent, String ipAddress, Integer statusCode) {
-        // Only track requests starting with /public/
-        if (uri != null && uri.startsWith("/public/")) {
-            RequestStatistics stats = new RequestStatistics(uri, method, referer, userAgent, ipAddress, statusCode);
-            requestQueue.add(stats);
-            log.debug("Recorded request: {} {} {} (total in memory: {})", method, uri, statusCode, requestQueue.size());
+    /**
+     * Whitelist of the public request surface. Static assets, admin routes, and
+     * infrastructure endpoints fall outside it by construction, so no deny list
+     * is needed.
+     */
+    private static boolean isCollectedUri(String uri) {
+        if (uri == null) {
+            return false;
         }
+        return uri.equals("/") || uri.startsWith("/public/") || uri.startsWith("/api/public/");
     }
 
     @Scheduled(fixedRate = 300000) // 5 minutes = 300000 milliseconds
