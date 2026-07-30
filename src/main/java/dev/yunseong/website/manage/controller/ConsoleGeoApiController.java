@@ -89,8 +89,9 @@ public class ConsoleGeoApiController {
     }
 
     private static void validateDays(int days) {
-        if (days < 1 || days > 90) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "days must be between 1 and 90");
+        if (days < 0 || days > 90) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "days must be 0 (all time) or between 1 and 90");
         }
     }
 

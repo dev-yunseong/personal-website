@@ -29,6 +29,8 @@ rows without exposing raw IP addresses.
   the maximum accuracy radius represented by the aggregate.
 - Keep the existing country list and filters. Drill down inside the Countries
   tab so console navigation and period state remain intact.
+- Let Geo views opt into all retained history with `days=0`; keep the global
+  console period unchanged for unrelated analytics tabs.
 - Use Leaflet with OpenStreetMap tiles for the admin-only interactive map.
   Pin Leaflet 1.9.4 from the official unpkg snippet with SRI, display required attribution, and request
   only the visible viewport. City lists and request rows remain usable if map

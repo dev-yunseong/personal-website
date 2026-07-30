@@ -5,6 +5,7 @@ import dev.yunseong.website.manage.domain.GeoLocation;
 import dev.yunseong.website.manage.repository.RequestGeoStatisticsRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -55,6 +56,20 @@ class RequestGeoStatisticsServiceTest {
         when(requestGeoStatisticsRepository.countWithoutCountry(any(LocalDateTime.class), eq(true))).thenReturn(7L);
 
         assertEquals(7L, requestGeoStatisticsService.getUnresolvedRequestsForLastDays(30, true));
+    }
+
+    @Test
+    void getCountriesForLastDays_WithZeroDays_UsesAllTimeBoundary() {
+        when(requestGeoStatisticsRepository.findCountryCounts(
+                any(LocalDateTime.class), eq(false), eq(PageRequest.of(0, 10))))
+                .thenReturn(Page.empty());
+
+        requestGeoStatisticsService.getCountriesForLastDays(0, false, 0);
+
+        ArgumentCaptor<LocalDateTime> startDate = ArgumentCaptor.forClass(LocalDateTime.class);
+        verify(requestGeoStatisticsRepository).findCountryCounts(
+                startDate.capture(), eq(false), eq(PageRequest.of(0, 10)));
+        assertEquals(LocalDateTime.of(1970, 1, 1, 0, 0), startDate.getValue());
     }
 
     @Test

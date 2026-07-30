@@ -8,6 +8,10 @@
             <h5 class="mb-0">Requests by Country</h5>
             <div class="d-flex gap-3 align-items-center flex-wrap">
                 <div class="form-check mb-0">
+                    <input class="form-check-input" type="checkbox" id="geo-all-time">
+                    <label class="form-check-label" for="geo-all-time">전체 기간</label>
+                </div>
+                <div class="form-check mb-0">
                     <input class="form-check-input" type="checkbox" id="geo-include-bots">
                     <label class="form-check-label" for="geo-include-bots">봇 포함</label>
                 </div>
@@ -52,6 +56,10 @@
 
         function includeBots() {
             return document.getElementById('geo-include-bots').checked;
+        }
+
+        function selectedDays() {
+            return document.getElementById('geo-all-time').checked ? 0 : days;
         }
 
         function csrfHeaders() {
@@ -142,7 +150,7 @@
             requestPage = 0;
             loading();
             fetchJson('/api/admin/console/geo/countries', {
-                days, geoPage, includeBots: includeBots()
+                days: selectedDays(), geoPage, includeBots: includeBots()
             }).then(renderCountryList).catch(() => {
                 document.getElementById('geo-content').innerHTML =
                     '<div class="alert alert-danger mb-0">국가 데이터를 불러오지 못했습니다.</div>';
@@ -242,7 +250,7 @@
         function loadCountryDetail() {
             loading();
             fetchJson(`/api/admin/console/geo/countries/${encodeURIComponent(selectedCountry)}/cities`, {
-                days, includeBots: includeBots()
+                days: selectedDays(), includeBots: includeBots()
             }).then(renderCountryDetail).catch(() => {
                 document.getElementById('geo-content').innerHTML =
                     '<div class="alert alert-danger mb-0">국가 상세 데이터를 불러오지 못했습니다.</div>';
@@ -285,7 +293,7 @@
             if (!container) return;
             container.innerHTML = '<div class="text-center py-3"><div class="spinner-border spinner-border-sm text-primary" role="status"></div></div>';
             fetchJson(`/api/admin/console/geo/countries/${encodeURIComponent(selectedCountry)}/requests`, {
-                days,
+                days: selectedDays(),
                 includeBots: includeBots(),
                 cityId: selectedCityId,
                 page: requestPage
@@ -295,6 +303,13 @@
         }
 
         document.getElementById('geo-include-bots').addEventListener('change', () => {
+            selectedCityId = null;
+            requestPage = 0;
+            if (selectedCountry) loadCountryDetail();
+            else loadCountryList();
+        });
+
+        document.getElementById('geo-all-time').addEventListener('change', () => {
             selectedCityId = null;
             requestPage = 0;
             if (selectedCountry) loadCountryDetail();

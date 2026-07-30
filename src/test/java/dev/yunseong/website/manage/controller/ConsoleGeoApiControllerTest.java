@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.yunseong.website.manage.domain.GeoRequestStat;
 import dev.yunseong.website.manage.service.RequestGeoStatisticsService;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.web.server.ResponseStatusException;
@@ -41,7 +42,9 @@ class ConsoleGeoApiControllerTest {
 
     @Test
     void endpoints_RejectInvalidBoundsAndCountryCodes() {
-        assertThrows(ResponseStatusException.class, () -> controller.countries(0, 0, false));
+        when(service.getCountriesForLastDays(0, false, 0)).thenReturn(Page.empty());
+        controller.countries(0, 0, false);
+        assertThrows(ResponseStatusException.class, () -> controller.countries(-1, 0, false));
         assertThrows(ResponseStatusException.class, () -> controller.countries(7, -1, false));
         assertThrows(ResponseStatusException.class, () -> controller.cities("KOR", 7, false));
         assertThrows(ResponseStatusException.class, () -> controller.requests("KR", 91, false, null, 0));

@@ -19,6 +19,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class RequestGeoStatisticsService {
+    private static final LocalDateTime ALL_TIME_START = LocalDateTime.of(1970, 1, 1, 0, 0);
     private static final int PAGE_SIZE = 10;
     private static final int REQUEST_PAGE_SIZE = 20;
     private static final int BACKFILL_CHUNK = 500;
@@ -29,12 +30,12 @@ public class RequestGeoStatisticsService {
     @Transactional(readOnly = true)
     public Page<CountryStat> getCountriesForLastDays(int days, boolean includeBots, int page) {
         return requestGeoStatisticsRepository.findCountryCounts(
-                LocalDateTime.now().minusDays(days), includeBots, PageRequest.of(page, PAGE_SIZE));
+                startDate(days), includeBots, PageRequest.of(page, PAGE_SIZE));
     }
 
     @Transactional(readOnly = true)
     public long getUnresolvedRequestsForLastDays(int days, boolean includeBots) {
-        return requestGeoStatisticsRepository.countWithoutCountry(LocalDateTime.now().minusDays(days), includeBots);
+        return requestGeoStatisticsRepository.countWithoutCountry(startDate(days), includeBots);
     }
 
     public boolean isResolverAvailable() {
@@ -44,20 +45,20 @@ public class RequestGeoStatisticsService {
     @Transactional(readOnly = true)
     public List<CityStat> getCitiesForLastDays(int days, String countryCode, boolean includeBots) {
         return requestGeoStatisticsRepository.findCityCounts(
-                LocalDateTime.now().minusDays(days), countryCode, includeBots);
+                startDate(days), countryCode, includeBots);
     }
 
     @Transactional(readOnly = true)
     public long getUnresolvedCitiesForLastDays(int days, String countryCode, boolean includeBots) {
         return requestGeoStatisticsRepository.countWithoutCity(
-                LocalDateTime.now().minusDays(days), countryCode, includeBots);
+                startDate(days), countryCode, includeBots);
     }
 
     @Transactional(readOnly = true)
     public Page<GeoRequestStat> getRequestsForLastDays(
             int days, String countryCode, boolean includeBots, Long cityId, int page) {
         return requestGeoStatisticsRepository.findGeoRequests(
-                LocalDateTime.now().minusDays(days), countryCode, includeBots, cityId,
+                startDate(days), countryCode, includeBots, cityId,
                 PageRequest.of(page, REQUEST_PAGE_SIZE));
     }
 
@@ -95,5 +96,9 @@ public class RequestGeoStatisticsService {
             log.info("Geo backfill: {} IPs processed, {} rows updated", ipsSeen, rowsUpdated);
         }
         return rowsUpdated;
+    }
+
+    private static LocalDateTime startDate(int days) {
+        return days == 0 ? ALL_TIME_START : LocalDateTime.now().minusDays(days);
     }
 }
