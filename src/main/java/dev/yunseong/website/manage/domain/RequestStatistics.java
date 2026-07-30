@@ -43,11 +43,22 @@ public class RequestStatistics {
     @CreationTimestamp
     private LocalDateTime createdAt;
 
+    @Column(name = "is_bot", nullable = false)
+    private boolean isBot;
+
+    @Column(name = "duration_ms")
+    private Integer durationMs;
+
     public RequestStatistics(String uri, String method, String referer, String userAgent, String ipAddress) {
-        this(null, uri, method, referer, userAgent, ipAddress, null, null);
+        this(null, uri, method, referer, userAgent, ipAddress, null, null, false, null);
     }
 
     public RequestStatistics(String uri, String method, String referer, String userAgent, String ipAddress, Integer statusCode) {
-        this(null, uri, method, referer, userAgent, ipAddress, statusCode, null);
+        this(null, uri, method, referer, userAgent, ipAddress, statusCode, null, false, null);
+    }
+
+    public RequestStatistics(String uri, String method, String referer, String userAgent, String ipAddress,
+                             Integer statusCode, boolean isBot, Integer durationMs) {
+        this(null, uri, method, referer, userAgent, ipAddress, statusCode, null, isBot, durationMs);
     }
 }

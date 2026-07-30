@@ -94,3 +94,17 @@ CREATE TABLE chat_conversations (
 
 CREATE INDEX idx_chat_conversations_ip ON chat_conversations(ip);
 CREATE INDEX idx_chat_conversations_created_at ON chat_conversations(created_at);
+
+-- ADD Bot Flag And Response Time To Statistics
+ALTER TABLE request_statistics ADD COLUMN is_bot BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE request_statistics ADD COLUMN duration_ms INTEGER;
+
+CREATE INDEX idx_request_statistics_is_bot ON request_statistics(is_bot);
+
+-- Backfill is_bot for rows written before the column existed. Keep the pattern in
+-- sync with BotDetector; a missing User-Agent counts as a bot there too.
+UPDATE request_statistics
+SET is_bot = TRUE
+WHERE user_agent IS NULL
+   OR btrim(user_agent) = ''
+   OR user_agent ~* 'bot|crawl|spider|slurp|curl|wget|python-requests|httpx|scrapy|okhttp|java/|go-http-client|libwww-perl|headlesschrome|facebookexternalhit|feedfetcher|monitoring|uptime';
