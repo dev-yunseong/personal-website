@@ -1,6 +1,8 @@
 package dev.yunseong.website.manage.repository;
 
 import dev.yunseong.website.manage.domain.CountryStat;
+import dev.yunseong.website.manage.domain.CityStat;
+import dev.yunseong.website.manage.domain.GeoRequestStat;
 import dev.yunseong.website.manage.domain.RequestStatistics;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -48,6 +50,53 @@ public interface RequestGeoStatisticsRepository extends JpaRepository<RequestSta
     long countWithoutCountry(@Param("startDate") LocalDateTime startDate,
                              @Param("includeBots") boolean includeBots);
 
+    @Query("""
+            SELECT new dev.yunseong.website.manage.domain.CityStat(
+                r.cityGeoNameId, MAX(r.cityName), AVG(r.latitude), AVG(r.longitude),
+                MAX(r.accuracyRadiusKm), COUNT(r),
+                SUM(CASE WHEN r.isBot = true THEN 1L ELSE 0L END))
+            FROM RequestStatistics r
+            WHERE r.createdAt >= :startDate AND r.countryCode = :countryCode
+              AND r.cityGeoNameId IS NOT NULL AND r.latitude IS NOT NULL AND r.longitude IS NOT NULL
+              AND (:includeBots = true OR r.isBot = false)
+            GROUP BY r.cityGeoNameId
+            ORDER BY COUNT(r) DESC, r.cityGeoNameId ASC
+            """)
+    List<CityStat> findCityCounts(@Param("startDate") LocalDateTime startDate,
+                                  @Param("countryCode") String countryCode,
+                                  @Param("includeBots") boolean includeBots);
+
+    @Query("""
+            SELECT COUNT(r) FROM RequestStatistics r
+            WHERE r.createdAt >= :startDate AND r.countryCode = :countryCode
+              AND (r.cityGeoNameId IS NULL OR r.latitude IS NULL OR r.longitude IS NULL)
+              AND (:includeBots = true OR r.isBot = false)
+            """)
+    long countWithoutCity(@Param("startDate") LocalDateTime startDate,
+                          @Param("countryCode") String countryCode,
+                          @Param("includeBots") boolean includeBots);
+
+    @Query(value = """
+            SELECT new dev.yunseong.website.manage.domain.GeoRequestStat(
+                r.uri, r.statusCode, r.isBot, r.cityName, r.createdAt)
+            FROM RequestStatistics r
+            WHERE r.createdAt >= :startDate AND r.countryCode = :countryCode
+              AND (:includeBots = true OR r.isBot = false)
+              AND (:cityId IS NULL OR r.cityGeoNameId = :cityId)
+            ORDER BY r.createdAt DESC, r.id DESC
+            """,
+            countQuery = """
+                    SELECT COUNT(r) FROM RequestStatistics r
+                    WHERE r.createdAt >= :startDate AND r.countryCode = :countryCode
+                      AND (:includeBots = true OR r.isBot = false)
+                      AND (:cityId IS NULL OR r.cityGeoNameId = :cityId)
+                    """)
+    Page<GeoRequestStat> findGeoRequests(@Param("startDate") LocalDateTime startDate,
+                                         @Param("countryCode") String countryCode,
+                                         @Param("includeBots") boolean includeBots,
+                                         @Param("cityId") Long cityId,
+                                         Pageable pageable);
+
     /**
      * Backfill input, chunked by distinct IP. Deliberately not filtered on
      * {@code countryCode IS NULL}: the IP set must stay stable while the
@@ -58,6 +107,28 @@ public interface RequestGeoStatisticsRepository extends JpaRepository<RequestSta
 
     @Transactional
     @Modifying(clearAutomatically = true)
-    @Query("UPDATE RequestStatistics r SET r.countryCode = :countryCode WHERE r.ip = :ip AND r.countryCode IS NULL")
-    int assignCountryCode(@Param("ip") String ip, @Param("countryCode") String countryCode);
+    @Query("""
+            UPDATE RequestStatistics r SET
+                r.countryCode = COALESCE(r.countryCode, :countryCode),
+                r.cityGeoNameId = COALESCE(r.cityGeoNameId, :cityId),
+                r.cityName = COALESCE(r.cityName, :cityName),
+                r.latitude = COALESCE(r.latitude, :latitude),
+                r.longitude = COALESCE(r.longitude, :longitude),
+                r.accuracyRadiusKm = COALESCE(r.accuracyRadiusKm, :accuracyRadiusKm)
+            WHERE r.ip = :ip AND (
+                (r.countryCode IS NULL AND :countryCode IS NOT NULL)
+                OR (r.cityGeoNameId IS NULL AND :cityId IS NOT NULL)
+                OR (r.cityName IS NULL AND :cityName IS NOT NULL)
+                OR (r.latitude IS NULL AND :latitude IS NOT NULL)
+                OR (r.longitude IS NULL AND :longitude IS NOT NULL)
+                OR (r.accuracyRadiusKm IS NULL AND :accuracyRadiusKm IS NOT NULL)
+            )
+            """)
+    int assignLocation(@Param("ip") String ip,
+                       @Param("countryCode") String countryCode,
+                       @Param("cityId") Long cityId,
+                       @Param("cityName") String cityName,
+                       @Param("latitude") Double latitude,
+                       @Param("longitude") Double longitude,
+                       @Param("accuracyRadiusKm") Integer accuracyRadiusKm);
 }
