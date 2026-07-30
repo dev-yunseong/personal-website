@@ -35,12 +35,15 @@ class RequestStatisticsServiceTest {
     @Mock
     private RequestStatisticsRepository requestStatisticsRepository;
 
+    @Mock
+    private GeoIpCountryResolver geoIpCountryResolver;
+
     @InjectMocks
     private RequestStatisticsService requestStatisticsService;
 
     @BeforeEach
     void setUp() {
-        requestStatisticsService = new RequestStatisticsService(requestStatisticsRepository);
+        requestStatisticsService = new RequestStatisticsService(requestStatisticsRepository, geoIpCountryResolver);
     }
 
     @Test
@@ -121,6 +124,36 @@ class RequestStatisticsServiceTest {
         assertEquals(42, savedStats.get(0).getDurationMs());
         assertFalse(savedStats.get(1).isBot());
         assertEquals(7, savedStats.get(1).getDurationMs());
+    }
+
+    @Test
+    void recordRequest_StoresResolvedCountryCode() {
+        // Given
+        when(geoIpCountryResolver.resolveCountryCode("1.1.1.1")).thenReturn("AU");
+
+        // When
+        requestStatisticsService.recordRequest("/", "GET", null, "Mozilla/5.0", "1.1.1.1", 200, 5);
+        requestStatisticsService.persistStatistics();
+
+        // Then
+        ArgumentCaptor<List<RequestStatistics>> captor = ArgumentCaptor.forClass(List.class);
+        verify(requestStatisticsRepository, times(1)).saveAll(captor.capture());
+        assertEquals("AU", captor.getValue().get(0).getCountryCode());
+    }
+
+    @Test
+    void recordRequest_WithoutGeoDatabase_LeavesCountryCodeNull() {
+        // Given - resolver with no database returns null for every address
+        when(geoIpCountryResolver.resolveCountryCode("1.1.1.1")).thenReturn(null);
+
+        // When
+        requestStatisticsService.recordRequest("/", "GET", null, "Mozilla/5.0", "1.1.1.1", 200, 5);
+        requestStatisticsService.persistStatistics();
+
+        // Then
+        ArgumentCaptor<List<RequestStatistics>> captor = ArgumentCaptor.forClass(List.class);
+        verify(requestStatisticsRepository, times(1)).saveAll(captor.capture());
+        assertNull(captor.getValue().get(0).getCountryCode());
     }
 
     @Test

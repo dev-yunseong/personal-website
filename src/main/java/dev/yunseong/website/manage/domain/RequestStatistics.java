@@ -49,16 +49,20 @@ public class RequestStatistics {
     @Column(name = "duration_ms")
     private Integer durationMs;
 
+    /** ISO 3166-1 alpha-2, resolved from {@link #ip} at insert time. Null when unresolved. */
+    @Column(name = "country_code", length = 2)
+    private String countryCode;
+
     public RequestStatistics(String uri, String method, String referer, String userAgent, String ipAddress) {
-        this(null, uri, method, referer, userAgent, ipAddress, null, null, false, null);
+        this(null, uri, method, referer, userAgent, ipAddress, null, null, false, null, null);
     }
 
     public RequestStatistics(String uri, String method, String referer, String userAgent, String ipAddress, Integer statusCode) {
-        this(null, uri, method, referer, userAgent, ipAddress, statusCode, null, false, null);
+        this(null, uri, method, referer, userAgent, ipAddress, statusCode, null, false, null, null);
     }
 
     public RequestStatistics(String uri, String method, String referer, String userAgent, String ipAddress,
-                             Integer statusCode, boolean isBot, Integer durationMs) {
-        this(null, uri, method, referer, userAgent, ipAddress, statusCode, null, isBot, durationMs);
+                             Integer statusCode, boolean isBot, Integer durationMs, String countryCode) {
+        this(null, uri, method, referer, userAgent, ipAddress, statusCode, null, isBot, durationMs, countryCode);
     }
 }
