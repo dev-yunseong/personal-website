@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- Countries tab for the admin console. Owns its own markup and script;
+     dashboard.html only wires the tab button and the load dispatch. -->
+<div class="tab-pane fade" id="pane-geo" role="tabpanel" th:fragment="geo">
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h5 class="mb-0">Requests by Country</h5>
+            <div class="d-flex gap-3 align-items-center flex-wrap">
+                <div class="form-check mb-0">
+                    <input class="form-check-input" type="checkbox" id="geo-include-bots">
+                    <label class="form-check-label" for="geo-include-bots">봇 포함</label>
+                </div>
+                <button class="btn btn-sm btn-outline-secondary" id="geo-backfill" type="button">Backfill</button>
+            </div>
+        </div>
+        <div class="card-body" id="geo-content">
+            <div class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        let days = 7;
+        let geoPage = 0;
+        const regionNames = (() => {
+            try { return new Intl.DisplayNames(['ko'], {type: 'region'}); } catch (e) { return null; }
+        })();
+
+        function escHtml(s) {
+            return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        function flagEmoji(code) {
+            if (!/^[A-Za-z]{2}$/.test(code)) return '🏳️';
+            return String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
+        }
+
+        function countryName(code) {
+            try { return regionNames ? regionNames.of(code.toUpperCase()) : code; } catch (e) { return code; }
+        }
+
+        function includeBots() {
+            return document.getElementById('geo-include-bots').checked;
+        }
+
+        function csrfHeaders() {
+            const token = document.querySelector('meta[name="_csrf"]');
+            const header = document.querySelector('meta[name="_csrf_header"]');
+            return (token && header) ? {[header.getAttribute('content')]: token.getAttribute('content')} : {};
+        }
+
+        function render(d) {
+            const el = document.getElementById('geo-content');
+            let html = '';
+            if (!d.resolverAvailable) {
+                html += '<div class="alert alert-warning">GeoIP 데이터베이스를 찾을 수 없습니다. 새 요청의 country_code 는 비어 있고 Backfill 도 동작하지 않습니다.</div>';
+            }
+            if (!d.content || d.content.length === 0) {
+                html += '<div class="alert alert-info">국가 데이터가 없습니다. 컬럼 추가 이전 행은 Backfill 이 필요합니다.</div>';
+                el.innerHTML = html;
+                return;
+            }
+            html += '<table class="table table-striped"><thead><tr><th>Country</th><th>Total Requests</th></tr></thead><tbody>';
+            d.content.forEach(row => {
+                const code = row.countryCode || '';
+                html += `<tr><td>${flagEmoji(code)} ${escHtml(countryName(code))} <small class="text-muted">${escHtml(code)}</small></td>` +
+                        `<td>${escHtml(String(row.requestCount))}</td></tr>`;
+            });
+            html += '</tbody></table>';
+            if (d.totalPages > 1) {
+                html += '<nav><ul class="pagination pagination-sm justify-content-center">' +
+                        `<li class="page-item ${d.first ? 'disabled' : ''}"><button class="page-link" data-geo-page="${d.number - 1}" type="button">&laquo;</button></li>` +
+                        `<li class="page-item disabled"><span class="page-link">${d.number + 1} / ${d.totalPages}</span></li>` +
+                        `<li class="page-item ${d.last ? 'disabled' : ''}"><button class="page-link" data-geo-page="${d.number + 1}" type="button">&raquo;</button></li>` +
+                        '</ul></nav>';
+            }
+            html += `<p class="text-muted mb-0"><small>미해석 요청 ${escHtml(String(d.unresolvedRequests))}건</small></p>`;
+            el.innerHTML = html;
+
+            el.querySelectorAll('[data-geo-page]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    geoPage = parseInt(btn.dataset.geoPage);
+                    load();
+                });
+            });
+        }
+
+        function load() {
+            const el = document.getElementById('geo-content');
+            el.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>';
+            const url = new URL('/api/admin/console/geo/countries', location.origin);
+            url.searchParams.set('days', days);
+            url.searchParams.set('geoPage', geoPage);
+            url.searchParams.set('includeBots', includeBots());
+            fetch(url, {credentials: 'same-origin'})
+                .then(r => { if (!r.ok) throw new Error('API error ' + r.status); return r.json(); })
+                .then(render)
+                .catch(() => { el.innerHTML = '<div class="alert alert-danger">Failed to load data.</div>'; });
+        }
+
+        document.getElementById('geo-include-bots').addEventListener('change', () => {
+            geoPage = 0;
+            load();
+        });
+
+        document.getElementById('geo-backfill').addEventListener('click', (event) => {
+            const btn = event.currentTarget;
+            btn.disabled = true;
+            btn.textContent = 'Backfilling…';
+            fetch('/api/admin/console/geo/backfill', {
+                method: 'POST', credentials: 'same-origin', headers: csrfHeaders()
+            })
+                .then(r => { if (!r.ok) throw new Error('API error ' + r.status); return r.json(); })
+                .then(d => {
+                    btn.textContent = d.resolverAvailable ? `Backfill (${d.rowsUpdated} rows)` : 'Backfill (no database)';
+                    geoPage = 0;
+                    load();
+                })
+                .catch(() => { btn.textContent = 'Backfill failed'; })
+                .finally(() => { btn.disabled = false; });
+        });
+
+        // Entry point used by the dashboard tab dispatch.
+        window.loadGeo = function (selectedDays) {
+            if (selectedDays !== undefined && selectedDays !== days) {
+                days = selectedDays;
+                geoPage = 0;
+            }
+            load();
+        };
+    })();
+    </script>
+</div>
+
+</body>
+</html>
