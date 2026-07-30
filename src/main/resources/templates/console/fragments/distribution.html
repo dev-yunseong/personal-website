@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<body>
+<div th:fragment="distribution" class="tab-pane fade" id="pane-distribution" role="tabpanel">
+    <style>
+        /* Heatmap is a plain CSS grid: 7 x 24 static cells need no charting library. */
+        .dist-heatmap {
+            display: grid;
+            grid-template-columns: 2.5rem repeat(24, minmax(0, 1fr));
+            gap: 2px;
+            align-items: center;
+        }
+        .dist-heatmap__cell {
+            aspect-ratio: 1;
+            min-height: .75rem;
+            border-radius: 2px;
+            outline: 1px solid rgba(0, 0, 0, .05);
+        }
+        .dist-heatmap__label {
+            font-size: .7rem;
+            line-height: 1;
+            text-align: center;
+            color: var(--bs-secondary-color, #6c757d);
+        }
+        .dist-heatmap__label--day {
+            text-align: right;
+            padding-right: .35rem;
+        }
+        .dist-bar {
+            height: .6rem;
+            border-radius: .3rem;
+            background-color: rgba(13, 110, 253, .85);
+        }
+        .dist-bar-track {
+            height: .6rem;
+            border-radius: .3rem;
+            background-color: rgba(13, 110, 253, .12);
+        }
+        .dist-slice-name {
+            width: 9rem;
+        }
+        .dist-slice-count {
+            width: 7rem;
+        }
+    </style>
+
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h5 class="mb-0">Traffic Distribution</h5>
+            <div class="btn-group" role="group" aria-label="Bot traffic">
+                <button class="btn btn-outline-dark btn-sm js-dist-bots active" data-bots="false" type="button">봇 제외</button>
+                <button class="btn btn-outline-dark btn-sm js-dist-bots" data-bots="true" type="button">봇 포함</button>
+            </div>
+        </div>
+        <div class="card-body" id="distribution-content">
+            <div class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        const DAY_NAMES = ['월', '화', '수', '목', '금', '토', '일'];
+
+        let includeBots = false;
+        let days = 7;
+
+        function escHtml(s) {
+            return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function heatmapHtml(rows, timeZone) {
+            const max = Math.max(1, ...rows.flat());
+            let html = `<p class="text-muted small mb-2">요일 · 시간 축은 서버 시간대(${escHtml(timeZone)}) 기준입니다. 가장 많은 칸 ${max}건.</p>`;
+            html += '<div class="dist-heatmap">';
+            html += '<div></div>';
+            for (let hour = 0; hour < 24; hour++) {
+                html += `<div class="dist-heatmap__label">${hour % 3 === 0 ? hour : ''}</div>`;
+            }
+            rows.forEach((row, dayIndex) => {
+                html += `<div class="dist-heatmap__label dist-heatmap__label--day">${DAY_NAMES[dayIndex]}</div>`;
+                row.forEach((count, hour) => {
+                    // Square root, not linear: one spike would otherwise wash out every other cell.
+                    const intensity = count === 0 ? 0 : 0.12 + 0.88 * Math.sqrt(count / max);
+                    html += `<div class="dist-heatmap__cell" style="background-color: rgba(13,110,253,${intensity.toFixed(3)})"`
+                        + ` title="${DAY_NAMES[dayIndex]} ${hour}시 · ${count}건"></div>`;
+                });
+            });
+            html += '</div>';
+            return html;
+        }
+
+        function slicesHtml(title, slices) {
+            const total = slices.reduce((sum, slice) => sum + slice.count, 0);
+            let html = `<div class="col-md-4 mb-3"><h6>${escHtml(title)}</h6>`;
+            if (slices.length === 0) {
+                html += '<p class="text-muted small mb-0">데이터 없음</p></div>';
+                return html;
+            }
+            slices.forEach(slice => {
+                const percent = total === 0 ? 0 : 100 * slice.count / total;
+                html += `<div class="d-flex align-items-center gap-2 mb-1">
+                    <div class="dist-slice-name text-truncate small" title="${escHtml(slice.name)}">${escHtml(slice.name)}</div>
+                    <div class="flex-grow-1 dist-bar-track">
+                        <div class="dist-bar" style="width: ${percent.toFixed(1)}%"></div>
+                    </div>
+                    <div class="dist-slice-count text-end text-muted small">${slice.count} (${percent.toFixed(1)}%)</div>
+                </div>`;
+            });
+            return html + '</div>';
+        }
+
+        function render(data) {
+            const el = document.getElementById('distribution-content');
+            const totalRequests = data.hourOfWeekCounts.flat().reduce((sum, count) => sum + count, 0);
+            if (totalRequests === 0) {
+                el.innerHTML = '<div class="alert alert-info mb-0">No traffic in this period. Statistics are saved every 5 minutes.</div>';
+                return;
+            }
+            el.innerHTML = heatmapHtml(data.hourOfWeekCounts, data.timeZone)
+                + '<div class="row mt-4">'
+                + slicesHtml('Device', data.devices)
+                + slicesHtml('Browser', data.browsers)
+                + slicesHtml('OS', data.operatingSystems)
+                + '</div>';
+        }
+
+        // Called by the dashboard tab dispatch; keeps the period it was last given.
+        window.loadDistribution = function (currentDays) {
+            if (currentDays) days = currentDays;
+            const el = document.getElementById('distribution-content');
+            el.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>';
+            const url = new URL('/api/admin/console/distribution', location.origin);
+            url.searchParams.set('days', days);
+            url.searchParams.set('includeBots', includeBots);
+            fetch(url, {credentials: 'same-origin'})
+                .then(r => {
+                    if (!r.ok) throw new Error('API error ' + r.status + ' at /api/admin/console/distribution');
+                    return r.json();
+                })
+                .then(render)
+                .catch(() => {
+                    el.innerHTML = '<div class="alert alert-danger mb-0">Failed to load data.</div>';
+                });
+        };
+
+        document.querySelectorAll('.js-dist-bots').forEach(btn => {
+            btn.addEventListener('click', () => {
+                includeBots = btn.dataset.bots === 'true';
+                document.querySelectorAll('.js-dist-bots').forEach(other => {
+                    other.classList.toggle('active', other === btn);
+                });
+                window.loadDistribution();
+            });
+        });
+    })();
+    </script>
+</div>
+</body>
+
+</html>

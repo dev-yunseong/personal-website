@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div th:fragment="notFoundReport">
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h5 class="mb-0">404 Report</h5>
+            <div class="d-flex gap-2 align-items-center flex-wrap">
+                <div class="form-check form-switch mb-0">
+                    <input class="form-check-input" type="checkbox" role="switch" id="nf-include-bots">
+                    <label class="form-check-label" for="nf-include-bots">Include bots</label>
+                </div>
+                <div class="btn-group" role="group" aria-label="404 report sort">
+                    <button class="btn btn-outline-secondary btn-sm js-nf-sort" data-sort="count_desc" type="button">Occurrences ↓</button>
+                    <button class="btn btn-outline-secondary btn-sm js-nf-sort" data-sort="recent" type="button">Most recent</button>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <p class="text-muted small mb-3">
+                Request collection covers the public route surface only
+                (<code>/</code>, <code>/public/**</code>, <code>/api/public/**</code>), so scanner-style probes of
+                unrelated paths are largely not recorded. This report therefore reflects 404s on real user paths.
+                Rows marked <span class="badge bg-warning text-dark">internal</span> were reached from a link on this
+                site and are ours to fix.
+            </p>
+            <div id="nf-content">
+                <div class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        const state = {days: 7, sort: 'count_desc', includeBots: false, page: 0};
+
+        function esc(s) {
+            return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function timestamp(value) {
+            return value ? String(value).replace('T', ' ').substring(0, 19) : '-';
+        }
+
+        function refererCounts(row) {
+            const parts = [];
+            if (row.internalRefererCount) parts.push(`<span class="badge bg-warning text-dark">internal ${row.internalRefererCount}</span>`);
+            if (row.externalRefererCount) parts.push(`<span class="badge bg-info text-dark">external ${row.externalRefererCount}</span>`);
+            if (row.directCount) parts.push(`<span class="badge bg-secondary">direct ${row.directCount}</span>`);
+            return parts.join(' ');
+        }
+
+        function tableHtml(data) {
+            let html = '<div class="table-responsive"><table class="table table-striped table-hover align-middle">'
+                + '<thead><tr><th>URI</th><th>404s</th><th>Source</th><th>First seen</th><th>Last seen</th><th>Representative referer</th></tr></thead><tbody>';
+            data.content.forEach(row => {
+                html += `<tr class="${row.internalRefererCount ? 'table-warning' : ''}">
+                    <td><code>${esc(row.uri)}</code></td>
+                    <td>${row.occurrences}</td>
+                    <td>${refererCounts(row)}</td>
+                    <td><small class="text-muted">${esc(timestamp(row.firstSeen))}</small></td>
+                    <td><small class="text-muted">${esc(timestamp(row.lastSeen))}</small></td>
+                    <td><small class="text-muted">${esc(row.sampleReferer || '-')}</small></td>
+                </tr>`;
+            });
+            html += '</tbody></table></div>';
+            if (data.totalPages > 1) {
+                html += `<nav><ul class="pagination pagination-sm justify-content-center mb-0">
+                    <li class="page-item ${data.first ? 'disabled' : ''}"><button class="page-link" data-nf-page="${data.number - 1}" type="button">&laquo;</button></li>
+                    <li class="page-item disabled"><span class="page-link">${data.number + 1} / ${data.totalPages}</span></li>
+                    <li class="page-item ${data.last ? 'disabled' : ''}"><button class="page-link" data-nf-page="${data.number + 1}" type="button">&raquo;</button></li>
+                </ul></nav>`;
+            }
+            return html;
+        }
+
+        function render() {
+            const el = document.getElementById('nf-content');
+            el.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>';
+
+            const url = new URL('/api/admin/console/not-found', location.origin);
+            url.searchParams.set('days', state.days);
+            url.searchParams.set('sort', state.sort);
+            url.searchParams.set('includeBots', state.includeBots);
+            url.searchParams.set('page', state.page);
+
+            fetch(url, {credentials: 'same-origin'}).then(r => {
+                if (!r.ok) throw new Error('API error ' + r.status);
+                return r.json();
+            }).then(data => {
+                if (!data.content || data.content.length === 0) {
+                    el.innerHTML = '<div class="alert alert-success mb-0">No 404s recorded on public routes for this period.</div>';
+                    return;
+                }
+                el.innerHTML = tableHtml(data);
+                el.querySelectorAll('[data-nf-page]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        state.page = parseInt(btn.dataset.nfPage);
+                        render();
+                    });
+                });
+            }).catch(() => {
+                el.innerHTML = '<div class="alert alert-danger mb-0">Failed to load 404 report.</div>';
+            });
+        }
+
+        function markActiveSort() {
+            document.querySelectorAll('.js-nf-sort').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.sort === state.sort);
+            });
+        }
+
+        document.querySelectorAll('.js-nf-sort').forEach(btn => {
+            btn.addEventListener('click', () => {
+                state.sort = btn.dataset.sort;
+                state.page = 0;
+                markActiveSort();
+                render();
+            });
+        });
+
+        document.getElementById('nf-include-bots').addEventListener('change', event => {
+            state.includeBots = event.target.checked;
+            state.page = 0;
+            render();
+        });
+
+        markActiveSort();
+
+        // Entry point for the dashboard tab dispatch; `days` comes from the shared period filter.
+        window.loadNotFound = function (days) {
+            if (typeof days === 'number' && days !== state.days) {
+                state.days = days;
+                state.page = 0;
+            }
+            render();
+        };
+    })();
+    </script>
+</div>
+
+</body>
+</html>

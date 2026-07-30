@@ -94,3 +94,28 @@ CREATE TABLE chat_conversations (
 
 CREATE INDEX idx_chat_conversations_ip ON chat_conversations(ip);
 CREATE INDEX idx_chat_conversations_created_at ON chat_conversations(created_at);
+
+-- ADD Bot Flag And Response Time To Statistics
+ALTER TABLE request_statistics ADD COLUMN is_bot BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE request_statistics ADD COLUMN duration_ms INTEGER;
+
+CREATE INDEX idx_request_statistics_is_bot ON request_statistics(is_bot);
+
+-- Backfill is_bot for rows written before the column existed. Keep the pattern in
+-- sync with BotDetector; a missing User-Agent counts as a bot there too.
+UPDATE request_statistics
+SET is_bot = TRUE
+WHERE user_agent IS NULL
+   OR btrim(user_agent) = ''
+   OR user_agent ~* 'bot|crawl|spider|slurp|curl|wget|python-requests|httpx|scrapy|okhttp|java/|go-http-client|libwww-perl|headlesschrome|facebookexternalhit|feedfetcher|monitoring|uptime';
+
+-- ADD Country Code To Statistics
+-- Resolved from ip at insert time, so reads are a plain GROUP BY country_code.
+ALTER TABLE request_statistics ADD COLUMN country_code CHAR(2);
+
+CREATE INDEX idx_request_statistics_country_code ON request_statistics(country_code);
+
+-- Existing rows cannot be backfilled in SQL: the mapping lives in the MaxMind
+-- database. After deploying, press "Backfill" on the console dashboard
+-- Countries tab (POST /api/admin/console/geo/backfill). It is chunked and safe
+-- to repeat; only rows whose country_code is still null are written.

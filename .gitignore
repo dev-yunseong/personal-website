@@ -43,3 +43,7 @@ out/
 
 ### dot env
 .env
+
+### MaxMind GeoLite2 database (licensed, never committed)
+*.mmdb
+geoip/

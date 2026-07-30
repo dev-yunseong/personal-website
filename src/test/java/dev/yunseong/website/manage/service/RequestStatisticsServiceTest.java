@@ -35,47 +35,125 @@ class RequestStatisticsServiceTest {
     @Mock
     private RequestStatisticsRepository requestStatisticsRepository;
 
+    @Mock
+    private GeoIpCountryResolver geoIpCountryResolver;
+
     @InjectMocks
     private RequestStatisticsService requestStatisticsService;
 
     @BeforeEach
     void setUp() {
-        requestStatisticsService = new RequestStatisticsService(requestStatisticsRepository);
+        requestStatisticsService = new RequestStatisticsService(requestStatisticsRepository, geoIpCountryResolver);
     }
 
     @Test
     void recordRequest_WithPublicUrl_RecordsStatistics() {
         // When
-        requestStatisticsService.recordRequest("/public/memos/1", "GET", "https://example.com", "Mozilla/5.0", "1.1.1.1");
-        requestStatisticsService.recordRequest("/public/memos/1", "GET", "https://example.com", "Mozilla/5.0", "1.1.1.1");
-        requestStatisticsService.recordRequest("/public/memos/2", "GET", null, "Chrome/91.0", "1.1.1.1");
+        requestStatisticsService.recordRequest("/public/memos/1", "GET", "https://example.com", "Mozilla/5.0", "1.1.1.1", 200, 12);
+        requestStatisticsService.recordRequest("/public/memos/1", "GET", "https://example.com", "Mozilla/5.0", "1.1.1.1", 200, 12);
+        requestStatisticsService.recordRequest("/public/memos/2", "GET", null, "Chrome/91.0", "1.1.1.1", 200, 12);
 
         // Then - verify by persisting
         requestStatisticsService.persistStatistics();
-        
+
         ArgumentCaptor<List<RequestStatistics>> captor = ArgumentCaptor.forClass(List.class);
         verify(requestStatisticsRepository, times(1)).saveAll(captor.capture());
-        
+
         List<RequestStatistics> savedStats = captor.getValue();
         assertEquals(3, savedStats.size());
     }
 
     @Test
+    void recordRequest_WithWhitelistedPublicSurface_RecordsStatistics() {
+        // When
+        requestStatisticsService.recordRequest("/", "GET", null, "Mozilla/5.0", "1.1.1.1", 200, 5);
+        requestStatisticsService.recordRequest("/public/search", "GET", null, "Mozilla/5.0", "1.1.1.1", 200, 5);
+        requestStatisticsService.recordRequest("/api/public/search/suggestions", "GET", null, "Mozilla/5.0", "1.1.1.1", 200, 5);
+
+        // Then
+        requestStatisticsService.persistStatistics();
+
+        ArgumentCaptor<List<RequestStatistics>> captor = ArgumentCaptor.forClass(List.class);
+        verify(requestStatisticsRepository, times(1)).saveAll(captor.capture());
+        assertEquals(List.of("/", "/public/search", "/api/public/search/suggestions"),
+                captor.getValue().stream().map(RequestStatistics::getUri).toList());
+    }
+
+    @Test
     void recordRequest_WithNonPublicUrl_DoesNotRecordStatistics() {
         // When
-        requestStatisticsService.recordRequest("/admin/console", "GET", null, null, "1.1.1.1");
-        requestStatisticsService.recordRequest("/", "GET", null, null, "1.1.1.1");
+        requestStatisticsService.recordRequest("/admin/console", "GET", null, "Mozilla/5.0", "1.1.1.1", 200, 5);
+        requestStatisticsService.recordRequest("/api/admin/console/summary", "GET", null, "Mozilla/5.0", "1.1.1.1", 200, 5);
+        requestStatisticsService.recordRequest("/css/main.css", "GET", null, "Mozilla/5.0", "1.1.1.1", 200, 5);
+        requestStatisticsService.recordRequest("/js/chat.js", "GET", null, "Mozilla/5.0", "1.1.1.1", 200, 5);
+        requestStatisticsService.recordRequest("/images/logo.png", "GET", null, "Mozilla/5.0", "1.1.1.1", 200, 5);
+        requestStatisticsService.recordRequest("/favicon.ico", "GET", null, "Mozilla/5.0", "1.1.1.1", 200, 5);
+        requestStatisticsService.recordRequest("/robots.txt", "GET", null, "Mozilla/5.0", "1.1.1.1", 200, 5);
+        requestStatisticsService.recordRequest("/sitemap.xml", "GET", null, "Mozilla/5.0", "1.1.1.1", 200, 5);
+        requestStatisticsService.recordRequest("/.well-known/security.txt", "GET", null, "Mozilla/5.0", "1.1.1.1", 200, 5);
 
         // Then - verify by persisting
         requestStatisticsService.persistStatistics();
-        
+
         verify(requestStatisticsRepository, never()).saveAll(any());
     }
 
     @Test
     void recordRequest_WithNullUri_DoesNotThrowException() {
         // When/Then
-        assertDoesNotThrow(() -> requestStatisticsService.recordRequest(null, "GET", null, null, "1.1.1.1"));
+        assertDoesNotThrow(() -> requestStatisticsService.recordRequest(null, "GET", null, "Mozilla/5.0", "1.1.1.1", 200, 5));
+    }
+
+    @Test
+    void recordRequest_StoresBotFlagAndDuration() {
+        // When
+        requestStatisticsService.recordRequest("/", "GET", null,
+                "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)", "1.1.1.1", 200, 42);
+        requestStatisticsService.recordRequest("/", "GET", null,
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15",
+                "1.1.1.1", 200, 7);
+
+        // Then
+        requestStatisticsService.persistStatistics();
+
+        ArgumentCaptor<List<RequestStatistics>> captor = ArgumentCaptor.forClass(List.class);
+        verify(requestStatisticsRepository, times(1)).saveAll(captor.capture());
+
+        List<RequestStatistics> savedStats = captor.getValue();
+        assertTrue(savedStats.get(0).isBot());
+        assertEquals(42, savedStats.get(0).getDurationMs());
+        assertFalse(savedStats.get(1).isBot());
+        assertEquals(7, savedStats.get(1).getDurationMs());
+    }
+
+    @Test
+    void recordRequest_StoresResolvedCountryCode() {
+        // Given
+        when(geoIpCountryResolver.resolveCountryCode("1.1.1.1")).thenReturn("AU");
+
+        // When
+        requestStatisticsService.recordRequest("/", "GET", null, "Mozilla/5.0", "1.1.1.1", 200, 5);
+        requestStatisticsService.persistStatistics();
+
+        // Then
+        ArgumentCaptor<List<RequestStatistics>> captor = ArgumentCaptor.forClass(List.class);
+        verify(requestStatisticsRepository, times(1)).saveAll(captor.capture());
+        assertEquals("AU", captor.getValue().get(0).getCountryCode());
+    }
+
+    @Test
+    void recordRequest_WithoutGeoDatabase_LeavesCountryCodeNull() {
+        // Given - resolver with no database returns null for every address
+        when(geoIpCountryResolver.resolveCountryCode("1.1.1.1")).thenReturn(null);
+
+        // When
+        requestStatisticsService.recordRequest("/", "GET", null, "Mozilla/5.0", "1.1.1.1", 200, 5);
+        requestStatisticsService.persistStatistics();
+
+        // Then
+        ArgumentCaptor<List<RequestStatistics>> captor = ArgumentCaptor.forClass(List.class);
+        verify(requestStatisticsRepository, times(1)).saveAll(captor.capture());
+        assertNull(captor.getValue().get(0).getCountryCode());
     }
 
     @Test
@@ -90,9 +168,9 @@ class RequestStatisticsServiceTest {
     @Test
     void persistStatistics_SavesCorrectData() {
         // Given
-        requestStatisticsService.recordRequest("/public/memos/1", "GET", "https://referer.com", "Mozilla/5.0", "1.1.1.1");
-        requestStatisticsService.recordRequest("/public/memos/1", "GET", "https://another-referer.com", "Chrome/91.0", "1.1.1.1");
-        requestStatisticsService.recordRequest("/public/memos/1", "GET", "https://last-referer.com", "Safari/14.0", "1.1.1.1");
+        requestStatisticsService.recordRequest("/public/memos/1", "GET", "https://referer.com", "Mozilla/5.0", "1.1.1.1", 200, 11);
+        requestStatisticsService.recordRequest("/public/memos/1", "GET", "https://another-referer.com", "Chrome/91.0", "1.1.1.1", 200, 22);
+        requestStatisticsService.recordRequest("/public/memos/1", "GET", "https://last-referer.com", "Safari/14.0", "1.1.1.1", 200, 33);
 
         // When
         requestStatisticsService.persistStatistics();

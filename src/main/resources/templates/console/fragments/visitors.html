@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div class="tab-pane fade" id="pane-visitors" role="tabpanel" th:fragment="pane">
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h5 class="mb-0">Visitors &amp; Sessions</h5>
+            <div class="btn-group" role="group" aria-label="Bot traffic">
+                <button class="btn btn-outline-dark btn-sm js-visitor-bots active" data-bots="exclude" type="button">봇 제외</button>
+                <button class="btn btn-outline-dark btn-sm js-visitor-bots" data-bots="include" type="button">봇 포함</button>
+            </div>
+        </div>
+        <div class="card-body">
+            <p class="text-muted small mb-3">
+                방문자는 IP + User-Agent 조합으로 식별한 <strong>근사치</strong>입니다.
+                같은 NAT 뒤의 여러 사용자는 1명으로 합쳐지고, IP 가 바뀌는 모바일 사용자는 여러 명으로 나뉩니다.
+                세션은 30분 무활동을 기준으로 분할합니다.
+                페이지뷰는 수집 대상 요청 수 기준이므로 <code>/api/public/**</code> 호출도 포함됩니다.
+            </p>
+            <div id="visitors-content">
+                <div class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        let excludeBots = true;
+        let lastDays = 7;
+
+        function esc(s) {
+            return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        function percent(rate) {
+            return (rate * 100).toFixed(1) + '%';
+        }
+
+        function duration(seconds) {
+            if (seconds < 60) return seconds + '초';
+            const minutes = Math.floor(seconds / 60);
+            if (minutes < 60) return minutes + '분 ' + (seconds % 60) + '초';
+            return Math.floor(minutes / 60) + '시간 ' + (minutes % 60) + '분';
+        }
+
+        function tile(label, value, hint) {
+            return `<div class="col-6 col-md-3 mb-3">
+                <div class="card h-100"><div class="card-body py-3">
+                    <div class="text-muted small">${esc(label)}</div>
+                    <div class="fs-4">${esc(value)}</div>
+                    <div class="text-muted" style="font-size:.75rem;">${esc(hint || '')}</div>
+                </div></div>
+            </div>`;
+        }
+
+        function pageTable(title, countLabel, pages) {
+            if (!pages || pages.length === 0) {
+                return `<div class="col-md-6"><h6>${esc(title)}</h6><p class="text-muted small">데이터 없음</p></div>`;
+            }
+            let html = `<div class="col-md-6"><h6>${esc(title)}</h6>`;
+            html += `<table class="table table-sm table-striped"><thead><tr><th>Page</th><th class="text-end">${esc(countLabel)}</th></tr></thead><tbody>`;
+            pages.forEach(page => {
+                html += `<tr><td>${esc(page.uri)}</td><td class="text-end">${esc(String(page.sessionCount))}</td></tr>`;
+            });
+            return html + '</tbody></table></div>';
+        }
+
+        function render(data) {
+            let html = '<div class="row">';
+            html += tile('순 방문자', data.uniqueVisitors, '근사치');
+            html += tile('세션', data.sessions, '30분 무활동 기준');
+            html += tile('페이지뷰', data.pageViews, '');
+            html += tile('세션당 페이지', data.pagesPerSession.toFixed(2), '');
+            html += tile('단일 페이지 세션', percent(data.singlePageSessionRate), '이탈률');
+            html += tile('세션 길이 중간값', duration(data.medianSessionSeconds), '');
+            html += tile('재방문 방문자', percent(data.returningVisitorRate), '세션 2회 이상');
+            html += '</div>';
+            html += '<div class="row mt-2">';
+            html += pageTable('상위 유입 페이지', '세션', data.topEntryPages);
+            html += pageTable('상위 이탈 페이지', '세션', data.topExitPages);
+            return html + '</div>';
+        }
+
+        window.loadVisitors = function (days) {
+            lastDays = days;
+            const el = document.getElementById('visitors-content');
+            el.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>';
+            const url = new URL('/api/admin/console/visitors', location.origin);
+            url.searchParams.set('days', days);
+            url.searchParams.set('excludeBots', excludeBots);
+            fetch(url, {credentials: 'same-origin'}).then(response => {
+                if (!response.ok) throw new Error('API error ' + response.status);
+                return response.json();
+            }).then(data => {
+                el.innerHTML = data.sessions === 0
+                    ? '<div class="alert alert-info">이 기간에 방문 데이터가 없습니다.</div>'
+                    : render(data);
+            }).catch(() => {
+                el.innerHTML = '<div class="alert alert-danger">Failed to load data.</div>';
+            });
+        };
+
+        document.querySelectorAll('.js-visitor-bots').forEach(btn => {
+            btn.addEventListener('click', () => {
+                excludeBots = btn.dataset.bots === 'exclude';
+                document.querySelectorAll('.js-visitor-bots').forEach(other => {
+                    other.classList.toggle('active', other === btn);
+                });
+                window.loadVisitors(lastDays);
+            });
+        });
+    })();
+    </script>
+</div>
+
+</body>
+</html>
