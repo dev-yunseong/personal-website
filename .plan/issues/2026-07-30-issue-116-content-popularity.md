@@ -2,7 +2,7 @@
 
 - Date: 2026-07-30
 - GitHub Issue: #116
-- Status: Draft
+- Status: Complete
 
 ## Goal
 
@@ -30,9 +30,9 @@
 
 ## Approach (Checklist)
 
-- [ ] **Step 0: Recon** (`RequestStatisticsRepository/Service`, `ConsoleApiController`, `UriStat`,
+- [x] **Step 0: Recon** (`RequestStatisticsRepository/Service`, `ConsoleApiController`, `UriStat`,
       `dashboard.html`, `PublicMemoController`, `Memo`, visibility aspect, `WebSecurityConfig`, `schema.sql`)
-- [ ] **Step 1: Implementation**
+- [x] **Step 1: Implementation**
   - `manage/domain/MemoUriParser` — static `extractMemoId(String uri)`; handles query string,
     fragment, trailing slash, sub-paths; rejects the list path `/public/memos`.
   - `manage/domain/MemoTrafficStat`, `manage/domain/CategoryTrafficStat` — response records.
@@ -44,9 +44,9 @@
   - `templates/console/fragments/content.html` — markup + JS + Chart.js doughnut, exposes
     `window.loadContentStats(days)`.
   - `dashboard.html` — nav tab button, pane include, two dispatch lines.
-- [ ] **Step 2: Tests** (`MemoUriParserTest` for parsing edges; `ContentPopularityServiceTest` for
+- [x] **Step 2: Tests** (`MemoUriParserTest` for parsing edges; `ContentPopularityServiceTest` for
       resolution, private/deleted fallback, category totals, evergreen split, bot exclusion)
-- [ ] **Step 3: Rollout / Rollback** (read-only feature, no migration; revert the commits)
+- [x] **Step 3: Rollout / Rollback** (read-only feature, no migration; revert the commits)
 
 ## Visibility Decision
 
@@ -59,8 +59,13 @@
 
 ## Validation
 
-- **Commands to run:** `./gradlew test`
-- **Expected output:** BUILD SUCCESSFUL, new parser/service tests passing.
+- **Commands run:** `./gradlew test --tests 'dev.yunseong.website.manage.*'`, `./gradlew test`
+- **Result:** 211 tests, 29 new, all new tests pass. 10 failures remain in
+  `AdminMiniAppApiControllerTest` and `FileUploadControllerTest`; they fail
+  identically on the untouched base commit `1c6ba37` because this environment has
+  no `.env` (`OpenAI API key must be set`). Unrelated to this change.
+- **Not verified:** the tab was not exercised against a running PostgreSQL
+  instance; template rendering and the JPQL are covered by tests instead.
 
 ## Risks & Rollback
 
