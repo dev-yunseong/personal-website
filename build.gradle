@@ -69,6 +69,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     runtimeOnly 'org.postgresql:postgresql'
 
+    // geo ip (local MaxMind GeoLite2 lookup, no external call on the request path)
+    implementation 'com.maxmind.geoip2:geoip2:4.2.1'
+
     // security
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-aop'

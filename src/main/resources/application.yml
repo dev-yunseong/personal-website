@@ -19,5 +19,8 @@ spring:
       password: ${APPLICATION_PW}
 
 app:
+  # Local MaxMind GeoLite2 database. Absent file => country_code stays null.
+  geoip:
+    database-path: ${GEOIP_DATABASE_PATH:/app/geoip/GeoLite2-Country.mmdb}
   base-url: ${BASE_URL:https://yunseong.dev}
   profile-image-url: ${PROFILE_IMAGE_URL:https://s3.yunseong.dev/agent-artifacts/profile-yunseong.jpg}
