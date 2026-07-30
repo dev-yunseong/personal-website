@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+  Content popularity tab. Self-contained: dashboard.html only wires the nav tab
+  and calls window.loadContentStats(days) when the tab is shown or the period changes.
+-->
+<div class="tab-pane fade" id="pane-content" role="tabpanel" th:fragment="contentTab">
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h5 class="mb-0">Content Popularity</h5>
+            <div class="btn-group" role="group" aria-label="Bot traffic">
+                <button class="btn btn-outline-dark btn-sm js-content-bots active" data-bots="false" type="button">봇 제외</button>
+                <button class="btn btn-outline-dark btn-sm js-content-bots" data-bots="true" type="button">봇 포함</button>
+            </div>
+        </div>
+        <div class="card-body" id="content-body">
+            <div class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>
+        </div>
+    </div>
+
+    <script>
+(function () {
+    let categoryChart = null;
+    let includeBots = false;
+    let days = 7;
+
+    const CATEGORY_COLORS = [
+        'rgba(13,110,253,0.7)', 'rgba(25,135,84,0.7)', 'rgba(255,193,7,0.7)',
+        'rgba(220,53,69,0.7)', 'rgba(13,202,240,0.7)', 'rgba(111,66,193,0.7)',
+        'rgba(253,126,20,0.7)', 'rgba(108,117,125,0.7)'
+    ];
+
+    function esc(s) {
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function publishedLabel(row) {
+        return row.publishedAt ? row.publishedAt.substring(0, 10) : '-';
+    }
+
+    function lifecycleBadge(row) {
+        if (!row.memoId) return '<span class="badge bg-secondary">Unresolved</span>';
+        return row.evergreen
+            ? '<span class="badge bg-success">Evergreen</span>'
+            : '<span class="badge bg-primary">New</span>';
+    }
+
+    function titleCell(row) {
+        if (!row.memoId) {
+            return `<code class="text-muted">${esc(row.uri)}</code>`;
+        }
+        return `<a href="${esc(row.uri)}" target="_blank" rel="noopener">${esc(row.title)}</a>`;
+    }
+
+    function tableHtml(rows) {
+        let html = '<table class="table table-striped align-middle">'
+            + '<thead><tr><th>Title</th><th>Category</th><th>Requests</th><th>Published</th><th>State</th></tr></thead><tbody>';
+        rows.forEach(row => {
+            html += `<tr>
+                <td>${titleCell(row)}</td>
+                <td><small class="text-muted">${esc(row.category || '-')}</small></td>
+                <td>${esc(String(row.requestCount))}</td>
+                <td><small class="text-muted">${esc(publishedLabel(row))}</small></td>
+                <td>${lifecycleBadge(row)}</td>
+            </tr>`;
+        });
+        return html + '</tbody></table>';
+    }
+
+    function renderCategoryChart(categories) {
+        if (categoryChart) { categoryChart.destroy(); categoryChart = null; }
+        if (!categories || categories.length === 0) return;
+        categoryChart = new Chart(document.getElementById('categoryChart'), {
+            type: 'doughnut',
+            data: {
+                labels: categories.map(c => c.category),
+                datasets: [{
+                    data: categories.map(c => c.requestCount),
+                    backgroundColor: categories.map((c, i) => CATEGORY_COLORS[i % CATEGORY_COLORS.length]),
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'right' } }
+            }
+        });
+    }
+
+    function load() {
+        const el = document.getElementById('content-body');
+        el.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>';
+        const url = new URL('/api/admin/console/content', location.origin);
+        url.searchParams.set('days', days);
+        url.searchParams.set('includeBots', includeBots);
+        fetch(url, {credentials: 'same-origin'}).then(r => {
+            if (!r.ok) throw new Error('API error ' + r.status);
+            return r.json();
+        }).then(d => {
+            if (!d.content || d.content.length === 0) {
+                el.innerHTML = '<div class="alert alert-info">No memo traffic in this period yet.</div>';
+                if (categoryChart) { categoryChart.destroy(); categoryChart = null; }
+                return;
+            }
+            el.innerHTML = '<h6 class="text-muted">Traffic by Category</h6>'
+                + '<div style="height:260px;" class="mb-4"><canvas id="categoryChart"></canvas></div>'
+                + '<h6 class="text-muted">Popular Content</h6>'
+                + tableHtml(d.content);
+            renderCategoryChart(d.categories);
+        }).catch(() => {
+            el.innerHTML = '<div class="alert alert-danger">Failed to load data.</div>';
+        });
+    }
+
+    document.querySelectorAll('.js-content-bots').forEach(btn => {
+        btn.addEventListener('click', () => {
+            includeBots = btn.dataset.bots === 'true';
+            document.querySelectorAll('.js-content-bots').forEach(other => {
+                other.classList.toggle('active', other === btn);
+            });
+            load();
+        });
+    });
+
+    window.loadContentStats = function (selectedDays) {
+        days = selectedDays;
+        load();
+    };
+})();
+    </script>
+</div>
+
+</body>
+</html>
