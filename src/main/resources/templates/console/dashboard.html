@@ -66,6 +66,9 @@
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="tab-btn-referer" data-tab="referer" role="tab" type="button">Traffic Sources</button>
             </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-btn-notfound" data-tab="notfound" role="tab" type="button">404 Report</button>
+            </li>
         </ul>
 
         <div class="tab-content">
@@ -161,6 +164,10 @@
 
         <!-- Traffic Sources Tab -->
         <div th:replace="~{console/fragments/referer :: referer}"></div>
+        <!-- 404 Report Tab -->
+        <div class="tab-pane fade" id="pane-notfound" role="tabpanel">
+            <div th:replace="~{console/fragments/not_found_report_fragment :: notFoundReport}"></div>
+        </div>
 
         </div><!-- end tab-content -->
     </div>
@@ -385,6 +392,7 @@
             if (tabName === 'history')  loadHistory();
             if (tabName === 'timeline') loadTimeline();
             if (tabName === 'referer')  loadReferer(STATE.days);
+            if (tabName === 'notfound') loadNotFound(STATE.days);
         }
 
         // ── XSS helper ────────────────────────────────────────────────
@@ -405,6 +413,7 @@
                 if (STATE.tab === 'history')  loadHistory();
                 if (STATE.tab === 'timeline') loadTimeline();
                 if (STATE.tab === 'referer')  loadReferer(STATE.days);
+                if (STATE.tab === 'notfound') loadNotFound(STATE.days);
             });
         });
 
