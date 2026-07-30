@@ -62,6 +62,11 @@ public class RequestStatistics {
     }
 
     public RequestStatistics(String uri, String method, String referer, String userAgent, String ipAddress,
+                             Integer statusCode, boolean isBot, Integer durationMs) {
+        this(uri, method, referer, userAgent, ipAddress, statusCode, isBot, durationMs, null);
+    }
+
+    public RequestStatistics(String uri, String method, String referer, String userAgent, String ipAddress,
                              Integer statusCode, boolean isBot, Integer durationMs, String countryCode) {
         this(null, uri, method, referer, userAgent, ipAddress, statusCode, null, isBot, durationMs, countryCode);
     }
