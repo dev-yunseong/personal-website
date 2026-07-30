@@ -1,9 +1,11 @@
 package dev.yunseong.website.manage.service;
 
 import dev.yunseong.website.manage.domain.CountryStat;
+import dev.yunseong.website.manage.domain.GeoLocation;
 import dev.yunseong.website.manage.repository.RequestGeoStatisticsRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -31,7 +33,7 @@ class RequestGeoStatisticsServiceTest {
     private RequestGeoStatisticsRepository requestGeoStatisticsRepository;
 
     @Mock
-    private GeoIpCountryResolver geoIpCountryResolver;
+    private GeoIpLocationResolver geoIpLocationResolver;
 
     @InjectMocks
     private RequestGeoStatisticsService requestGeoStatisticsService;
@@ -57,27 +59,44 @@ class RequestGeoStatisticsServiceTest {
     }
 
     @Test
-    void backfillCountryCodes_WithoutGeoDatabase_DoesNothing() {
-        when(geoIpCountryResolver.isAvailable()).thenReturn(false);
+    void getCountriesForLastDays_WithZeroDays_UsesAllTimeBoundary() {
+        when(requestGeoStatisticsRepository.findCountryCounts(
+                any(LocalDateTime.class), eq(false), eq(PageRequest.of(0, 10))))
+                .thenReturn(Page.empty());
 
-        assertEquals(0, requestGeoStatisticsService.backfillCountryCodes());
+        requestGeoStatisticsService.getCountriesForLastDays(0, false, 0);
+
+        ArgumentCaptor<LocalDateTime> startDate = ArgumentCaptor.forClass(LocalDateTime.class);
+        verify(requestGeoStatisticsRepository).findCountryCounts(
+                startDate.capture(), eq(false), eq(PageRequest.of(0, 10)));
+        assertEquals(LocalDateTime.of(1970, 1, 1, 0, 0), startDate.getValue());
+    }
+
+    @Test
+    void backfillLocations_WithoutGeoDatabase_DoesNothing() {
+        when(geoIpLocationResolver.isAvailable()).thenReturn(false);
+
+        assertEquals(0, requestGeoStatisticsService.backfillLocations());
         verifyNoInteractions(requestGeoStatisticsRepository);
     }
 
     @Test
-    void backfillCountryCodes_WalksChunksAndSkipsUnresolvableIps() {
-        when(geoIpCountryResolver.isAvailable()).thenReturn(true);
+    void backfillLocations_WalksChunksAndSkipsUnresolvableIps() {
+        when(geoIpLocationResolver.isAvailable()).thenReturn(true);
         when(requestGeoStatisticsRepository.findDistinctIps(PageRequest.of(0, 500)))
                 .thenReturn(List.of("1.1.1.1", "10.0.0.1"));
         when(requestGeoStatisticsRepository.findDistinctIps(PageRequest.of(1, 500)))
                 .thenReturn(List.of());
-        when(geoIpCountryResolver.resolveCountryCode("1.1.1.1")).thenReturn("AU");
-        when(geoIpCountryResolver.resolveCountryCode("10.0.0.1")).thenReturn(null);
-        when(requestGeoStatisticsRepository.assignCountryCode("1.1.1.1", "AU")).thenReturn(3);
+        GeoLocation melbourne = new GeoLocation("AU", 2158177L, "Melbourne", -37.814, 144.9633, 20);
+        when(geoIpLocationResolver.resolve("1.1.1.1")).thenReturn(melbourne);
+        when(geoIpLocationResolver.resolve("10.0.0.1")).thenReturn(null);
+        when(requestGeoStatisticsRepository.assignLocation(
+                "1.1.1.1", "AU", 2158177L, "Melbourne", -37.814, 144.9633, 20)).thenReturn(3);
 
-        assertEquals(3, requestGeoStatisticsService.backfillCountryCodes());
+        assertEquals(3, requestGeoStatisticsService.backfillLocations());
 
         verify(requestGeoStatisticsRepository, times(2)).findDistinctIps(any(PageRequest.class));
-        verify(requestGeoStatisticsRepository, never()).assignCountryCode(eq("10.0.0.1"), anyString());
+        verify(requestGeoStatisticsRepository, never()).assignLocation(
+                eq("10.0.0.1"), anyString(), any(), any(), any(), any(), any());
     }
 }

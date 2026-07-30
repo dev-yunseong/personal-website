@@ -119,3 +119,15 @@ CREATE INDEX idx_request_statistics_country_code ON request_statistics(country_c
 -- database. After deploying, press "Backfill" on the console dashboard
 -- Countries tab (POST /api/admin/console/geo/backfill). It is chunked and safe
 -- to repeat; only rows whose country_code is still null are written.
+
+-- ADD City Location To Statistics
+-- GeoName ID is the stable city key. Coordinates are approximate MaxMind area
+-- coordinates, not a precise request location.
+ALTER TABLE request_statistics ADD COLUMN city_geoname_id BIGINT;
+ALTER TABLE request_statistics ADD COLUMN city_name VARCHAR(255);
+ALTER TABLE request_statistics ADD COLUMN latitude DOUBLE PRECISION;
+ALTER TABLE request_statistics ADD COLUMN longitude DOUBLE PRECISION;
+ALTER TABLE request_statistics ADD COLUMN accuracy_radius_km INTEGER;
+
+-- Existing country rows need the Countries-tab Backfill again after the runtime
+-- database is replaced with GeoLite2-City.

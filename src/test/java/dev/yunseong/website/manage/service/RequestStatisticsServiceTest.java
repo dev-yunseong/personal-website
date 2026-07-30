@@ -1,6 +1,7 @@
 package dev.yunseong.website.manage.service;
 
 import dev.yunseong.website.manage.domain.RequestStatistics;
+import dev.yunseong.website.manage.domain.GeoLocation;
 import dev.yunseong.website.manage.domain.TimelineStat;
 import dev.yunseong.website.manage.domain.UriStat;
 import dev.yunseong.website.manage.repository.RequestStatisticsRepository;
@@ -36,14 +37,14 @@ class RequestStatisticsServiceTest {
     private RequestStatisticsRepository requestStatisticsRepository;
 
     @Mock
-    private GeoIpCountryResolver geoIpCountryResolver;
+    private GeoIpLocationResolver geoIpLocationResolver;
 
     @InjectMocks
     private RequestStatisticsService requestStatisticsService;
 
     @BeforeEach
     void setUp() {
-        requestStatisticsService = new RequestStatisticsService(requestStatisticsRepository, geoIpCountryResolver);
+        requestStatisticsService = new RequestStatisticsService(requestStatisticsRepository, geoIpLocationResolver);
     }
 
     @Test
@@ -127,9 +128,10 @@ class RequestStatisticsServiceTest {
     }
 
     @Test
-    void recordRequest_StoresResolvedCountryCode() {
+    void recordRequest_StoresResolvedCityLocation() {
         // Given
-        when(geoIpCountryResolver.resolveCountryCode("1.1.1.1")).thenReturn("AU");
+        when(geoIpLocationResolver.resolve("1.1.1.1"))
+                .thenReturn(new GeoLocation("AU", 2158177L, "Melbourne", -37.814, 144.9633, 20));
 
         // When
         requestStatisticsService.recordRequest("/", "GET", null, "Mozilla/5.0", "1.1.1.1", 200, 5);
@@ -139,12 +141,16 @@ class RequestStatisticsServiceTest {
         ArgumentCaptor<List<RequestStatistics>> captor = ArgumentCaptor.forClass(List.class);
         verify(requestStatisticsRepository, times(1)).saveAll(captor.capture());
         assertEquals("AU", captor.getValue().get(0).getCountryCode());
+        assertEquals(2158177L, captor.getValue().get(0).getCityGeoNameId());
+        assertEquals("Melbourne", captor.getValue().get(0).getCityName());
+        assertEquals(-37.814, captor.getValue().get(0).getLatitude());
+        assertEquals(20, captor.getValue().get(0).getAccuracyRadiusKm());
     }
 
     @Test
     void recordRequest_WithoutGeoDatabase_LeavesCountryCodeNull() {
         // Given - resolver with no database returns null for every address
-        when(geoIpCountryResolver.resolveCountryCode("1.1.1.1")).thenReturn(null);
+        when(geoIpLocationResolver.resolve("1.1.1.1")).thenReturn(null);
 
         // When
         requestStatisticsService.recordRequest("/", "GET", null, "Mozilla/5.0", "1.1.1.1", 200, 5);
@@ -573,4 +579,3 @@ class RequestStatisticsServiceTest {
     }
 
 }
-
