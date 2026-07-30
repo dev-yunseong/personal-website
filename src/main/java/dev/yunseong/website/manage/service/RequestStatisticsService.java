@@ -1,6 +1,7 @@
 package dev.yunseong.website.manage.service;
 
 import dev.yunseong.website.manage.domain.BotDetector;
+import dev.yunseong.website.manage.domain.GeoLocation;
 import dev.yunseong.website.manage.domain.RequestStatistics;
 import dev.yunseong.website.manage.domain.TimelineStat;
 import dev.yunseong.website.manage.domain.UriStat;
@@ -36,7 +37,7 @@ public class RequestStatisticsService {
     private static final int PAGE_SIZE = 10;
 
     private final RequestStatisticsRepository requestStatisticsRepository;
-    private final GeoIpCountryResolver geoIpCountryResolver;
+    private final GeoIpLocationResolver geoIpLocationResolver;
 
     // In-memory storage for request statistics
     private final Queue<RequestStatistics> requestQueue = new ConcurrentLinkedDeque<>();
@@ -48,10 +49,14 @@ public class RequestStatisticsService {
         }
         boolean isBot = BotDetector.isBot(userAgent);
         // Resolved here, not on read: a local mmdb lookup, so reads stay a plain GROUP BY.
-        String countryCode = geoIpCountryResolver.resolveCountryCode(ipAddress);
-        requestQueue.add(new RequestStatistics(uri, method, referer, userAgent, ipAddress, statusCode, isBot, durationMs, countryCode));
-        log.debug("Recorded request: {} {} {} bot={} {}ms country={} (total in memory: {})",
-                method, uri, statusCode, isBot, durationMs, countryCode, requestQueue.size());
+        GeoLocation location = geoIpLocationResolver.resolve(ipAddress);
+        requestQueue.add(new RequestStatistics(
+                uri, method, referer, userAgent, ipAddress, statusCode, isBot, durationMs, location));
+        log.debug("Recorded request: {} {} {} bot={} {}ms country={} city={} (total in memory: {})",
+                method, uri, statusCode, isBot, durationMs,
+                location == null ? null : location.countryCode(),
+                location == null ? null : location.cityName(),
+                requestQueue.size());
     }
 
     /**

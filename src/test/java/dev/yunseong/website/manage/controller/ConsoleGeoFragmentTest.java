@@ -21,7 +21,14 @@ class ConsoleGeoFragmentTest {
         assertTrue(html.contains("Requests by Country"));
         assertTrue(html.contains("id=\"geo-content\""));
         assertTrue(html.contains("/api/admin/console/geo/countries"));
+        assertTrue(html.contains("/cities"));
+        assertTrue(html.contains("/requests"));
         assertTrue(html.contains("/api/admin/console/geo/backfill"));
+        assertTrue(html.contains("기존 데이터 채우기"));
+        assertTrue(html.contains("id=\"geo-all-time\""));
+        assertTrue(html.contains("전체 기간"));
+        assertTrue(html.contains("id=\"geo-map\""));
+        assertTrue(html.contains("data-country"));
         assertTrue(html.contains("window.loadGeo"), "the dashboard tab dispatch calls window.loadGeo");
     }
 

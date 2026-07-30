@@ -53,21 +53,50 @@ public class RequestStatistics {
     @Column(name = "country_code", length = 2)
     private String countryCode;
 
+    @Column(name = "city_geoname_id")
+    private Long cityGeoNameId;
+
+    @Column(name = "city_name", length = 255)
+    private String cityName;
+
+    @Column
+    private Double latitude;
+
+    @Column
+    private Double longitude;
+
+    @Column(name = "accuracy_radius_km")
+    private Integer accuracyRadiusKm;
+
     public RequestStatistics(String uri, String method, String referer, String userAgent, String ipAddress) {
-        this(null, uri, method, referer, userAgent, ipAddress, null, null, false, null, null);
+        this(null, uri, method, referer, userAgent, ipAddress, null, null, false, null,
+                null, null, null, null, null, null);
     }
 
     public RequestStatistics(String uri, String method, String referer, String userAgent, String ipAddress, Integer statusCode) {
-        this(null, uri, method, referer, userAgent, ipAddress, statusCode, null, false, null, null);
+        this(null, uri, method, referer, userAgent, ipAddress, statusCode, null, false, null,
+                null, null, null, null, null, null);
     }
 
     public RequestStatistics(String uri, String method, String referer, String userAgent, String ipAddress,
                              Integer statusCode, boolean isBot, Integer durationMs) {
-        this(uri, method, referer, userAgent, ipAddress, statusCode, isBot, durationMs, null);
+        this(uri, method, referer, userAgent, ipAddress, statusCode, isBot, durationMs, (String) null);
     }
 
     public RequestStatistics(String uri, String method, String referer, String userAgent, String ipAddress,
                              Integer statusCode, boolean isBot, Integer durationMs, String countryCode) {
-        this(null, uri, method, referer, userAgent, ipAddress, statusCode, null, isBot, durationMs, countryCode);
+        this(null, uri, method, referer, userAgent, ipAddress, statusCode, null, isBot, durationMs,
+                countryCode, null, null, null, null, null);
+    }
+
+    public RequestStatistics(String uri, String method, String referer, String userAgent, String ipAddress,
+                             Integer statusCode, boolean isBot, Integer durationMs, GeoLocation location) {
+        this(null, uri, method, referer, userAgent, ipAddress, statusCode, null, isBot, durationMs,
+                location == null ? null : location.countryCode(),
+                location == null ? null : location.cityGeoNameId(),
+                location == null ? null : location.cityName(),
+                location == null ? null : location.latitude(),
+                location == null ? null : location.longitude(),
+                location == null ? null : location.accuracyRadiusKm());
     }
 }
