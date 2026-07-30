@@ -75,6 +75,9 @@
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="tab-btn-content" data-tab="content" role="tab" type="button">Content</button>
             </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="tab-btn-distribution" data-tab="distribution" role="tab" type="button">Distribution</button>
+            </li>
         </ul>
 
         <div class="tab-content">
@@ -178,6 +181,8 @@
         <div th:replace="~{console/fragments/visitors :: pane}"></div>
         <!-- Content Tab -->
         <div th:replace="~{console/fragments/content :: contentTab}"></div>
+        <!-- Distribution Tab -->
+        <div th:replace="~{console/fragments/distribution :: distribution}"></div>
 
         </div><!-- end tab-content -->
     </div>
@@ -405,6 +410,7 @@
             if (tabName === 'notfound') loadNotFound(STATE.days);
             if (tabName === 'visitors') loadVisitors(STATE.days);
             if (tabName === 'content')  loadContentStats(STATE.days);
+            if (tabName === 'distribution') window.loadDistribution(STATE.days);
         }
 
         // ── XSS helper ────────────────────────────────────────────────
@@ -428,6 +434,7 @@
                 if (STATE.tab === 'notfound') loadNotFound(STATE.days);
                 if (STATE.tab === 'visitors') loadVisitors(STATE.days);
                 if (STATE.tab === 'content')  loadContentStats(STATE.days);
+                if (STATE.tab === 'distribution') window.loadDistribution(STATE.days);
             });
         });
 
