@@ -29,12 +29,12 @@ public class MemoService {
 
     @FilterVisibleContent
     public Page<Memo> searchMemo(String query, Pageable pageable) {
-        return memoRepository.findByQuery(query, pageable);
+        return memoRepository.findByQuery(query, pageOnly(pageable));
     }
 
     @FilterVisibleContent
     public Page<Memo> searchPublicMemo(String query, Pageable pageable) {
-        return memoRepository.findPublicByQuery(query, pageable);
+        return memoRepository.findPublicByQuery(query, pageOnly(pageable));
     }
 
     public long saveMemo(String title, String content) {
@@ -104,13 +104,13 @@ public class MemoService {
 
     @Transactional(readOnly = true)
     public Page<Memo> getMemos(Pageable pageable) {
-        return memoRepository.findAll(pageable);
+        return memoRepository.findAllByOrderByUpdatedAtDesc(pageOnly(pageable));
     }
 
     @FilterVisibleContent
     @Transactional(readOnly = true)
     public Page<Memo> getPublicMemos(Pageable pageable) {
-        return memoRepository.findPublic(pageable);
+        return memoRepository.findPublic(pageOnly(pageable));
     }
 
     @FilterVisibleContent
@@ -123,16 +123,14 @@ public class MemoService {
     @Transactional(readOnly = true)
     public Page<Memo> getMemos(String category, Pageable pageable) {
         category = normalizeCategory(category);
-        PageRequest pageRequest = getCategoryPageRequest(pageable);
-        return memoRepository.findAllByPath(category, pageRequest);
+        return memoRepository.findAllByPath(category, pageOnly(pageable));
     }
 
     @FilterVisibleContent
     @Transactional(readOnly = true)
     public Page<Memo> getPublicMemos(String category, Pageable pageable) {
         category = normalizeCategory(category);
-        PageRequest pageRequest = getCategoryPageRequest(pageable);
-        return memoRepository.findPublicByPath(category, pageRequest);
+        return memoRepository.findPublicByPath(category, pageOnly(pageable));
     }
 
     @FilterVisibleContent
@@ -162,8 +160,14 @@ public class MemoService {
         return category;
     }
 
-    private PageRequest getCategoryPageRequest(Pageable pageable) {
-        return PageRequest
-                .of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by("created_at").descending());
+    /**
+     * Memo listings are always ordered newest-updated-first, and that order is declared by the
+     * query itself (the native {@code ORDER BY updated_at DESC} / the JPQL {@code ORDER BY
+     * m.updatedAt DESC}). Client sorting is therefore not supported: dropping it here keeps the
+     * order rule in one place and stops a stray {@code ?sort=} from being appended to a native
+     * query as a non-existent column.
+     */
+    private PageRequest pageOnly(Pageable pageable) {
+        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
     }
 }
