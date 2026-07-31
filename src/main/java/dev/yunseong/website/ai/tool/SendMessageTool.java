@@ -3,6 +3,7 @@ package dev.yunseong.website.ai.tool;
 import dev.yunseong.website.ai.domain.ToolEventPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.stereotype.Component;
 
@@ -14,9 +15,9 @@ public class SendMessageTool {
     private final ToolEventPublisher toolEventPublisher;
 
     @Tool(description = "Send an intermediate message to the user during a long-running task. Use this to keep the user informed of progress before the final answer is ready.")
-    public void sendMessage(String message) {
+    public void sendMessage(String message, ToolContext toolContext) {
         log.info("sendMessage: {}", message);
-        toolEventPublisher.emitTool("send_message", message);
-        toolEventPublisher.emitMessage(message);
+        toolEventPublisher.emitTool(toolContext, "send_message", message);
+        toolEventPublisher.emitMessage(toolContext, message);
     }
 }

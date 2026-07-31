@@ -62,12 +62,12 @@ public class BlogTools {
     }
 
     @Tool(description = "Search for memos using an English keyword. Returns a list of memo full path.")
-    public List<String> search(String keyword) {
+    public List<String> search(String keyword, ToolContext toolContext) {
 
         if (containsKorean(keyword)) throw new IllegalArgumentException("The keyword must be in English.");
 
         log.info("search: {}", keyword);
-        toolEventPublisher.emitTool("search", keyword);
+        toolEventPublisher.emitTool(toolContext, "search", keyword);
         return memoService.searchMemo(keyword, PageRequest.of(0, 10))
                 .getContent()
                 .stream()
@@ -83,7 +83,7 @@ public class BlogTools {
     public String pwd(ToolContext toolContext) {
         String fullPath = getDirectory(toolContext).getFullPath();
         log.info("pwd: {}", fullPath);
-        toolEventPublisher.emitTool("pwd", null);
+        toolEventPublisher.emitTool(toolContext, "pwd", null);
         return fullPath;
     }
 
@@ -93,7 +93,7 @@ public class BlogTools {
         MemoDirectory newDir = memoFileService.changeDirectory(getDirectory(toolContext), path);
         directoryByConversation.put(conversationId, newDir);
         log.info("cd: {}", path);
-        toolEventPublisher.emitTool("cd", path);
+        toolEventPublisher.emitTool(toolContext, "cd", path);
         return "Current directory changed to: " + newDir.getFullPath();
     }
 
@@ -101,7 +101,7 @@ public class BlogTools {
     public List<String> lsAt(String path, ToolContext toolContext) {
         List<String> names = memoFileService.listNames(getDirectory(toolContext), path);
         log.info("ls: {}, result: {}", path, names);
-        toolEventPublisher.emitTool("ls", path);
+        toolEventPublisher.emitTool(toolContext, "ls", path);
         return names;
     }
 
@@ -109,14 +109,14 @@ public class BlogTools {
     public List<String> ls(ToolContext toolContext) {
         List<String> names = memoFileService.listNames(getDirectory(toolContext));
         log.info("ls: result: {}", names);
-        toolEventPublisher.emitTool("ls", null);
+        toolEventPublisher.emitTool(toolContext, "ls", null);
         return names;
     }
 
     @Tool(description = "Get the content of a specific memo by its path, similar to 'cat' in a file system.")
     public String cat(String path, ToolContext toolContext) {
         log.info("cat: {}", path);
-        toolEventPublisher.emitTool("cat", path);
+        toolEventPublisher.emitTool(toolContext, "cat", path);
         return memoFileService.getMemo(getDirectory(toolContext), path).toString();
     }
 }
