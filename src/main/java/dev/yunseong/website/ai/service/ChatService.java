@@ -6,6 +6,7 @@ import dev.yunseong.website.ai.domain.BlogAgent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.SignalType;
 
 import org.springframework.stereotype.Service;
 
@@ -42,6 +43,13 @@ public class ChatService {
                 })
                 .concatWith(Flux.just("[DONE]"))
                 .doFinally(signal -> {
+                    if (signal == SignalType.CANCEL) {
+                        log.debug("Chat stream cancelled before completion, not saving for ip={}", ip);
+                        return;
+                    }
+                    if (signal == SignalType.ON_ERROR) {
+                        log.warn("Saving partial chat response after stream error for ip={}", ip);
+                    }
                     try {
                         String tools = toolsUsed.isEmpty() ? null : String.join(", ", toolsUsed);
                         chatConversationService.save(ip, message, responseBuilder.toString(), tools);
