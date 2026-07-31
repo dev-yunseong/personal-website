@@ -80,10 +80,16 @@ public class RequestStatisticsService {
         }
 
         log.info("Persisting {} request statistics to database", requestQueue.size());
-        
-        // Create a snapshot of current statistics and clear the list
-        List<RequestStatistics> snapshot = new ArrayList<>(requestQueue);
-        requestQueue.clear();
+
+        // Drain with poll(): copy-then-clear is not atomic, so anything recorded
+        // between the copy and the clear was deleted without ever being saved.
+        // poll() takes and removes the head in one operation, so that window is gone.
+        // FIFO is preserved: add() appends at the tail, poll() takes the head.
+        List<RequestStatistics> snapshot = new ArrayList<>();
+        RequestStatistics item;
+        while ((item = requestQueue.poll()) != null) {
+            snapshot.add(item);
+        }
 
         // Persist to database
         requestStatisticsRepository.saveAll(snapshot);
