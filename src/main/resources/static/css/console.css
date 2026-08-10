@@ -56,20 +56,22 @@
 }
 
 /* ------------------------------------------------------------------ stats */
-/* One hairline grid, not a row of floating cards. The 1px gap over a hairline
-   background draws every divider, including after a wrap. */
+/* One hairline grid, not a row of floating cards. Dividers are drawn per cell
+   (right + bottom, with the container supplying top + left) so a short last
+   row simply ends — no empty filler blocks when the grid wraps. */
 
 .stat-grid {
-  background: var(--hairline);
+  background: var(--surface);
   border: 1px solid var(--hairline);
+  border-width: 1px 0 0 1px;
   display: grid;
-  gap: 1px;
   grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
   margin-bottom: var(--sp-5);
 }
 
 .stat {
-  background: var(--surface);
+  border-bottom: 1px solid var(--hairline);
+  border-right: 1px solid var(--hairline);
   padding: var(--sp-3) var(--sp-4) var(--sp-4);
 }
 
@@ -116,8 +118,6 @@
 .console .nav-tabs {
   gap: var(--sp-1);
   margin-bottom: var(--sp-4);
-  overflow-x: auto;
-  scrollbar-width: thin;
 }
 
 .console .nav-tabs .nav-link {
@@ -138,9 +138,13 @@
   border-radius: var(--r-surface);
 }
 
+/* Panel head: title left, its own controls right, wrapping instead of
+   colliding once the two no longer fit on one line. */
 .console .card-header {
   background: var(--surface);
   border-bottom: 1px solid var(--border-strong);
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-3);
   padding: var(--sp-3) var(--sp-4);
 }
 

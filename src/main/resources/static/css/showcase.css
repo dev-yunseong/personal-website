@@ -206,12 +206,6 @@ p.showcase-status {
   color: var(--text-primary);
 }
 
-/* ------------------------------------------------------------ detail head */
-
-.showcase-detail {
-  margin-bottom: var(--sp-10);
-}
-
 /* ------------------------------------------------------------ admin table */
 /*
  * A real tabular record, so it stays a table — but framed with hairlines
