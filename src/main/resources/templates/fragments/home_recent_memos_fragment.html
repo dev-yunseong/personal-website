@@ -4,17 +4,20 @@
 <body>
 <section th:fragment="recentMemosSection" class="home-recent" aria-labelledby="home-recent-title">
     <div class="section-head">
-        <h2 id="home-recent-title">최근 글</h2>
-        <a class="section-head__all" href="/public/memos">전체 보기</a>
+        <h2 id="home-recent-title">Recent memos</h2>
+        <a class="section-head__all" href="/public/memos">View all</a>
     </div>
 
+    <!-- th:each must sit on an outer element: th:replace has the higher
+         precedence and would otherwise run before the loop variable exists. -->
     <ul class="memo-list" th:if="${!#lists.isEmpty(recentMemos)}">
-        <th:block th:each="memo : ${recentMemos}"
-                  th:replace="~{fragments/memo_card_fragment :: memoRow(memo=${memo})}"></th:block>
+        <th:block th:each="memo : ${recentMemos}">
+            <th:block th:replace="~{fragments/memo_card_fragment :: memoRow(memo=${memo})}"></th:block>
+        </th:block>
     </ul>
 
     <p class="memo-list__empty" th:if="${#lists.isEmpty(recentMemos)}">
-        아직 공개된 글이 없습니다.
+        No public memos yet.
     </p>
 </section>
 </body>

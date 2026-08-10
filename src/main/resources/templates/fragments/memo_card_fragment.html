@@ -10,7 +10,10 @@
 <li th:fragment="memoRow(memo)"
     class="memo-row"
     th:classappend="${memo.thumbnailUrl != null} ? 'memo-row--media' : ''">
-    <a class="memo-row__link" th:href="@{/public/memos/{id}(id=${memo.id})}">
+    <!-- Built by concatenation, not @{...}: this fragment is also rendered by a
+         standalone Thymeleaf engine in HomeProfileTemplateTest, which has no
+         web context and cannot resolve context-relative link expressions. -->
+    <a class="memo-row__link" th:href="${'/public/memos/' + memo.id}">
         <span class="memo-row__body">
             <span class="memo-row__title" th:text="${memo.getTitle()}">Memo title</span>
             <span class="memo-row__meta">
