@@ -47,8 +47,8 @@ body {
 }
 
 ::selection {
-  background: var(--site-accent);
-  color: #fff;
+  background: var(--accent-soft);
+  color: var(--accent-soft-text);
 }
 
 a {
@@ -163,8 +163,6 @@ pre,
   padding-bottom: var(--sp-3);
 }
 
-
-
 .page-subtitle {
   color: var(--site-muted);
   font-family: var(--site-mono);
@@ -194,18 +192,12 @@ h6 {
   box-shadow: none !important;
 }
 
-a.card,
-.game-card,
-.app-card {
+a.card {
   transition: background-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
 
 a.card:hover,
-a.card:focus-visible,
-.game-card:hover,
-.game-card:focus-within,
-.app-card:hover,
-.app-card:focus-within {
+a.card:focus-visible {
   background: var(--site-panel-strong);
   box-shadow: var(--site-shadow) !important;
   color: var(--site-ink) !important;
@@ -253,7 +245,7 @@ a.card:focus-visible,
 .card-text,
 .text-muted,
 .form-text {
-  color: var(--site-muted) !important;
+  color: var(--text-tertiary);
 }
 
 /* --------------------------------------------------------------- memo list */
@@ -382,15 +374,15 @@ a.card:focus-visible,
 .badge.bg-primary {
   background-color: var(--site-ink) !important;
   border-color: var(--site-ink) !important;
-  color: #fff !important;
+  color: var(--ink-on);
 }
 
 .btn-primary:hover,
 .btn-primary:focus,
 .btn-secondary:hover,
 .btn-secondary:focus {
-  background-color: #363636 !important;
-  border-color: #363636 !important;
+  background-color: var(--text-secondary);
+  border-color: var(--text-secondary);
 }
 
 .btn-outline-primary,
@@ -418,9 +410,9 @@ a.card:focus-visible,
 }
 
 .badge.bg-success {
-  background-color: var(--site-sage-soft) !important;
+  background-color: var(--ok-soft);
   border: 1px solid var(--site-sage);
-  color: #314434 !important;
+  color: var(--ok-soft-text);
 }
 
 .form-label {
@@ -446,7 +438,7 @@ a.card:focus-visible,
 
 .form-check-input {
   border-color: var(--site-line-strong);
-  border-radius: 0 !important;
+  border-radius: var(--r-control);
 }
 
 .form-check-input:checked {
@@ -517,10 +509,9 @@ a.card:focus-visible,
 
 .list-group-item {
   background: transparent;
-  border-color: var(--site-line);
-  color: var(--site-ink);
-  font-family: var(--site-mono);
-  font-size: 0.76rem;
+  border-color: var(--hairline);
+  color: var(--text-primary);
+  font-size: var(--fs-body-sm);
 }
 
 .list-group-item.active {
@@ -555,7 +546,7 @@ a.card:focus-visible,
 .table {
   --bs-table-bg: transparent;
   --bs-table-striped-bg: rgba(23, 23, 23, 0.035);
-  --bs-table-hover-bg: rgba(22, 70, 216, 0.065);
+  --bs-table-hover-bg: var(--sunken);
   color: var(--site-ink);
   margin: 0;
 }
@@ -565,14 +556,15 @@ a.card:focus-visible,
   padding: 0.85rem;
 }
 
-.table thead,
-.table-dark {
-  --bs-table-bg: var(--site-ink);
-  --bs-table-color: #fff;
-  font-family: var(--site-mono);
-  font-size: 0.7rem;
-  letter-spacing: 0.035em;
-  text-transform: uppercase;
+.table thead {
+  --bs-table-bg: transparent;
+  --bs-table-color: var(--text-secondary);
+  font-size: var(--fs-meta);
+  font-weight: 620;
+}
+
+.table thead th {
+  border-bottom: 1px solid var(--border-strong);
 }
 
 .pagination {
@@ -580,26 +572,32 @@ a.card:focus-visible,
 }
 
 .page-link {
-  background: var(--site-panel);
-  border-color: var(--site-line-strong);
-  border-radius: 0 !important;
-  color: var(--site-ink);
-  font-family: var(--site-mono);
+  background: var(--surface);
+  border-color: var(--hairline);
+  border-radius: var(--r-control);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
 }
 
-.page-link:hover,
+.page-link:hover {
+  background: var(--sunken);
+  color: var(--text-primary);
+}
+
 .page-item.active .page-link {
-  background: var(--site-accent);
-  border-color: var(--site-accent);
-  color: #fff;
+  background: var(--accent-soft);
+  border-color: var(--accent-line);
+  color: var(--accent-soft-text);
+  font-weight: 620;
 }
 
 .alert {
-  background: var(--site-panel);
-  border: 1px solid currentColor;
-  border-radius: 0;
-  font-family: var(--site-mono);
-  font-size: 0.78rem;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-left: 2px solid currentColor;
+  border-radius: var(--r-surface);
+  font-size: var(--fs-body-sm);
 }
 
 .dropdown-menu {
@@ -610,8 +608,7 @@ a.card:focus-visible,
 }
 
 .dropdown-item {
-  font-family: var(--site-mono);
-  font-size: 0.76rem;
+  font-size: var(--fs-body-sm);
 }
 
 .dropdown-item:hover,
@@ -620,88 +617,21 @@ a.card:focus-visible,
   color: #fff;
 }
 
-.game-card,
-.app-card {
-  cursor: pointer;
-  min-height: 100%;
-}
-
-.game-card {
-  background: var(--site-panel);
-  border-top: 4px solid var(--site-accent);
-}
-
-.app-card {
-  background: var(--site-panel);
-  border-top: 4px solid var(--site-sage);
-}
-
-.game-card .card-body,
-.app-card .card-body {
-  display: flex;
-  flex-direction: column;
-  min-height: 168px;
-  padding: 1rem;
-}
-
-.game-card .badge,
-.app-card .badge {
-  align-self: flex-start;
-  margin-top: auto;
-}
-
-.game-card .badge.bg-primary {
-  background: var(--site-blue-soft) !important;
-  border: 1px solid var(--site-accent) !important;
-  color: var(--site-accent-dark) !important;
-}
-
-.game-card .card-text,
-.app-card .card-text {
-  line-height: 1.5;
-  margin-bottom: 1rem;
-}
-
-.game-thumbnail {
-  border: 1px solid var(--site-line);
-  border-radius: 0;
-  display: none;
-  height: 44px;
-  margin-right: 0.75rem;
-  object-fit: cover;
-  width: 44px;
-}
-
-.game-thumbnail.loaded {
-  display: block;
-}
-
-.game-title-container {
-  align-items: center;
-  display: flex;
-}
-
-.game-iframe-container {
-  border: 1px solid var(--site-line-strong);
-  border-radius: 0 !important;
-  box-shadow: var(--site-shadow) !important;
-}
-
 .markdown-body {
-  background: transparent !important;
-  color: var(--site-ink) !important;
-  font-family: var(--site-display) !important;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
 }
 
 .markdown-body h1,
 .markdown-body h2,
 .markdown-body h3 {
-  border-bottom-color: var(--site-line) !important;
-  letter-spacing: -0.04em;
+  border-bottom-color: var(--hairline);
+  letter-spacing: -0.02em;
 }
 
 .markdown-body a {
-  color: var(--site-accent) !important;
+  color: var(--accent);
 }
 
 .site-footer {
@@ -801,10 +731,6 @@ a.card:focus-visible,
     align-self: start;
   }
 
-  .markdown-body {
-    font-size: 0.95rem;
-  }
-
   .markdown-body pre {
     font-size: 0.82rem;
     overflow-x: auto;
@@ -812,8 +738,9 @@ a.card:focus-visible,
 
   .markdown-body table {
     display: block;
+    max-width: 100%;
     overflow-x: auto;
-    white-space: nowrap;
+    white-space: normal;
   }
 
   .search-container form {
@@ -834,11 +761,6 @@ a.card:focus-visible,
 
   .card-body {
     padding: 1rem;
-  }
-
-  .game-card .card-body,
-  .app-card .card-body {
-    min-height: 0;
   }
 }
 
