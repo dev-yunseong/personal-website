@@ -50,7 +50,7 @@
   border: 1px solid var(--site-line-strong);
   bottom: calc(100% + 0.65rem);
   color: #fff;
-  font-family: var(--site-sans);
+  font-family: var(--font-sans);
   font-size: 0.78rem;
   font-weight: 500;
   left: 50%;
