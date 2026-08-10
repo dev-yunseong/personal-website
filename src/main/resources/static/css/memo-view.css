@@ -1,55 +1,592 @@
-/* 1. 코드 블록 컨테이너: 그림자 제거 및 미세 조정 */
-.markdown-body pre {
-  background-color: #ece8de !important;
-  border: 1px solid #171717 !important;
-  border-radius: 0 !important;
-  padding: 16px !important;
-  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace !important;
-  font-size: 13.6px !important; /* 가독성 좋은 크기 */
-  line-height: 1.6 !important;
-  box-shadow: none !important;  /* 그림자 완전 제거 */
-  text-shadow: none !important; /* 글자 그림자 제거 (Prism 기본값 방지) */
-  position: relative;
+/*
+ * Memo (article) detail — the site's main reading surface.
+ *
+ * Long-form Korean technical writing. Three things drive every rule below:
+ *   1. Measure. The column is 34rem, which at the 1rem body size is roughly
+ *      65-70 Latin characters and about 34 Hangul syllables — the point where
+ *      a Korean line still scans in one eye movement.
+ *   2. `word-break: keep-all`. Korean breaks between 어절, never inside one.
+ *      site.css sets it on <body>; github-markdown-css re-declares
+ *      `word-wrap: break-word` on .markdown-body, so it is restated here for
+ *      the article body and again for headings, which suffer the most.
+ *   3. Ownership of the CDN theme. github-markdown-light.css and
+ *      prism-ghcolors.min.css both load before this file. Rules here are
+ *      scoped to `.memo-article__body` (and often `.memo-article__body.markdown-body`),
+ *      which outranks their single-class selectors — so nothing needs
+ *      `!important` except where site.css already used it.
+ *
+ * Colours come from the semantic layer in tokens.css only. Light mode only.
+ */
+
+.memo-page {
+  /* Reading measure. Everything on this page — header, prose, child list —
+     shares it so the left edge never moves as you scroll. */
+  --measure: 34rem;
+  margin: 0 auto;
+  max-width: var(--measure);
 }
 
-/* 2. Prism 기본 효과 강제 제거 */
-code[class*="language-"],
-pre[class*="language-"] {
-  text-shadow: none !important; /* 텍스트 번짐 효과 제거 */
-  box-shadow: none !important;  /* 박스 그림자 제거 */
-  background: none !important;  /* 배경 중복 방지 */
+/* ------------------------------------------------------------------ header */
+/*
+ * Path, title, dates. A rule under the header separates it from the prose;
+ * it is the same `--border-strong` line `.page-title` uses elsewhere, so the
+ * article header reads as this page's title block rather than a new component.
+ */
+
+.memo-article__head {
+  border-bottom: 1px solid var(--border-strong);
+  margin-bottom: var(--sp-10);
+  padding-bottom: var(--sp-5);
 }
 
-/* 3. 최신 GitHub 라이트 모드 글자색 (Shiki/GitHub 최신 버전 참고) */
-.token.comment,
-.token.prolog,
-.token.doctype,
-.token.cdata { color: #8c959f !important; font-style: italic; } /* 주석 */
+.memo-article__crumbs {
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+  line-height: var(--lh-tight);
+  margin-bottom: var(--sp-3);
+}
 
-.token.keyword,
-.token.selector,
-.token.atrule { color: #cf222e !important; font-weight: 600; } /* 키워드 (if, import 등) */
+/* The path is the one accent mark in the header: it says where you are.
+   Same treatment as `.memo-row__path` in the list, so the two agree. */
+.memo-article__path {
+  color: var(--accent);
+  font-weight: 500;
+  text-decoration: none;
+}
 
-.token.string,
-.token.attr-value { color: #0a3069 !important; } /* 문자열 */
+.memo-article__path:hover,
+.memo-article__path:focus-visible {
+  color: var(--accent-soft-text);
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
 
-.token.function,
-.token.attr-name { color: #8250df !important; } /* 함수 및 속성명 */
+.memo-article__title {
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--fs-h1);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: var(--lh-tight);
+  margin: 0;
+  /* Korean titles are the common case — never split an 어절 across lines. */
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
 
-.token.number,
-.token.boolean,
-.token.constant,
-.token.property,
-.token.regex,
-.token.inserted { color: #0550ae !important; } /* 숫자 및 상수 */
+.memo-article__meta {
+  align-items: center;
+  color: var(--text-tertiary);
+  display: flex;
+  flex-wrap: wrap;
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+  gap: var(--sp-2) var(--sp-5);
+  line-height: var(--lh-tight);
+  margin-top: var(--sp-4);
+}
 
-.token.class-name,
-.token.type { color: #953800 !important; } /* 클래스명 */
+.memo-article__date {
+  display: inline-flex;
+  gap: var(--sp-2);
+  white-space: nowrap;
+}
 
-.token.operator,
-.token.entity,
-.token.url,
-.language-css .token.string,
-.style .token.string { color: #171717 !important; background: none !important; } /* 연산자 */
+.memo-article__date-label {
+  color: var(--text-tertiary);
+  /* Korean label, so it sets in the sans face; mono is for the date itself. */
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+}
 
-.token.punctuation { color: #171717 !important; } /* 괄호, 쉼표 등 */
+.memo-article__date time {
+  color: var(--text-secondary);
+}
+
+/* Author-only control. A control, so it gets the control radius and a real
+   focus ring; everything else on this page stays square. */
+.memo-article__edit {
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: var(--r-control);
+  color: var(--text-primary);
+  display: inline-flex;
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  gap: var(--sp-1);
+  margin-left: auto;
+  padding: var(--sp-1) var(--sp-3);
+  text-decoration: none;
+  transition: background-color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+
+.memo-article__edit:hover {
+  background: var(--sunken);
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+
+.memo-article__edit:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* -------------------------------------------------------------------- prose */
+
+.memo-article__body.markdown-body {
+  /* github-markdown-css themes itself through these custom properties, so
+     remapping them retires most of its hard-coded GitHub greys in one place.
+     The explicit element rules below still stand on their own if the CDN
+     renames a variable. */
+  --color-canvas-default: transparent;
+  --color-canvas-subtle: var(--sunken);
+  --color-border-default: var(--hairline);
+  --color-border-muted: var(--hairline);
+  --color-fg-default: var(--text-primary);
+  --color-fg-muted: var(--text-secondary);
+  --color-fg-subtle: var(--text-tertiary);
+  --color-accent-fg: var(--accent);
+  --color-neutral-muted: var(--sunken);
+
+  font-size: var(--fs-row);
+  line-height: var(--lh-body);
+  /* Restated: github-markdown-css sets `word-wrap: break-word` on this class. */
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.memo-article__body > *:first-child {
+  margin-top: 0;
+}
+
+.memo-article__body > *:last-child {
+  margin-bottom: 0;
+}
+
+.memo-article__body p {
+  margin: 0 0 var(--sp-6);
+}
+
+/* ------------------------------------------------------------- prose: heads */
+/*
+ * One step per level from the type scale. h2 keeps a hairline because a long
+ * Korean article needs a visible section break; h3 and below do not — weight
+ * and the space above them carry the level.
+ */
+
+.memo-article__body.markdown-body h1,
+.memo-article__body.markdown-body h2,
+.memo-article__body.markdown-body h3,
+.memo-article__body.markdown-body h4,
+.memo-article__body.markdown-body h5,
+.memo-article__body.markdown-body h6 {
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  letter-spacing: -0.02em;
+  line-height: var(--lh-tight);
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.memo-article__body.markdown-body h1 {
+  border-bottom: 0;
+  font-size: var(--fs-h2);
+  font-weight: 700;
+  margin: var(--sp-12) 0 var(--sp-5);
+  padding-bottom: 0;
+}
+
+.memo-article__body.markdown-body h2 {
+  border-bottom: 1px solid var(--hairline);
+  font-size: var(--fs-h2);
+  font-weight: 680;
+  margin: var(--sp-12) 0 var(--sp-5);
+  padding-bottom: var(--sp-2);
+}
+
+.memo-article__body.markdown-body h3 {
+  border-bottom: 0;
+  font-size: var(--fs-h3);
+  font-weight: 680;
+  margin: var(--sp-10) 0 var(--sp-4);
+  padding-bottom: 0;
+}
+
+.memo-article__body.markdown-body h4,
+.memo-article__body.markdown-body h5,
+.memo-article__body.markdown-body h6 {
+  font-size: var(--fs-row);
+  font-weight: 680;
+  margin: var(--sp-8) 0 var(--sp-3);
+}
+
+.memo-article__body.markdown-body h5,
+.memo-article__body.markdown-body h6 {
+  color: var(--text-secondary);
+  font-size: var(--fs-body);
+}
+
+/* ------------------------------------------------------------- prose: links */
+/* Inline links are the accent's main job on this page. */
+
+.memo-article__body.markdown-body a {
+  color: var(--accent) !important; /* site.css sets .markdown-body a with !important */
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  transition: color var(--dur-fast) var(--ease);
+}
+
+.memo-article__body.markdown-body a:hover,
+.memo-article__body.markdown-body a:focus-visible {
+  color: var(--accent-soft-text) !important;
+}
+
+.memo-article__body a:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* ------------------------------------------------------------- prose: lists */
+
+.memo-article__body ul,
+.memo-article__body ol {
+  margin: 0 0 var(--sp-6);
+  padding-left: var(--sp-6);
+}
+
+.memo-article__body li + li {
+  margin-top: var(--sp-2);
+}
+
+.memo-article__body li > ul,
+.memo-article__body li > ol {
+  margin: var(--sp-2) 0 0;
+}
+
+.memo-article__body li::marker {
+  color: var(--text-tertiary);
+}
+
+/* -------------------------------------------------------- prose: quotations */
+/* A quote is an aside, not a callout: a rule and quieter text, no tint, no
+   radius. The accent stays reserved for links and location. */
+
+.memo-article__body.markdown-body blockquote {
+  border-left: 2px solid var(--border);
+  color: var(--text-secondary);
+  margin: 0 0 var(--sp-6);
+  padding: var(--sp-1) 0 var(--sp-1) var(--sp-4);
+}
+
+.memo-article__body blockquote > *:last-child {
+  margin-bottom: 0;
+}
+
+.memo-article__body.markdown-body hr {
+  background: none;
+  border: 0;
+  border-top: 1px solid var(--hairline);
+  height: 0;
+  margin: var(--sp-12) 0;
+  padding: 0;
+}
+
+/* --------------------------------------------------------------- prose: code */
+/*
+ * Square, as content surfaces are throughout the system. The block scrolls
+ * inside itself so a long line never widens the page.
+ */
+
+.memo-article__body.markdown-body pre {
+  background: var(--sunken);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-surface);
+  box-shadow: none;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--fs-body-sm);
+  line-height: 1.65;
+  margin: 0 0 var(--sp-6);
+  max-width: 100%;
+  overflow-x: auto;
+  padding: var(--sp-4);
+  tab-size: 2;
+  text-shadow: none;
+}
+
+.memo-article__body.markdown-body pre > code,
+.memo-article__body.markdown-body pre code[class*="language-"] {
+  background: none;
+  border: 0;
+  color: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  padding: 0;
+  text-shadow: none;
+  white-space: pre;
+  word-break: normal;
+}
+
+/* Inline code: a tinted chip, no border, no radius. Not accent-coloured —
+   that would compete with links. */
+.memo-article__body.markdown-body code,
+.memo-article__body.markdown-body tt {
+  background: var(--sunken);
+  border-radius: var(--r-surface);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  padding: 0.15em 0.35em;
+  /* `break-word`, not `break-all`: an identifier moves to the next line whole
+     and only splits when it cannot fit on a line by itself. `break-all` cut
+     `TransactionInterceptor` in half mid-sentence. */
+  overflow-wrap: break-word;
+}
+
+.memo-article__body.markdown-body kbd {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-control);
+  box-shadow: none;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+  padding: 0.1em 0.4em;
+}
+
+/* ----------------------------------------------------------- syntax colours */
+/*
+ * Prism's ghcolors theme ships GitHub's palette. These rules re-point the
+ * tokens at the system's own ramps — accent for values, the state hues for
+ * keywords and types — so the code block belongs to this site instead of to
+ * GitHub. Selector is three classes deep, which beats the theme's `.token.x`
+ * without `!important`.
+ */
+
+.memo-article__body .token.comment,
+.memo-article__body .token.prolog,
+.memo-article__body .token.doctype,
+.memo-article__body .token.cdata {
+  color: var(--text-tertiary);
+  font-style: italic;
+}
+
+.memo-article__body .token.punctuation,
+.memo-article__body .token.operator,
+.memo-article__body .token.entity {
+  background: none;
+  color: var(--text-secondary);
+}
+
+.memo-article__body .token.keyword,
+.memo-article__body .token.selector,
+.memo-article__body .token.atrule,
+.memo-article__body .token.important,
+.memo-article__body .token.deleted {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.memo-article__body .token.string,
+.memo-article__body .token.attr-value,
+.memo-article__body .token.char,
+.memo-article__body .token.inserted,
+.memo-article__body .language-css .token.string,
+.memo-article__body .style .token.string {
+  background: none;
+  color: var(--ok);
+}
+
+.memo-article__body .token.function,
+.memo-article__body .token.attr-name,
+.memo-article__body .token.number,
+.memo-article__body .token.boolean,
+.memo-article__body .token.constant,
+.memo-article__body .token.property,
+.memo-article__body .token.symbol,
+.memo-article__body .token.regex,
+.memo-article__body .token.url,
+.memo-article__body .token.variable {
+  color: var(--accent);
+}
+
+.memo-article__body .token.class-name,
+.memo-article__body .token.tag,
+.memo-article__body .token.builtin,
+.memo-article__body .token.namespace {
+  color: var(--warn);
+}
+
+.memo-article__body .token.bold {
+  font-weight: 700;
+}
+
+.memo-article__body .token.italic {
+  font-style: italic;
+}
+
+/* ------------------------------------------------------------ prose: tables */
+/* The table itself is the scroll container: markdown gives no wrapper to
+   attach one to. `white-space: normal` undoes the site-wide mobile `nowrap`,
+   which forced Korean cells into one endless line. */
+
+.memo-article__body.markdown-body table {
+  border-collapse: collapse;
+  display: block;
+  font-size: var(--fs-body-sm);
+  margin: 0 0 var(--sp-6);
+  max-width: 100%;
+  overflow-x: auto;
+  white-space: normal;
+  width: max-content;
+  word-break: keep-all;
+}
+
+.memo-article__body.markdown-body table th,
+.memo-article__body.markdown-body table td {
+  border: 1px solid var(--hairline);
+  line-height: var(--lh-tight);
+  padding: var(--sp-2) var(--sp-3);
+  vertical-align: top;
+}
+
+.memo-article__body.markdown-body table th {
+  background: var(--sunken);
+  color: var(--text-primary);
+  font-weight: 620;
+  text-align: left;
+}
+
+.memo-article__body.markdown-body table tr {
+  background: transparent;
+  border-top: 0;
+}
+
+.memo-article__body.markdown-body table tr:nth-child(2n) {
+  background: transparent;
+}
+
+/* ------------------------------------------------------------ prose: images */
+/*
+ * A picture the author placed on its own line becomes a block figure with a
+ * hairline; an image inside a sentence (a build badge, an icon) is left in the
+ * flow untouched, so badge rows do not each become their own framed block.
+ */
+
+.memo-article__body img {
+  height: auto;
+  max-width: 100%;
+}
+
+.memo-article__body p > img:only-child,
+.memo-article__body p > a:only-child > img:only-child {
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-surface);
+  display: block;
+  margin: 0 auto;
+}
+
+/* ------------------------------------------------- prose: mermaid and katex */
+/*
+ * The parser fragment swaps `pre > code.language-mermaid` for `div.mermaid`
+ * and renders an SVG into it. Wide diagrams scroll inside that div rather
+ * than pushing the page sideways.
+ */
+
+.memo-article__body .mermaid {
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-surface);
+  margin: 0 0 var(--sp-6);
+  max-width: 100%;
+  overflow-x: auto;
+  padding: var(--sp-4);
+  text-align: center;
+}
+
+.memo-article__body .mermaid svg {
+  height: auto;
+}
+
+/* Display math is often wider than the measure — scroll it, do not clip it. */
+.memo-article__body .katex-display {
+  margin: var(--sp-6) 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: var(--sp-1) 0;
+}
+
+.memo-article__body .katex {
+  font-size: 1.05em;
+}
+
+/* ----------------------------------------------------------- child documents */
+/* Reuses `.memo-list` / `.memo-row` from site.css so a memo's children look
+   exactly like the same memos on the blog index. */
+
+.memo-children {
+  margin-top: var(--sp-16);
+}
+
+.memo-children__head {
+  align-items: baseline;
+  border-bottom: 1px solid var(--border-strong);
+  display: flex;
+  gap: var(--sp-4);
+  justify-content: space-between;
+  padding-bottom: var(--sp-2);
+}
+
+.memo-children__head h2 {
+  font-size: var(--fs-h3);
+  margin: 0;
+}
+
+.memo-children__all {
+  color: var(--text-tertiary);
+  flex: 0 0 auto;
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+  text-decoration: none;
+}
+
+.memo-children__all:hover,
+.memo-children__all:focus-visible {
+  color: var(--accent);
+}
+
+/* ------------------------------------------------------------------ mobile */
+
+@media (max-width: 767.98px) {
+  .memo-article__head {
+    margin-bottom: var(--sp-8);
+  }
+
+  /* Body size holds at 1rem here: site.css drops .markdown-body to 0.95rem,
+     which is below comfortable reading size for Hangul on a phone. */
+  .memo-article__body.markdown-body {
+    font-size: var(--fs-row);
+  }
+
+  .memo-article__body.markdown-body pre {
+    font-size: var(--fs-label);
+    padding: var(--sp-3);
+  }
+
+  .memo-article__body.markdown-body h1,
+  .memo-article__body.markdown-body h2 {
+    margin-top: var(--sp-10);
+  }
+
+  .memo-article__body .mermaid {
+    padding: var(--sp-2);
+  }
+
+  .memo-children {
+    margin-top: var(--sp-12);
+  }
+}
