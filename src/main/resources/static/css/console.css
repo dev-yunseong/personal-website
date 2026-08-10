@@ -1,0 +1,671 @@
+/*
+ * Admin console.
+ *
+ * Everything is scoped to `.console` so the dashboard can be far denser than
+ * the reading side of the site without leaking that density back into it.
+ * Semantic tokens only (see tokens.css) — no literal colours, no new clamps.
+ *
+ * Two ideas drive the layout:
+ *   1. Summary before detail. Headline figures sit above the tabs; each panel
+ *      leads with its own aggregate and only then lists rows.
+ *   2. The console is scanned, not read. Rows are compact, every numeric
+ *      column is tabular and right-aligned, and separation is carried by
+ *      hairlines rather than boxes, shadows or fills.
+ *
+ * Accent (teal) is a signal, not a brand coat: it marks the active period,
+ * the active tab, the selected row and the focus ring. Actions stay ink.
+ */
+
+/* ------------------------------------------------------------------ shell */
+
+.console-head {
+  align-items: baseline;
+  border-bottom: 1px solid var(--border-strong);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3) var(--sp-4);
+  justify-content: space-between;
+  margin-bottom: var(--sp-5);
+  padding-bottom: var(--sp-3);
+}
+
+.console-head h1 {
+  font-size: var(--fs-h2);
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+/* Period switch + the "which period am I looking at" readout. */
+.console-toolbar {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-3);
+  margin-bottom: var(--sp-4);
+}
+
+.console-toolbar__label {
+  background: var(--accent-soft);
+  border-radius: var(--r-control);
+  color: var(--accent-soft-text);
+  font-size: var(--fs-meta);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  line-height: var(--lh-tight);
+  padding: var(--sp-1) var(--sp-2);
+}
+
+/* ------------------------------------------------------------------ stats */
+/* One hairline grid, not a row of floating cards. The 1px gap over a hairline
+   background draws every divider, including after a wrap. */
+
+.stat-grid {
+  background: var(--hairline);
+  border: 1px solid var(--hairline);
+  display: grid;
+  gap: 1px;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  margin-bottom: var(--sp-5);
+}
+
+.stat {
+  background: var(--surface);
+  padding: var(--sp-3) var(--sp-4) var(--sp-4);
+}
+
+.stat__label {
+  color: var(--text-tertiary);
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  line-height: var(--lh-tight);
+  text-transform: uppercase;
+}
+
+.stat__value {
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: var(--fs-h2);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: var(--lh-tight);
+  margin-top: var(--sp-2);
+}
+
+/* The three figures above the tabs carry the page — they get the display size. */
+.stat-grid--lead .stat__value {
+  font-size: var(--fs-h1);
+}
+
+.stat__hint {
+  color: var(--text-tertiary);
+  font-size: var(--fs-meta);
+  line-height: var(--lh-tight);
+  margin: var(--sp-1) 0 0;
+  min-height: 1em;
+}
+
+.stat__value .stat__pending {
+  color: var(--text-tertiary);
+  font-weight: 400;
+}
+
+/* ------------------------------------------------------------------- tabs */
+
+.console .nav-tabs {
+  gap: var(--sp-1);
+  margin-bottom: var(--sp-4);
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.console .nav-tabs .nav-link {
+  padding: var(--sp-2) var(--sp-3);
+  white-space: nowrap;
+}
+
+.console .nav-tabs .nav-link.active {
+  font-weight: 650;
+}
+
+/* ----------------------------------------------------------------- panels */
+/* A panel is a content surface: square corners, hairline border, no shadow.
+   Rounding in this system means "you can press this". */
+
+.console .card {
+  border-color: var(--hairline);
+  border-radius: var(--r-surface);
+}
+
+.console .card-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border-strong);
+  padding: var(--sp-3) var(--sp-4);
+}
+
+.console .card-header h5 {
+  font-size: var(--fs-h3);
+  font-weight: 650;
+  letter-spacing: -0.015em;
+}
+
+.console .card-body {
+  padding: var(--sp-4);
+}
+
+.console .card-footer {
+  border-top-color: var(--hairline);
+  padding: var(--sp-2);
+}
+
+/* Section headings inside a panel body. */
+.console .card-body h6 {
+  color: var(--text-tertiary);
+  font-size: var(--fs-meta);
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--sp-2);
+  text-transform: uppercase;
+}
+
+/* Explanatory prose stays sans and readable — mono is for labels and data. */
+.console .card-body > p,
+.console .panel-note {
+  color: var(--text-tertiary);
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-body);
+  max-width: 78ch;
+}
+
+/* --------------------------------------------------------------- controls */
+/* Segmented filters are one uniform control. Bootstrap's coloured outline
+   variants would spend the state ramps on decoration; state belongs on the
+   data, and "which filter is on" belongs to the accent. */
+
+.console .btn-group > .btn,
+.console .dropdown > .btn {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text-secondary);
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  min-height: 30px;
+  padding: var(--sp-1) var(--sp-3);
+}
+
+.console .btn-group > .btn:hover,
+.console .dropdown > .btn:hover {
+  background: var(--sunken);
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+
+.console .btn-group > .btn.active,
+.console .btn-group > .btn.active:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent-soft-text);
+  position: relative;
+  z-index: 1;
+}
+
+.console .dropdown-item {
+  font-family: var(--font-sans);
+  font-size: var(--fs-label);
+}
+
+.console .form-check-label {
+  color: var(--text-secondary);
+  font-size: var(--fs-label);
+}
+
+.console :focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* ----------------------------------------------------------------- tables */
+
+.console .table-responsive {
+  border: 0;
+}
+
+.console .table {
+  --bs-table-hover-bg: var(--sunken);
+  color: var(--text-primary);
+  font-size: var(--fs-body-sm);
+  font-variant-numeric: tabular-nums;
+  line-height: var(--lh-tight);
+}
+
+.console .table > :not(caption) > * > * {
+  border-bottom-color: var(--hairline);
+  padding: var(--sp-2) var(--sp-3);
+  vertical-align: middle;
+}
+
+/* Column headers may be uppercase and tight — they are labels, not sentences.
+   The old inverted black slab is replaced by a rule under plain small caps. */
+.console .table thead {
+  --bs-table-bg: var(--surface);
+  --bs-table-color: var(--text-tertiary);
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.console .table thead th {
+  border-bottom: 1px solid var(--border-strong);
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.console .table tfoot {
+  font-size: var(--fs-meta);
+  font-weight: 650;
+}
+
+.console .table tfoot th {
+  border-top: 1px solid var(--border-strong);
+}
+
+.console .table code {
+  color: var(--text-primary);
+  font-size: var(--fs-meta);
+}
+
+/* Timestamps and identifiers: mono and tabular, but left-aligned — they are
+   read left to right, not compared by magnitude. */
+.console .mono {
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Numeric column: mono, tabular, right-aligned so digits stack. */
+.console .num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.console .table thead .num {
+  text-align: right;
+}
+
+/* Long, low-value strings (UA, referer) recede but stay one line per row. */
+.console .cell-dim {
+  color: var(--text-tertiary);
+  font-size: var(--fs-meta);
+}
+
+.console .cell-clip {
+  display: inline-block;
+  max-width: 22rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: bottom;
+  white-space: nowrap;
+}
+
+/* An HTTP verb is an identifier — mono, uppercase, no badge chrome needed. */
+.console .method {
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------- state tags */
+/* Every state carries its own text (the status code, "internal", "Evergreen"),
+   so colour is reinforcement rather than the only channel. */
+
+.console .status,
+.console .tag {
+  border: 1px solid;
+  border-radius: var(--r-control);
+  display: inline-block;
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  line-height: 1.5;
+  padding: 0 var(--sp-2);
+  white-space: nowrap;
+}
+
+.console .status {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  min-width: 3rem;
+  text-align: center;
+}
+
+.console .status--ok,
+.console .tag--ok {
+  background: var(--ok-soft);
+  border-color: var(--ok);
+  color: var(--ok-soft-text);
+}
+
+.console .status--warn,
+.console .tag--warn {
+  background: var(--warn-soft);
+  border-color: var(--warn);
+  color: var(--warn-soft-text);
+}
+
+.console .status--danger,
+.console .tag--danger {
+  background: var(--danger-soft);
+  border-color: var(--danger);
+  color: var(--danger-soft-text);
+}
+
+.console .status--muted,
+.console .tag--muted {
+  background: var(--sunken);
+  border-color: var(--border);
+  color: var(--text-secondary);
+}
+
+.console .tag--accent {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent-soft-text);
+}
+
+.console .tag-count {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* A row that needs the operator's attention: tinted plus a labelled tag in the
+   Source column, so the highlight is never the only signal. */
+.console .table > tbody > tr.row-flag > * {
+  --bs-table-bg: var(--warn-soft);
+  box-shadow: none;
+}
+
+.console .table > tbody > tr.row-flag > *:first-child {
+  box-shadow: inset 3px 0 0 var(--warn);
+}
+
+/* -------------------------------------------------------------- bar charts */
+/* Drawn as a track + a fill. No block characters, no charting library. */
+
+.bar-track {
+  background: var(--sunken);
+  border-radius: var(--r-surface);
+  flex: 1 1 auto;
+  height: 0.55rem;
+  min-width: 3rem;
+  overflow: hidden;
+}
+
+.bar-fill {
+  background: var(--text-secondary);
+  display: block;
+  height: 100%;
+}
+
+/* The leading slice reads as the answer to "where is the traffic". */
+.bar-fill--lead {
+  background: var(--accent-solid);
+}
+
+/* Bars are read by relative length; past ~45rem the comparison stops paying
+   for the width it costs. */
+.bar-list {
+  max-width: 46rem;
+}
+
+.bar-row {
+  align-items: center;
+  display: flex;
+  gap: var(--sp-3);
+  padding: var(--sp-1) 0;
+}
+
+.bar-row + .bar-row {
+  border-top: 1px solid var(--hairline);
+}
+
+.bar-row__name {
+  flex: 0 0 7rem;
+  font-size: var(--fs-body-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bar-row__value {
+  color: var(--text-secondary);
+  flex: 0 0 6rem;
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* Inline share bar living inside a table cell. */
+.bar-cell {
+  align-items: center;
+  display: flex;
+  gap: var(--sp-2);
+  max-width: 18rem;
+}
+
+.bar-cell .bar-track {
+  min-width: 2.5rem;
+}
+
+.bar-cell__value {
+  flex: 0 0 3.5rem;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* ---------------------------------------------------------------- heatmap */
+/* 7 x 24 static cells: a CSS grid beats a charting dependency. Intensity is a
+   single-hue accent ramp mixed toward the sunken surface, so an empty cell is
+   still visibly a cell. */
+
+.dist-heatmap {
+  align-items: center;
+  display: grid;
+  gap: 2px;
+  grid-template-columns: 2.5rem repeat(24, minmax(0, 1fr));
+}
+
+.dist-heatmap__cell {
+  aspect-ratio: 1;
+  background-color: color-mix(in oklab, var(--accent) calc(var(--i, 0) * 100%), var(--sunken));
+  border-radius: var(--r-surface);
+  min-height: 0.75rem;
+}
+
+.dist-heatmap__label {
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  text-align: center;
+}
+
+.dist-heatmap__label--day {
+  padding-right: var(--sp-1);
+  text-align: right;
+}
+
+.dist-legend {
+  align-items: center;
+  color: var(--text-tertiary);
+  display: flex;
+  font-size: var(--fs-meta);
+  gap: var(--sp-2);
+  margin-top: var(--sp-3);
+}
+
+.dist-legend__scale {
+  display: flex;
+  gap: 2px;
+}
+
+.dist-legend__step {
+  background-color: color-mix(in oklab, var(--accent) calc(var(--i, 0) * 100%), var(--sunken));
+  height: 0.75rem;
+  width: 1.25rem;
+}
+
+/* ----------------------------------------------------------- empty states */
+/* Bootstrap alerts inside the console are status strips, not prose blocks:
+   sans (they are sentences), left rule, no rounding. */
+
+.console .alert {
+  background: var(--sunken);
+  border: 1px solid var(--hairline);
+  border-left: 3px solid var(--border);
+  border-radius: var(--r-surface);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-body);
+  padding: var(--sp-3) var(--sp-4);
+}
+
+.console .alert-warning {
+  background: var(--warn-soft);
+  border-color: var(--hairline);
+  border-left-color: var(--warn);
+  color: var(--warn-soft-text);
+}
+
+.console .alert-danger {
+  background: var(--danger-soft);
+  border-color: var(--hairline);
+  border-left-color: var(--danger);
+  color: var(--danger-soft-text);
+}
+
+.console .alert-success {
+  background: var(--ok-soft);
+  border-color: var(--hairline);
+  border-left-color: var(--ok);
+  color: var(--ok-soft-text);
+}
+
+/* ------------------------------------------------------------- pagination */
+
+.console .pagination {
+  margin-top: var(--sp-4);
+}
+
+.console .page-link {
+  font-size: var(--fs-meta);
+  font-variant-numeric: tabular-nums;
+  padding: var(--sp-1) var(--sp-3);
+}
+
+/* ----------------------------------------------------------- chat history */
+
+.console-subhead {
+  align-items: baseline;
+  border-bottom: 1px solid var(--hairline);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-4);
+  justify-content: space-between;
+  margin-bottom: var(--sp-3);
+  padding-bottom: var(--sp-2);
+}
+
+.console-subhead h5 {
+  font-size: var(--fs-h3);
+  font-weight: 650;
+}
+
+.console-subhead__count {
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+  font-variant-numeric: tabular-nums;
+}
+
+.console .list-group-item {
+  border-color: var(--hairline);
+  font-size: var(--fs-meta);
+  padding: var(--sp-2) var(--sp-3);
+}
+
+/* Selected visitor = current location, so it takes the accent — as a soft
+   field with a solid edge, not a saturated block of white-on-teal. */
+.console .list-group-item.active {
+  background: var(--accent-soft);
+  border-color: var(--hairline);
+  box-shadow: inset 3px 0 0 var(--accent-solid);
+  color: var(--accent-soft-text);
+}
+
+.console .ip-list-item .fw-semibold {
+  font-family: var(--font-mono);
+  font-size: var(--fs-label);
+}
+
+/* Not `.text-muted`: site.css pins that colour with `!important`, and the muted
+   grey lands at 4.05:1 on the accent-soft field of the selected row. */
+.console .ip-list-item__time {
+  color: var(--text-tertiary);
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+}
+
+.console .ip-list-item.active .ip-list-item__time {
+  color: var(--accent-soft-text);
+}
+
+.chat-history-box {
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-surface);
+  max-height: 75vh;
+  overflow-y: auto;
+  padding: var(--sp-4);
+}
+
+.console-empty {
+  border: 1px dashed var(--hairline);
+  color: var(--text-tertiary);
+  font-size: var(--fs-body-sm);
+  padding: var(--sp-10) var(--sp-4);
+  text-align: center;
+}
+
+/* ------------------------------------------------------------- responsive */
+
+@media (max-width: 767.98px) {
+  .console .card-body {
+    padding: var(--sp-3);
+  }
+
+  .console .table > :not(caption) > * > * {
+    padding: var(--sp-2);
+  }
+
+  .bar-row__name {
+    flex-basis: 6rem;
+  }
+
+  .bar-row__value {
+    flex-basis: 5.5rem;
+  }
+
+  .console .cell-clip {
+    max-width: 12rem;
+  }
+}

@@ -8,38 +8,50 @@
         pageKeywords='프로젝트, 게임, 데모, 웹 프로젝트, 개발',
         pageUrl='/public/projects'">
 
-<th:block layout:fragment="css"></th:block>
+<th:block layout:fragment="css">
+    <link rel="stylesheet" th:href="@{/css/showcase.css}">
+</th:block>
 
 <body>
 <th:block layout:fragment="content">
     <div class="container px-3 px-md-4">
         <h1 class="page-title">Projects</h1>
-        <p class="page-subtitle">Choose a project to explore</p>
-        
-        <div class="row g-3">
-            <div class="col-12 col-sm-6 col-lg-4" th:each="game : ${games}">
-                <a th:href="@{/public/projects/{id}(id=${game.id})}" class="text-decoration-none">
-                    <div class="card game-card h-100 shadow">
-                        <div class="card-body">
-                            <div class="game-title-container">
-                                <img th:src="${game.gameUrl + '/thumbnail.png'}" 
-                                     class="game-thumbnail" 
-                                     th:alt="${game.getTitle()}"
-                                     onerror="this.style.display='none'"
-                                     onload="this.classList.add('loaded')">
-                                <h5 class="card-title mb-0" th:text="${game.getTitle()}">Game Title</h5>
-                            </div>
-                            <p class="card-text text-muted mt-2 small" th:text="${game.gameUrl}">Game URL</p>
-                            <span class="badge bg-primary">Open</span>
-                        </div>
-                    </div>
+        <p class="showcase-lede">브라우저에서 바로 실행되는 프로젝트와 데모입니다.</p>
+
+        <div class="showcase-toolbar" th:if="${!games.isEmpty()}">
+            <p class="showcase-count"><span th:text="${#lists.size(games)}">0</span> projects</p>
+        </div>
+
+        <!--
+          Rows, not a card grid. The thumbnail is a probe at <gameUrl>/thumbnail.png:
+          where the file exists it is a real screenshot of a real, runnable thing;
+          where it 404s the inline onerror collapses it and the item stays a plain
+          text row. The list is uneven by design.
+        -->
+        <ul class="showcase-list" th:if="${!games.isEmpty()}">
+            <li class="showcase-row" th:each="game : ${games}">
+                <a th:href="@{/public/projects/{id}(id=${game.id})}" class="showcase-row__link">
+                    <span class="showcase-row__body">
+                        <span class="showcase-row__title" th:text="${game.getTitle()}">Game Title</span>
+                        <span class="showcase-row__meta">
+                            <span class="showcase-status">실행 가능</span>
+                            <span class="showcase-row__url" th:text="${game.gameUrl}">Game URL</span>
+                        </span>
+                    </span>
+                    <img th:src="${game.gameUrl + '/thumbnail.png'}"
+                         class="game-thumbnail showcase-row__thumb"
+                         alt=""
+                         loading="lazy"
+                         decoding="async"
+                         onerror="this.style.display='none'"
+                         onload="this.classList.add('loaded')">
                 </a>
-            </div>
-        </div>
-        
-        <div th:if="${games.isEmpty()}" class="alert alert-info" role="alert">
+            </li>
+        </ul>
+
+        <p th:if="${games.isEmpty()}" class="showcase-empty" role="status">
             No projects available at the moment.
-        </div>
+        </p>
     </div>
 </th:block>
 </body>
