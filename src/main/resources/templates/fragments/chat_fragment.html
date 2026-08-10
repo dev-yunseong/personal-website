@@ -5,9 +5,12 @@
 <!-- Live interactive chat UI, used in chat.html -->
 <div th:fragment="chatBox">
     <div class="chat-container">
-        <div class="card">
-            <div class="card-header">
-                <h1 class="h5 mb-0">Curator</h1>
+        <section class="chat-panel">
+            <header class="chat-panel__head">
+                <div class="chat-panel__identity">
+                    <p class="chat-panel__eyebrow">AI CURATOR</p>
+                    <h1 class="chat-panel__title">Curator</h1>
+                </div>
                 <button class="curator-memory-help" type="button" aria-describedby="curator-memory-tooltip">
                     <i class="bi bi-database-lock" aria-hidden="true"></i>
                     <span>Memory</span>
@@ -15,22 +18,38 @@
                         Curator can remember durable notes privately. Memory persists globally across sessions.
                     </span>
                 </button>
-            </div>
-            <div class="card-body chat-box" id="chat-box">
+            </header>
+
+            <div class="chat-box" id="chat-box">
                 <!-- Messages will be appended here -->
+                <div class="chat-empty">
+                    <p class="chat-empty__lead">
+                        블로그 글, 이력서, 프로젝트 기록을 근거로 답변합니다. 궁금한 점을 자유롭게 물어보세요.
+                    </p>
+                    <p class="chat-empty__label">예시 질문</p>
+                    <ul class="chat-empty__hints">
+                        <li>어떤 기술 스택으로 일해 왔나요?</li>
+                        <li>최근에 쓴 글 중 인프라 관련 내용을 요약해 주세요.</li>
+                        <li>이 사이트는 어떤 구조로 만들어졌나요?</li>
+                    </ul>
+                </div>
             </div>
-            <div class="card-footer">
-                <form id="chat-form" class="d-flex">
-                    <input type="text" id="message-input" class="form-control" placeholder="Type your message..." autocomplete="off"/>
-                    <button type="submit" class="btn btn-secondary ms-2">Send</button>
+
+            <div class="chat-panel__composer">
+                <form id="chat-form" class="chat-form">
+                    <label class="visually-hidden" for="message-input">Message</label>
+                    <input type="text" id="message-input" class="form-control chat-form__input"
+                           placeholder="Type your message..." autocomplete="off"/>
+                    <button type="submit" class="btn chat-form__send">Send</button>
                 </form>
+                <p class="chat-form__note">Enter를 누르면 전송됩니다. 답변은 이 사이트의 공개 자료를 근거로 생성됩니다.</p>
             </div>
-        </div>
+        </section>
     </div>
 </div>
 
 <!-- Single conversation entry, used in admin chat history page -->
-<div th:fragment="conversationEntry(conv)">
+<div th:fragment="conversationEntry(conv)" class="chat-entry">
     <div class="message user-message">
         <div class="message-bubble">
             <strong>You</strong>
@@ -54,9 +73,8 @@
             <div class="content ai-response-content" th:attr="data-raw=${conv.aiResponse}"></div>
         </div>
     </div>
-    <div class="text-muted small text-end mb-3"
-         th:text="${#temporals.format(conv.createdAt, 'yyyy-MM-dd HH:mm:ss')}"></div>
-    <hr/>
+    <p class="chat-entry__time"
+       th:text="${#temporals.format(conv.createdAt, 'yyyy-MM-dd HH:mm:ss')}"></p>
 </div>
 
 </body>
