@@ -5,13 +5,21 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;
+import org.commonmark.node.AbstractVisitor;
+import org.commonmark.node.HtmlBlock;
+import org.commonmark.node.HtmlInline;
+import org.commonmark.node.Image;
 import org.commonmark.node.Node;
 import org.commonmark.node.FencedCodeBlock;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
 import org.commonmark.renderer.html.AttributeProvider;
 
+import java.net.URI;
 import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -47,6 +55,89 @@ public class Memo {
 
     @OneToMany(mappedBy = "memo", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<GameProject> gameProjects = new ArrayList<>();
+
+    /**
+     * URL of the first usable image in the body, or {@code null} when the memo has none.
+     *
+     * <p>List views use this as a thumbnail so the image is always real content the
+     * author already wrote, never a generated placeholder. A memo with no image simply
+     * renders as a text row — that difference is the intended visual hierarchy.
+     *
+     * <p>Badge images (build status, coverage) are skipped: they are decoration inside
+     * the article, and cropping one into a card reads as a broken thumbnail.
+     */
+    public String getThumbnailUrl() {
+        if (content == null || content.isBlank()) {
+            return null;
+        }
+        FirstImageVisitor visitor = new FirstImageVisitor();
+        Parser.builder().build().parse(content).accept(visitor);
+        return visitor.getUrl();
+    }
+
+    private static final Pattern HTML_IMG_SRC =
+            Pattern.compile("<img\\b[^>]*?\\bsrc\\s*=\\s*[\"']([^\"']+)[\"']", Pattern.CASE_INSENSITIVE);
+
+    private static final Set<String> BADGE_HOSTS =
+            Set.of("img.shields.io", "shields.io", "badgen.net", "badge.fury.io", "forthebadge.com");
+
+    /**
+     * Walks the parsed body and keeps the first image URL, covering both Markdown
+     * {@code ![]()} syntax and raw {@code <img>} tags.
+     */
+    private static class FirstImageVisitor extends AbstractVisitor {
+
+        private String url;
+
+        private String getUrl() {
+            return url;
+        }
+
+        @Override
+        public void visit(Image image) {
+            accept(image.getDestination());
+            visitChildren(image);
+        }
+
+        @Override
+        public void visit(HtmlInline htmlInline) {
+            acceptHtml(htmlInline.getLiteral());
+            visitChildren(htmlInline);
+        }
+
+        @Override
+        public void visit(HtmlBlock htmlBlock) {
+            acceptHtml(htmlBlock.getLiteral());
+            visitChildren(htmlBlock);
+        }
+
+        private void acceptHtml(String literal) {
+            if (literal == null) {
+                return;
+            }
+            Matcher matcher = HTML_IMG_SRC.matcher(literal);
+            if (matcher.find()) {
+                accept(matcher.group(1));
+            }
+        }
+
+        private void accept(String candidate) {
+            if (url != null || candidate == null || candidate.isBlank() || isBadge(candidate)) {
+                return;
+            }
+            url = candidate.trim();
+        }
+
+        private boolean isBadge(String candidate) {
+            try {
+                String host = URI.create(candidate.trim()).getHost();
+                return host != null && BADGE_HOSTS.contains(host.toLowerCase());
+            } catch (IllegalArgumentException e) {
+                // Not a parsable URI (relative upload path, for example) — treat as usable.
+                return false;
+            }
+        }
+    }
 
     public String getHtml() {
         Parser parser = Parser.builder().build();

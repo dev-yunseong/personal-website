@@ -1,17 +1,32 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
-<a th:href="@{/public/memos/{id}(id=${memo.id})}" th:fragment="memoCard(memo)" class="card mb-3 text-decoration-none text-dark shadow-sm">
-    <div class="card-body">
-        <div class="memo-card__meta">
-            <span th:text="${memo.getPath()}">/path/to</span>
-            <time th:text="${#temporals.format(memo.updatedAt, 'yyyy-MM-dd')}">2026-06-19</time>
-        </div>
-        <div class="memo-card__main">
-            <h5 class="card-title" th:text="${memo.getTitle()}">Memo Title</h5>
-            <i class="bi bi-arrow-up-right memo-card__arrow" aria-hidden="true"></i>
-        </div>
-    </div>
-</a>
+<!--
+  One memo as a list row. Rows, not cards: the site's main surfaces are lists,
+  and a card per item adds a border and padding to every line without adding
+  information. The thumbnail is only rendered when the memo body actually
+  contains an image, so rows are deliberately uneven.
+-->
+<li th:fragment="memoRow(memo)"
+    class="memo-row"
+    th:classappend="${memo.thumbnailUrl != null} ? 'memo-row--media' : ''">
+    <a class="memo-row__link" th:href="@{/public/memos/{id}(id=${memo.id})}">
+        <span class="memo-row__body">
+            <span class="memo-row__title" th:text="${memo.getTitle()}">Memo title</span>
+            <span class="memo-row__meta">
+                <span class="memo-row__path" th:text="${memo.getPath()}">/blog</span>
+                <time th:if="${memo.updatedAt != null}"
+                      th:datetime="${#temporals.format(memo.updatedAt, 'yyyy-MM-dd')}"
+                      th:text="${#temporals.format(memo.updatedAt, 'yyyy-MM-dd')}">2026-06-19</time>
+            </span>
+        </span>
+        <img class="memo-row__thumb"
+             th:if="${memo.thumbnailUrl != null}"
+             th:src="${memo.thumbnailUrl}"
+             alt=""
+             loading="lazy"
+             decoding="async">
+    </a>
+</li>
 </body>
 </html>
