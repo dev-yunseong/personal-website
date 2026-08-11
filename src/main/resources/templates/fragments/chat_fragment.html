@@ -12,7 +12,9 @@
                     <p class="chat-panel__eyebrow">AI CURATOR</p>
                     <h1 class="chat-panel__title">Curator</h1>
                 </div>
-                <button class="curator-memory-help" type="button" aria-describedby="curator-memory-tooltip">
+                <!-- Nothing to remember while the curator is off; advertising it would mislead. -->
+                <button class="curator-memory-help" type="button" aria-describedby="curator-memory-tooltip"
+                        th:if="${curatorEnabled}">
                     <i class="bi bi-database-lock" aria-hidden="true"></i>
                     <span>Memory</span>
                     <span class="curator-memory-tooltip" id="curator-memory-tooltip" role="tooltip">
