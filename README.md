@@ -24,10 +24,16 @@ username is read separately and has no default.
 cp .env.example .env
 ```
 
-Fill in `OPENAI_API_KEY` at minimum; the application context fails to start
-without it, because the chat model bean is created eagerly. `TAVILY_API_KEY`
-and the GeoLite2 database are optional — a missing GeoIP file only leaves the
-geo fields null.
+`OPENAI_API_KEY` must be set to something, but it does not have to be a real
+key. Spring AI validates it while building the beans, not when calling the
+API, so an empty value fails startup at `openAiApi` — and with
+`spring.main.lazy-initialization=true` it just fails one step later at
+`openAiEmbeddingModel` instead. Any non-empty placeholder starts the app with
+every page working; only the curator itself fails, and the chat UI renders
+that as an error. Put a real key in when you need the curator.
+
+`TAVILY_API_KEY` and the GeoLite2 database are optional — a missing GeoIP file
+only leaves the geo fields null.
 
 ### 3. Infrastructure
 
