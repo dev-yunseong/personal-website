@@ -3,6 +3,7 @@ package dev.yunseong.website.ai.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.yunseong.website.ai.domain.BlogAgent;
+import dev.yunseong.website.global.config.ConditionalOnCuratorEnabled;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 
+@ConditionalOnCuratorEnabled
 @Slf4j
 @Service
 @RequiredArgsConstructor

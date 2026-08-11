@@ -11,6 +11,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import dev.yunseong.website.global.config.ConditionalOnCuratorEnabled;
+
 @Configuration
 public class ChatClientConfig {
 
@@ -27,7 +29,12 @@ public class ChatClientConfig {
                 .build();
     }
 
+    /**
+     * Only this bean needs OpenAI; {@code chatMemory} above is JDBC-only and stays available so
+     * the admin chat history page keeps working without a key.
+     */
     @Bean
+    @ConditionalOnCuratorEnabled
     public ChatClient openAiChatClient(OpenAiChatModel chatModel) {
         return ChatClient.create(chatModel);
     }

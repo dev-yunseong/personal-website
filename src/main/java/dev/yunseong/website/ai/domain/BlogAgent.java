@@ -23,9 +23,11 @@ import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
 import dev.yunseong.website.ai.tool.DateTimeTools;
+import dev.yunseong.website.global.config.ConditionalOnCuratorEnabled;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 
+@ConditionalOnCuratorEnabled
 @Component
 public class BlogAgent {
 

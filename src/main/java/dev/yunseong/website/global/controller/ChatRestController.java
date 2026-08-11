@@ -8,9 +8,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import dev.yunseong.website.ai.service.ChatService;
+import dev.yunseong.website.global.config.ConditionalOnCuratorEnabled;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 
+@ConditionalOnCuratorEnabled
 @RestController
 @RequiredArgsConstructor
 public class ChatRestController {

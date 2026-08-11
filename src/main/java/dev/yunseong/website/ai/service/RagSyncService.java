@@ -5,6 +5,7 @@ import dev.yunseong.website.ai.domain.ResourceType;
 import dev.yunseong.website.ai.repository.RagDocumentRepository;
 import dev.yunseong.website.blog.domain.Memo;
 import dev.yunseong.website.blog.repository.MemoRepository;
+import dev.yunseong.website.global.config.ConditionalOnCuratorEnabled;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.document.Document;
@@ -23,6 +24,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
+@ConditionalOnCuratorEnabled
 @Slf4j
 @Service
 @Transactional
