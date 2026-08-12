@@ -1,6 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org">
 <body>
 
 <!-- Live interactive chat UI, used in chat.html -->
@@ -37,15 +36,13 @@
                     </ul>
                 </div>
 
-                <!-- No key configured: say so plainly instead of offering an input that cannot work. -->
+                <!-- Curator unavailable: say that much and no more. Why it is off is the
+                     operator's business, and the startup log already tells them. -->
                 <div class="chat-empty chat-empty--off" th:unless="${curatorEnabled}" role="status">
                     <p class="chat-empty__label">이용할 수 없음</p>
                     <p class="chat-empty__lead">
-                        큐레이터가 아직 설정되지 않아 지금은 대화할 수 없습니다.
+                        큐레이터를 지금은 이용할 수 없습니다.
                         블로그 글은 그대로 읽으실 수 있습니다.
-                    </p>
-                    <p class="chat-empty__aside" sec:authorize="isAuthenticated()">
-                        서버에 <code>OPENAI_API_KEY</code>를 설정하면 활성화됩니다.
                     </p>
                     <div class="chat-empty__links">
                         <a href="/public/memos">글 목록 보기</a>

@@ -200,24 +200,7 @@
 }
 
 .chat-empty--off .chat-empty__lead {
-  margin-bottom: var(--sp-4);
-}
-
-/* Admin-only hint. Recessed so a visitor's eye skips it if it ever leaks. */
-.chat-empty__aside {
-  color: var(--text-tertiary);
-  font-size: var(--fs-body-sm);
-  line-height: var(--lh-body);
-  margin: 0 0 var(--sp-5);
-  word-break: keep-all;
-}
-
-.chat-empty__aside code {
-  background: var(--warn-soft);
-  color: var(--warn-soft-text);
-  font-family: var(--font-mono);
-  font-size: 0.92em;
-  padding: 0.1em 0.35em;
+  margin-bottom: var(--sp-5);
 }
 
 /* Same underline treatment as .home-hero__links — the way out of a dead end. */

@@ -22,6 +22,6 @@ public class CuratorUnavailableRestController {
     @GetMapping("/api/public/chat")
     public ResponseEntity<Map<String, String>> chatUnavailable() {
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                .body(Map.of("error", "큐레이터가 현재 설정되어 있지 않습니다."));
+                .body(Map.of("error", "큐레이터를 지금은 이용할 수 없습니다."));
     }
 }

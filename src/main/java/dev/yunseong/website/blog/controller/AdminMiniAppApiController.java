@@ -27,7 +27,7 @@ public class AdminMiniAppApiController {
         MiniAppAiService miniAppAiService = miniAppAiServiceProvider.getIfAvailable();
         if (miniAppAiService == null) {
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body(Map.of("error", "AI 메타데이터 생성이 현재 설정되어 있지 않습니다."));
+                    .body(Map.of("error", "AI 메타데이터 생성을 지금은 이용할 수 없습니다."));
         }
 
         String url = body.get("url");
