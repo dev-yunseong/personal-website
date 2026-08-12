@@ -22,12 +22,11 @@
 }
 
 .home-hero__portrait {
-  aspect-ratio: 1 / 1;
   background: var(--sunken);
   border: 1px solid var(--hairline);
   border-radius: var(--r-surface);
   display: block;
-  object-fit: cover;
+  height: auto;
   width: 100%;
 }
 
