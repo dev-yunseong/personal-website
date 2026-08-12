@@ -1,6 +1,7 @@
 package dev.yunseong.website.blog.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.yunseong.website.global.config.ConditionalOnCuratorEnabled;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -12,6 +13,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 
+@ConditionalOnCuratorEnabled
 @Slf4j
 @Service
 @RequiredArgsConstructor

@@ -24,13 +24,20 @@ username is read separately and has no default.
 cp .env.example .env
 ```
 
-`OPENAI_API_KEY` must be set to something, but it does not have to be a real
-key. Spring AI validates it while building the beans, not when calling the
-API, so an empty value fails startup at `openAiApi` — and with
-`spring.main.lazy-initialization=true` it just fails one step later at
-`openAiEmbeddingModel` instead. Any non-empty placeholder starts the app with
-every page working; only the curator itself fails, and the chat UI renders
-that as an error. Put a real key in when you need the curator.
+`OPENAI_API_KEY` is optional. Leave it empty and the app detects that at
+startup, logs a `WARN`, and boots with the curator switched off:
+
+- `/public/chat` renders a notice instead of the composer
+- `GET /api/public/chat` and `POST /api/admin/miniapps/generate` answer `503`
+- RAG sync and mini app metadata generation stay idle
+
+Every other page behaves exactly as it does with a key. Put a real key in when
+you want the curator, and the whole graph comes back with no other change.
+
+Detection only looks at whether the key is blank, so a typo that resolves to an
+empty value silently disables the curator — the startup `WARN` is the only
+signal. To pin the behaviour explicitly, set `app.curator.enabled` yourself; an
+explicit value always wins over detection.
 
 `TAVILY_API_KEY` and the GeoLite2 database are optional — a missing GeoIP file
 only leaves the geo fields null.

@@ -188,6 +188,42 @@
   word-break: keep-all;
 }
 
+/* Curator not configured. Warn, not danger — nothing has failed, the feature is
+   simply not set up. Follows .home-profile-error: a left rule, no filled card. */
+.chat-empty--off {
+  border-left: 3px solid var(--warn);
+  padding-left: var(--sp-5);
+}
+
+.chat-empty--off .chat-empty__label {
+  color: var(--warn-soft-text);
+}
+
+.chat-empty--off .chat-empty__lead {
+  margin-bottom: var(--sp-5);
+}
+
+/* Same underline treatment as .home-hero__links — the way out of a dead end. */
+.chat-empty__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-5);
+}
+
+.chat-empty__links a {
+  border-bottom: 1px solid var(--hairline);
+  color: var(--text-primary);
+  font-size: var(--fs-body-sm);
+  font-weight: 560;
+  padding-bottom: 0.15rem;
+  text-decoration: none;
+}
+
+.chat-empty__links a:hover {
+  border-bottom-color: var(--accent-line);
+  color: var(--accent);
+}
+
 /* ---------------------------------------------------------------- messages */
 
 .message {

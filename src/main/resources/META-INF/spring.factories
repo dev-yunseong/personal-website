@@ -1,0 +1,4 @@
+# EnvironmentPostProcessor is still discovered through spring.factories in Boot 3.x —
+# the META-INF/spring/*.imports mechanism only covers auto-configuration classes.
+org.springframework.boot.env.EnvironmentPostProcessor=\
+dev.yunseong.website.global.config.CuratorAvailabilityEnvironmentPostProcessor

@@ -11,7 +11,9 @@
                     <p class="chat-panel__eyebrow">AI CURATOR</p>
                     <h1 class="chat-panel__title">Curator</h1>
                 </div>
-                <button class="curator-memory-help" type="button" aria-describedby="curator-memory-tooltip">
+                <!-- Nothing to remember while the curator is off; advertising it would mislead. -->
+                <button class="curator-memory-help" type="button" aria-describedby="curator-memory-tooltip"
+                        th:if="${curatorEnabled}">
                     <i class="bi bi-database-lock" aria-hidden="true"></i>
                     <span>Memory</span>
                     <span class="curator-memory-tooltip" id="curator-memory-tooltip" role="tooltip">
@@ -22,7 +24,7 @@
 
             <div class="chat-box" id="chat-box">
                 <!-- Messages will be appended here -->
-                <div class="chat-empty">
+                <div class="chat-empty" th:if="${curatorEnabled}">
                     <p class="chat-empty__lead">
                         블로그 글, 이력서, 프로젝트 기록을 근거로 답변합니다. 궁금한 점을 자유롭게 물어보세요.
                     </p>
@@ -33,9 +35,23 @@
                         <li>이 사이트는 어떤 구조로 만들어졌나요?</li>
                     </ul>
                 </div>
+
+                <!-- Curator unavailable: say that much and no more. Why it is off is the
+                     operator's business, and the startup log already tells them. -->
+                <div class="chat-empty chat-empty--off" th:unless="${curatorEnabled}" role="status">
+                    <p class="chat-empty__label">이용할 수 없음</p>
+                    <p class="chat-empty__lead">
+                        큐레이터를 지금은 이용할 수 없습니다.
+                        블로그 글은 그대로 읽으실 수 있습니다.
+                    </p>
+                    <div class="chat-empty__links">
+                        <a href="/public/memos">글 목록 보기</a>
+                        <a href="/">홈으로</a>
+                    </div>
+                </div>
             </div>
 
-            <div class="chat-panel__composer">
+            <div class="chat-panel__composer" th:if="${curatorEnabled}">
                 <form id="chat-form" class="chat-form">
                     <label class="visually-hidden" for="message-input">Message</label>
                     <input type="text" id="message-input" class="form-control chat-form__input"

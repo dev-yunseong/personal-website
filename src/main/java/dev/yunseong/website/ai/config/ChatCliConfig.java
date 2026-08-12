@@ -7,8 +7,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import dev.yunseong.website.ai.domain.BlogAgent;
+import dev.yunseong.website.global.config.ConditionalOnCuratorEnabled;
 import reactor.core.publisher.Flux;
 
+@ConditionalOnCuratorEnabled
 @Configuration
 //@Profile("!test")
 public class ChatCliConfig {

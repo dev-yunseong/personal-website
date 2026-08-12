@@ -3,12 +3,15 @@ class ChatApplication {
         this.chatBox = document.getElementById(chatBoxId);
         this.chatForm = document.getElementById(chatFormId);
         this.messageInput = document.getElementById(messageInputId);
-        this.submitButton = this.chatForm.querySelector('button[type="submit"]');
+        this.submitButton = this.chatForm ? this.chatForm.querySelector('button[type="submit"]') : null;
         this.fullResponse = "";
         this.isStreaming = false;
     }
 
     initialize() {
+        // The composer is not rendered when the curator is unavailable. Without this the
+        // constructor and this call would both throw on every load of the chat page.
+        if (!this.chatForm || !this.messageInput || !this.chatBox) return;
         this.chatForm.addEventListener('submit', this.handleSubmit.bind(this));
     }
 
