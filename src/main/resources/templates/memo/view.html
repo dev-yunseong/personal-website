@@ -76,7 +76,10 @@
           <th:block th:replace="~{fragments/memo_card_fragment :: memoRow(memo=${child})}"></th:block>
         </th:block>
       </ul>
-      <div th:replace="~{fragments/page_navi_fragment :: pageNavi(memos=${memos}, selectedCategory=${selectedCategory})}"></div>
+      <!-- The pager links to /public/memos, so it has to carry this memo's name as the
+           category — the children come from the same query the category filter uses.
+           Without it the next page drops the visitor into the unfiltered blog list. -->
+      <div th:replace="~{fragments/page_navi_fragment :: pageNavi(memos=${memos}, selectedCategory=${memo.name})}"></div>
     </nav>
 
     <div th:replace="~{fragments/mermaid_katex_parser.html :: parser}"></div>
