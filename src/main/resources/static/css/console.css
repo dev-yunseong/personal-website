@@ -600,19 +600,11 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* The selected-row treatment now lives in site.css so the public pages get it
+   too; only the console's denser metrics stay here. */
 .console .list-group-item {
-  border-color: var(--hairline);
   font-size: var(--fs-meta);
   padding: var(--sp-2) var(--sp-3);
-}
-
-/* Selected visitor = current location, so it takes the accent — as a soft
-   field with a solid edge, not a saturated block of white-on-teal. */
-.console .list-group-item.active {
-  background: var(--accent-soft);
-  border-color: var(--hairline);
-  box-shadow: inset 3px 0 0 var(--accent-solid);
-  color: var(--accent-soft-text);
 }
 
 .console .ip-list-item .fw-semibold {

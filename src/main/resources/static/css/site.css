@@ -497,10 +497,8 @@ a.card:focus-visible {
   display: none;
 }
 
-.autocomplete-suggestions .list-group-item:hover,
-.autocomplete-suggestions .list-group-item.active {
-  background: var(--site-accent);
-  color: #fff;
+.autocomplete-suggestions .list-group-item:hover {
+  background: var(--sunken);
 }
 
 .list-group {
@@ -514,9 +512,14 @@ a.card:focus-visible {
   font-size: var(--fs-body-sm);
 }
 
+/* Selected = where you are, so it takes the accent — as a soft field with a
+   solid edge, not a saturated block of white-on-teal. On a page held together
+   by hairlines, a filled block is the only thing that shouts. */
 .list-group-item.active {
-  background: var(--site-accent);
-  border-color: var(--site-accent);
+  background: var(--accent-soft);
+  border-color: var(--hairline);
+  box-shadow: inset 3px 0 0 var(--accent-solid);
+  color: var(--accent-soft-text);
 }
 
 .nav-tabs {
@@ -674,6 +677,66 @@ a.card:focus-visible {
   align-self: end;
   font-family: var(--site-mono);
   font-size: 0.7rem;
+}
+
+/* ------------------------------------------------------------- error page */
+/* Left rule, same as .home-profile-error — the system marks a failed state by
+   ruling it off, not by boxing it in a card. */
+
+.error-page {
+  border-left: 3px solid var(--danger);
+  margin: var(--sp-10) 0 var(--sp-16);
+  max-width: 44rem;
+  padding-left: clamp(1rem, 3vw, 2rem);
+}
+
+/* The code is the headline. Mono and tabular so 404 and 500 sit identically. */
+.error-page__code {
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: clamp(2.75rem, 8vw, 4.5rem);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  margin: 0 0 var(--sp-3);
+}
+
+.error-page__title {
+  font-size: var(--fs-h2);
+  font-weight: 650;
+  line-height: var(--lh-tight);
+  margin: 0 0 var(--sp-3);
+  word-break: keep-all;
+}
+
+.error-page__lead {
+  color: var(--text-secondary);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  margin: 0 0 var(--sp-5);
+  word-break: keep-all;
+}
+
+.error-page__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-5);
+}
+
+.error-page__links a {
+  border-bottom: 1px solid var(--hairline);
+  color: var(--text-primary);
+  font-size: var(--fs-body-sm);
+  font-weight: 560;
+  padding-bottom: 0.15rem;
+  text-decoration: none;
+}
+
+.error-page__links a:hover,
+.error-page__links a:focus-visible {
+  border-bottom-color: var(--accent-line);
+  color: var(--accent);
 }
 
 @media (max-width: 991.98px) {
