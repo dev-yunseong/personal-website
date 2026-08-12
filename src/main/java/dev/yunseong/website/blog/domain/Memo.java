@@ -36,6 +36,7 @@ public class Memo {
 
     public static final String PRIVATE_PREFIX = "/private";
     public static final String DELETED_PREFIX = PRIVATE_PREFIX + "/deleted";
+    public static final String PROFILE_NAME = PRIVATE_PREFIX + "/profile";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
