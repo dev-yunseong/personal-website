@@ -154,14 +154,6 @@
   display: none;
 }
 
-.chat-empty__lead {
-  color: var(--text-secondary);
-  font-size: var(--fs-body);
-  line-height: var(--lh-body);
-  margin: 0 0 var(--sp-6);
-  word-break: keep-all;
-}
-
 /* Korean label: sans, no tracking, no uppercase — mono and letter-spacing
    both mangle Hangul. */
 .chat-empty__label {
