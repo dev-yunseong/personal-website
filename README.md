@@ -52,8 +52,8 @@ from `DATABASE_URL` and the `S3_*` settings.
 ./gradlew bootRun
 ```
 
-Flyway applies `V1__initial_schema.sql` and `V2__seed_profile_memo.sql` on
-first start. The app listens on `http://localhost:8080`; sign in with
+Flyway applies the migrations in `src/main/resources/db/migration` on first
+start. The app listens on `http://localhost:8080`; sign in with
 `APPLICATION_USER` / `APPLICATION_PW`.
 
 ### Tests

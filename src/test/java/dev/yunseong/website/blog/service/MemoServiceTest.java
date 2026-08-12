@@ -78,11 +78,11 @@ class MemoServiceTest {
     }
 
     @Test
-    void getRecentMemos_ShouldLimitSortByUpdatedAtAndExcludeProfileAndPrivateMemos() {
+    void getRecentMemos_ShouldLimitSortByUpdatedAtAndExcludePrivateMemos() {
         // Given
         Memo recentMemo = new Memo(4L, "/notes/recent", "Recent content", LocalDateTime.now(), LocalDateTime.now());
         Page<Memo> page = new PageImpl<>(List.of(recentMemo));
-        when(memoRepository.findRecentPublicMemos(eq("/profile"), any(PageRequest.class))).thenReturn(page);
+        when(memoRepository.findPublic(any(PageRequest.class))).thenReturn(page);
 
         // When
         List<Memo> result = memoService.getRecentMemos(3);
@@ -91,7 +91,7 @@ class MemoServiceTest {
         assertThat(result).containsExactly(recentMemo);
 
         ArgumentCaptor<PageRequest> pageRequestCaptor = ArgumentCaptor.forClass(PageRequest.class);
-        verify(memoRepository).findRecentPublicMemos(eq("/profile"), pageRequestCaptor.capture());
+        verify(memoRepository).findPublic(pageRequestCaptor.capture());
 
         PageRequest pageRequest = pageRequestCaptor.getValue();
         assertThat(pageRequest.getPageNumber()).isZero();
