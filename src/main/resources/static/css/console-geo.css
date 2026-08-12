@@ -1,83 +1,157 @@
-.geo-country-action {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.55rem;
-    padding: 0.25rem 0;
-    color: var(--bs-body-color);
-    font: inherit;
-    font-weight: 600;
-    text-align: left;
-    background: none;
-    border: 0;
+/*
+ * Countries tab. Loaded only by the console dashboard, so every rule is scoped
+ * to `.console` and reads the semantic tokens from tokens.css.
+ *
+ * The map is a content surface (square, hairline); the country and city rows
+ * are controls (pressable, so they carry the control radius and the accent
+ * selection signal).
+ */
+
+.console .geo-country-action {
+  align-items: center;
+  background: none;
+  border: 0;
+  border-radius: var(--r-control);
+  color: var(--text-primary);
+  display: inline-flex;
+  font: inherit;
+  font-weight: 600;
+  gap: var(--sp-2);
+  padding: var(--sp-1) var(--sp-1);
+  text-align: left;
 }
 
-.geo-country-action:hover,
-.geo-country-action:focus-visible {
-    color: var(--bs-primary);
+.console .geo-country-action:hover,
+.console .geo-country-action:focus-visible {
+  color: var(--accent);
 }
 
-.geo-country-action .bi {
-    transition: transform 160ms ease;
+.console .geo-country-action__code {
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+  font-weight: 500;
 }
 
-.geo-country-action:hover .bi,
-.geo-country-action:focus-visible .bi {
-    transform: translateX(0.2rem);
+.console .geo-country-action .bi {
+  color: var(--text-tertiary);
+  transition: transform var(--dur-base) var(--ease);
 }
 
-.geo-detail-header {
-    padding: 1rem 1.1rem;
-    background:
-        linear-gradient(120deg, rgba(13, 110, 253, 0.09), transparent 55%),
-        var(--bs-tertiary-bg);
-    border: 1px solid var(--bs-border-color);
-    border-radius: 0.75rem;
+.console .geo-country-action:hover .bi,
+.console .geo-country-action:focus-visible .bi {
+  color: var(--accent);
+  transform: translateX(0.2rem);
 }
 
-.geo-map {
-    min-height: 420px;
-    overflow: hidden;
-    border: 1px solid var(--bs-border-color);
-    border-radius: 0.75rem;
-    background: var(--bs-tertiary-bg);
+/* Detail header: a plain sunken band. The old version was a blue gradient
+   wash, which read as decoration and said nothing about the data. */
+.console .geo-detail-header {
+  background: var(--sunken);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-surface);
+  padding: var(--sp-3) var(--sp-4);
 }
 
-.geo-city-list {
-    max-height: 420px;
-    overflow: auto;
+.console .geo-detail-header h4 {
+  font-size: var(--fs-h3);
+  font-weight: 650;
+  margin-bottom: var(--sp-1);
 }
 
-.geo-city-action {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 0.65rem 0.75rem;
-    color: var(--bs-body-color);
-    text-align: left;
-    background: transparent;
-    border: 0;
-    border-bottom: 1px solid var(--bs-border-color);
+.console .geo-detail-header__code {
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+  font-weight: 500;
 }
 
-.geo-city-action:hover,
-.geo-city-action:focus-visible,
-.geo-city-action.active {
-    color: var(--bs-primary);
-    background: rgba(13, 110, 253, 0.08);
+.console .geo-map {
+  background: var(--sunken);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-surface);
+  min-height: 420px;
+  overflow: hidden;
 }
 
-.geo-request-uri {
-    max-width: 32rem;
-    overflow-wrap: anywhere;
+.console .geo-city-list {
+  border: 1px solid var(--hairline);
+  max-height: 420px;
+  overflow: auto;
+}
+
+.console .geo-city-action {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--hairline);
+  color: var(--text-primary);
+  display: flex;
+  font-size: var(--fs-body-sm);
+  gap: var(--sp-3);
+  justify-content: space-between;
+  padding: var(--sp-2) var(--sp-3);
+  text-align: left;
+  width: 100%;
+}
+
+.console .geo-city-action:last-child {
+  border-bottom: 0;
+}
+
+.console .geo-city-action:hover,
+.console .geo-city-action:focus-visible {
+  background: var(--sunken);
+}
+
+/* Selected city — current location, so accent, and marked on the edge as well
+   as by fill so it survives a colour-blind read. */
+.console .geo-city-action.active {
+  background: var(--accent-soft);
+  box-shadow: inset 3px 0 0 var(--accent-solid);
+  color: var(--accent-soft-text);
+}
+
+.console .geo-city-action__name {
+  font-weight: 620;
+}
+
+.console .geo-city-action__meta {
+  color: var(--text-tertiary);
+  display: block;
+  font-size: var(--fs-meta);
+  line-height: var(--lh-tight);
+}
+
+.console .geo-city-action.active .geo-city-action__meta {
+  color: var(--accent-soft-text);
+}
+
+.console .geo-city-action__count {
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.console .geo-request-uri {
+  max-width: 32rem;
+  overflow-wrap: anywhere;
+}
+
+.console .geo-note {
+  color: var(--text-tertiary);
+  font-size: var(--fs-meta);
+  line-height: var(--lh-tight);
+  margin: var(--sp-2) 0 0;
 }
 
 @media (max-width: 767.98px) {
-    .geo-map {
-        min-height: 320px;
-    }
+  .console .geo-map {
+    min-height: 320px;
+  }
 
-    .geo-city-list {
-        max-height: 280px;
-    }
+  .console .geo-city-list {
+    max-height: 280px;
+  }
 }

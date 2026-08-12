@@ -13,6 +13,7 @@
 </th:block>
 
 <th:block layout:fragment="css">
+    <link rel="stylesheet" th:href="@{/css/showcase.css}">
     <th:block th:replace="~{fragments/game_player_fragment :: gamePlayerCss}"></th:block>
 </th:block>
 
@@ -21,8 +22,9 @@
     <div class="container px-3 px-md-4">
         <div class="row justify-content-center">
             <div class="col-12 col-lg-12">
-                <h1 class="my-3 my-md-4" th:text="${miniApp.title}">App Title</h1>
-                <p class="text-muted" th:text="${miniApp.description}" th:if="${miniApp.description != null and !miniApp.description.isEmpty()}"></p>
+                <h1 class="page-title" th:text="${miniApp.title}">App Title</h1>
+                <p class="showcase-lede" th:text="${miniApp.description}" th:if="${miniApp.description != null and !miniApp.description.isEmpty()}"></p>
+                <p class="showcase-status">실행 가능</p>
 
                 <div th:replace="~{fragments/game_player_fragment :: gamePlayer(gameUrl=${miniApp.appUrl})}"></div>
             </div>
