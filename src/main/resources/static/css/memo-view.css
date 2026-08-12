@@ -21,7 +21,7 @@
 .memo-page {
   /* Reading measure. Everything on this page — header, prose, child list —
      shares it so the left edge never moves as you scroll. */
-  --measure: 34rem;
+  --measure: 44rem;
   margin: 0 auto;
   max-width: var(--measure);
 }
@@ -149,6 +149,12 @@
   --color-fg-subtle: var(--text-tertiary);
   --color-accent-fg: var(--accent);
   --color-neutral-muted: var(--sunken);
+
+  /* github-markdown-light.css hard-codes `background-color: #ffffff` on
+     `.markdown-body` rather than reading `--color-canvas-default`, so the
+     remap above cannot reach it. Without this the article sits as a white
+     slab on the page's off-white canvas. */
+  background: transparent;
 
   font-size: var(--fs-row);
   line-height: var(--lh-body);
