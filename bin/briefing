@@ -1,0 +1,94 @@
+#!/bin/sh
+# Publish and read agent briefings.
+#
+# The API is plain text in and out, so this stays a thin wrapper over curl —
+# a markdown body goes over the wire untouched, with nothing to escape.
+#
+#   printf '# 오늘의 뉴스\n\n본문\n' | bin/briefing publish news
+#   bin/briefing publish jobs 2026-08-12 < body.md
+#   bin/briefing last news
+#   bin/briefing kinds
+#
+# Environment:
+#   BRIEFING_TOKEN  required; sent as X-Briefing-Token
+#   BRIEFING_URL    site root, defaults to https://yunseong.dev
+
+set -eu
+
+BRIEFING_URL="${BRIEFING_URL:-https://yunseong.dev}"
+API="${BRIEFING_URL}/api/agent/briefings"
+
+usage() {
+    cat >&2 <<'EOF'
+usage:
+  briefing publish <kind> [yyyy-MM-dd] < body.md
+  briefing last <kind>
+  briefing kinds
+
+env:
+  BRIEFING_TOKEN  required
+  BRIEFING_URL    defaults to https://yunseong.dev
+EOF
+    exit 2
+}
+
+require_token() {
+    if [ -z "${BRIEFING_TOKEN:-}" ]; then
+        echo "BRIEFING_TOKEN is not set." >&2
+        exit 1
+    fi
+}
+
+# curl exits 0 on a 4xx, so the status is written to the tail of the output and
+# checked here. Without this a rejected publish would look like a successful one.
+request() {
+    method="$1"
+    url="$2"
+    shift 2
+
+    response=$(curl -sS -X "$method" "$url" \
+        -H "X-Briefing-Token: ${BRIEFING_TOKEN}" \
+        -w '\n%{http_code}' "$@")
+
+    status=$(printf '%s' "$response" | tail -n1)
+    body=$(printf '%s' "$response" | sed '$d')
+
+    printf '%s\n' "$body"
+
+    case "$status" in
+        2*) return 0 ;;
+        *) echo "request failed with HTTP $status" >&2; return 1 ;;
+    esac
+}
+
+require_token
+
+[ $# -ge 1 ] || usage
+command="$1"
+shift
+
+case "$command" in
+    publish)
+        [ $# -ge 1 ] || usage
+        kind="$1"
+        url="${API}/${kind}"
+        if [ $# -ge 2 ]; then
+            url="${url}?date=$2"
+        fi
+        # --data-binary @- keeps the body byte-for-byte; -d would strip newlines
+        # and turn the markdown into one line.
+        request POST "$url" \
+            -H 'Content-Type: text/plain; charset=utf-8' \
+            --data-binary @-
+        ;;
+    last)
+        [ $# -ge 1 ] || usage
+        request GET "${API}/$1/latest"
+        ;;
+    kinds)
+        request GET "${API}/kinds"
+        ;;
+    *)
+        usage
+        ;;
+esac

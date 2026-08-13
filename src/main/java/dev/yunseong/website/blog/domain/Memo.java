@@ -11,6 +11,8 @@ import org.commonmark.node.HtmlInline;
 import org.commonmark.node.Image;
 import org.commonmark.node.Node;
 import org.commonmark.node.FencedCodeBlock;
+import org.commonmark.Extension;
+import org.commonmark.ext.gfm.tables.TablesExtension;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
 import org.commonmark.renderer.html.AttributeProvider;
@@ -37,6 +39,8 @@ public class Memo {
     public static final String PRIVATE_PREFIX = "/private";
     public static final String DELETED_PREFIX = PRIVATE_PREFIX + "/deleted";
     public static final String PROFILE_NAME = PRIVATE_PREFIX + "/profile";
+
+    private static final List<Extension> MARKDOWN_EXTENSIONS = List.of(TablesExtension.create());
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -66,6 +70,10 @@ public class Memo {
      *
      * <p>Badge images (build status, coverage) are skipped: they are decoration inside
      * the article, and cropping one into a card reads as a broken thumbnail.
+     *
+     * <p>The bare parser here is deliberate. An image inline is found the same way
+     * whether a table row is a table or a paragraph of pipes, so this walk gains nothing
+     * from the table extension that {@link #getHtml()} needs.
      */
     public String getThumbnailUrl() {
         if (content == null || content.isBlank()) {
@@ -140,11 +148,25 @@ public class Memo {
         }
     }
 
+    /**
+     * Renders the body as HTML.
+     *
+     * <p>Tables are a GFM extension rather than core CommonMark, so without it a pipe
+     * table degrades into one paragraph of literal pipes. The extension is handed to the
+     * renderer as well as the parser: it contributes the node renderer that turns the
+     * table nodes into {@code <table>} markup, and a parser-only setup would silently
+     * drop them.
+     *
+     * <p>Only tables are enabled. Pipes that mean something else — inline code, fenced
+     * blocks, prose — stay untouched, because the extension only forms a table where a
+     * header row is followed by a delimiter row.
+     */
     public String getHtml() {
-        Parser parser = Parser.builder().build();
+        Parser parser = Parser.builder().extensions(MARKDOWN_EXTENSIONS).build();
         Node node = parser.parse(content);
 
         HtmlRenderer renderer = HtmlRenderer.builder()
+                .extensions(MARKDOWN_EXTENSIONS)
                 .attributeProviderFactory(context -> new CodeBlockLanguageAttributeProvider())
                 .build();
 

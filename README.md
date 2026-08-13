@@ -56,6 +56,55 @@ Flyway applies the migrations in `src/main/resources/db/migration` on first
 start. The app listens on `http://localhost:8080`; sign in with
 `APPLICATION_USER` / `APPLICATION_PW`.
 
+## Agent briefings
+
+An external agent publishes daily briefings; the site stores them and shows a
+whole day at `/briefing`. Generating and scheduling them happens outside this
+repository — what lives here is the intake API, the page, and the CLI.
+
+A briefing is a memo named `/private/briefing/<kind>/<yyyy-MM-dd>`. The kind is
+only a path segment, so a new kind (`news`, `jobs`, anything after that) starts
+existing the first time something is published under that name. There is no
+registry to update. Publishing the same kind and date again replaces that entry
+rather than adding one, which makes a retried cron run harmless.
+
+The memos are private, so briefings stay out of the blog list, the category
+tree, search, and the sitemap. The `/briefing` page itself is public.
+
+### Setup
+
+```sh
+BRIEFING_TOKEN=<a long random string>
+```
+
+The agent sends it as `X-Briefing-Token`. It is deliberately not the admin
+account: it cannot reach `/admin/**`, and rotating it is one variable. Leave it
+unset and the intake API answers 401 to everything — it never falls open.
+
+### Publishing
+
+`bin/briefing` is a thin wrapper over `curl`; the API is plain text in and out,
+so a markdown body needs no escaping. The title is the body's first `#` heading.
+
+```sh
+export BRIEFING_TOKEN=...
+export BRIEFING_URL=http://localhost:8080   # defaults to https://yunseong.dev
+
+printf '# 오늘의 뉴스\n\n본문\n' | bin/briefing publish news
+bin/briefing publish jobs 2026-08-12 < body.md   # explicit date, default is today
+bin/briefing last news                           # most recent briefing of a kind
+bin/briefing kinds                               # kinds published recently
+```
+
+Or without the script:
+
+```sh
+curl -X POST "$BRIEFING_URL/api/agent/briefings/news" \
+  -H "X-Briefing-Token: $BRIEFING_TOKEN" \
+  -H 'Content-Type: text/plain; charset=utf-8' \
+  --data-binary @body.md
+```
+
 ### Tests
 
 ```sh
