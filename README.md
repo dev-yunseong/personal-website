@@ -81,6 +81,14 @@ The agent sends it as `X-Briefing-Token`. It is deliberately not the admin
 account: it cannot reach `/admin/**`, and rotating it is one variable. Leave it
 unset and the intake API answers 401 to everything — it never falls open.
 
+That fail-closed default has one confusing consequence worth knowing before you
+hit it: a server with no token configured and a client sending the wrong token
+produce the identical `401 Missing or invalid X-Briefing-Token`, because saying
+which one it is would tell an unauthenticated caller whether the server has a
+secret at all. If you are getting a 401 you did not expect, check the server's
+startup log — it warns when `BRIEFING_TOKEN` is unset — and confirm the client
+is pointed at the right host with `BRIEFING_URL`.
+
 ### Publishing
 
 `bin/briefing` is a thin wrapper over `curl`; the API is plain text in and out,
