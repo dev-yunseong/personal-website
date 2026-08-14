@@ -1,5 +1,6 @@
 package dev.yunseong.website.global.config;
 
+import dev.yunseong.website.global.util.ClientIpResolver;
 import dev.yunseong.website.manage.service.RequestStatisticsService;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,10 +23,11 @@ public class RequestLoggingFilter implements Filter {
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
         if (servletRequest instanceof HttpServletRequest httpRequest) {
             long startTime = System.currentTimeMillis();
+            String ipAddress = ClientIpResolver.resolve(httpRequest);
             log.info("[Request Start] method={}, uri={}, ip={}, userAgent={}",
                     httpRequest.getMethod(),
                     httpRequest.getRequestURI(),
-                    httpRequest.getRemoteAddr(),
+                    ipAddress,
                     Objects.requireNonNullElse(httpRequest.getHeader(HttpHeaders.USER_AGENT), "Unknown")
             );
             try {
@@ -45,7 +47,6 @@ public class RequestLoggingFilter implements Filter {
                 // Record statistics for public URLs
                 String referer = httpRequest.getHeader(HttpHeaders.REFERER);
                 String userAgent = httpRequest.getHeader(HttpHeaders.USER_AGENT);
-                String ipAddress = httpRequest.getRemoteAddr();
                 requestStatisticsService.recordRequest(httpRequest.getRequestURI(), httpRequest.getMethod(), referer, userAgent, ipAddress, statusCode, (int) duration);
             }
         } else {

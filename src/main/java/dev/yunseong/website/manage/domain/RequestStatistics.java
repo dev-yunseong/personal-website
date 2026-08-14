@@ -33,7 +33,8 @@ public class RequestStatistics {
     @Column(name = "user_agent", length = 512)
     private String userAgent;
 
-    @Column
+    /** 45 characters is the longest IPv6 literal, including an IPv4-mapped suffix. */
+    @Column(length = 45)
     private String ip;
 
     @Column(name = "status_code")
