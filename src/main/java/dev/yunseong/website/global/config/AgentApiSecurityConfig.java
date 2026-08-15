@@ -1,5 +1,6 @@
 package dev.yunseong.website.global.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,6 +22,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  * The chain itself permits everything it matches — the filter has already rejected any
  * request without a valid token by then.
  */
+@Slf4j
 @Configuration
 public class AgentApiSecurityConfig {
 
@@ -32,6 +34,8 @@ public class AgentApiSecurityConfig {
     @Bean
     @Order(1)
     public SecurityFilterChain agentApiSecurityFilterChain(HttpSecurity http) throws Exception {
+        warnIfIntakeIsClosed();
+
         http
                 .securityMatcher(AGENT_API_PATTERN)
                 .csrf(csrf -> csrf.disable())
@@ -46,5 +50,21 @@ public class AgentApiSecurityConfig {
                 .authorizeHttpRequests(requests -> requests.anyRequest().permitAll());
 
         return http.build();
+    }
+
+    /**
+     * Says once, at startup, that the intake API is shut.
+     *
+     * <p>An unconfigured token and a wrong token are the same 401 to the caller, and they
+     * stay that way — telling an unauthenticated client that the server has no secret
+     * configured hands it information it has no business having. The operator does need
+     * to know, though, so the distinction goes to the log instead of the response. Without
+     * this, a fresh environment looks like a client-side auth bug.
+     */
+    private void warnIfIntakeIsClosed() {
+        if (briefingToken == null || briefingToken.isBlank()) {
+            log.warn("app.briefing.token is not set — {} rejects every request with 401. "
+                    + "Set BRIEFING_TOKEN to accept briefings.", AGENT_API_PATTERN);
+        }
     }
 }
