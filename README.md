@@ -56,6 +56,54 @@ Flyway applies the migrations in `src/main/resources/db/migration` on first
 start. The app listens on `http://localhost:8080`; sign in with
 `APPLICATION_USER` / `APPLICATION_PW`.
 
+## Public memo automation
+
+`bin/website` exposes public memos to scheduled tools without scraping rendered
+HTML. It never authenticates and uses only the same public-only repository
+queries as the anonymous website.
+
+```sh
+export WEBSITE_URL=http://localhost:8080   # defaults to https://yunseong.dev
+
+bin/website memo list
+bin/website memo list --updated-after 2026-08-15T10:00:00 --page 0 --limit 100
+bin/website memo read 42
+```
+
+`memo list` prints the API JSON unchanged:
+
+```json
+{
+  "items": [
+    {"id": 42, "name": "/notes/example", "updatedAt": "2026-08-15T10:30:00"}
+  ],
+  "page": 0,
+  "limit": 100,
+  "hasNext": false
+}
+```
+
+`updated-after` is a strict-exclusive filter (`updatedAt > value`). Its value is
+an ISO local date-time without an offset, interpreted in the website server's
+local time. Pages are zero-based; `limit` must be between 1 and 100. Results are
+ordered by `updatedAt`, then memo ID, both ascending. Offset pagination is stable
+for a static result set; a consumer that overlaps with concurrent edits should
+start slightly before its last watermark and deduplicate by memo ID.
+
+`memo read` writes the stored Markdown bytes to stdout, including trailing
+newlines. Private, deleted, and missing memo IDs all return HTTP 404 and a
+non-zero CLI exit status.
+
+The underlying public API is:
+
+```text
+GET /api/public/memos?updatedAfter=<yyyy-MM-ddTHH:mm:ss>&page=0&limit=100
+GET /api/public/memos/<id>/content
+```
+
+The list endpoint returns metadata only. The content endpoint returns
+`text/markdown; charset=UTF-8`.
+
 ## Agent briefings
 
 An external agent publishes daily briefings; the site stores them and shows a
