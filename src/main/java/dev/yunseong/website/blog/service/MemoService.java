@@ -113,6 +113,11 @@ public class MemoService {
         return memoRepository.findPublic(pageable);
     }
 
+    @Transactional(readOnly = true)
+    public Page<Memo> getPublicMemosUpdatedAfter(LocalDateTime updatedAfter, Pageable pageable) {
+        return memoRepository.findPublicUpdatedAfter(updatedAfter, pageable);
+    }
+
     @FilterVisibleContent
     @Transactional(readOnly = true)
     public List<Memo> getRecentMemos(int limit) {

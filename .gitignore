@@ -24,6 +24,7 @@ bin/
 !/bin/
 /bin/*
 !/bin/briefing
+!/bin/website
 
 ### IntelliJ IDEA ###
 .idea
