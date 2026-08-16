@@ -2,7 +2,7 @@
 
 - Date: 2026-08-16
 - GitHub Issue: #175
-- Status: Implemented and independently reviewed; PR pending
+- Status: Completed; PR #176 open
 
 ## Goal
 
@@ -31,7 +31,7 @@
 - [x] **Step 3: CLI TDD** — 로컬 HTTP server 기반 `BriefingCliTest`에서 `show <kind> <date>`의 GET method, exact path, `X-Briefing-Token` header를 검증한다. UTF-8 응답 끝이 0개·1개·여러 개 newline인 세 fixture의 stdout byte-for-byte 보존을 각각 RED→GREEN으로 검증한다. 404는 stdout 비움+stderr exact body/status, 인자 부족·초과는 usage/exit 2로 검증한다. `last` 성공 경로도 공통 request 회귀 테스트로 보호한다.
 - [x] **Step 4: Docs** — README와 CLI usage에 새 명령과 직접 GET 예시를 기록한다.
 - [x] **Step 5: Validation** — focused tests, 전체 test, clean build, 로컬 HTTP fixture를 사용한 실제 CLI 조회를 수행한다. 운영 smoke test는 endpoint 배포 후 수행한다.
-- [ ] **Step 6: Review / PR** — diff·security 검사, 독립 review, commit, push, PR, CI 확인을 수행한다.
+- [x] **Step 6: Review / PR** — diff·security 검사, 독립 review, commit, push, PR #176 생성, GitGuardian check PASS를 확인했다.
 
 ## Validation
 - **Commands to run:**
