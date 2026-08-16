@@ -176,6 +176,41 @@ class AgentBriefingApiControllerTest {
     }
 
     @Test
+    void historical_ReturnsTheStoredContentAsUtf8PlainText() throws Exception {
+        when(briefingService.findByKindAndDate("news", LocalDate.of(2026, 8, 12)))
+                .thenReturn(Optional.of(briefing("news", "2026-08-12", "# 지난 뉴스\n\n본문")));
+
+        mockMvc.perform(get("/api/agent/briefings/news/2026-08-12"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(TEXT_PLAIN_UTF8))
+                .andExpect(content().string("# 지난 뉴스\n\n본문"));
+
+        verify(briefingService).findByKindAndDate("news", LocalDate.of(2026, 8, 12));
+    }
+
+    @Test
+    void historical_AnswersNotFoundWithKindAndDate() throws Exception {
+        when(briefingService.findByKindAndDate("news", LocalDate.of(2026, 8, 11)))
+                .thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/agent/briefings/news/2026-08-11"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(TEXT_PLAIN_UTF8))
+                .andExpect(content().string(
+                        "No briefing published for kind 'news' on 2026-08-11.\n"));
+    }
+
+    @Test
+    void historical_AnswersBadRequestForAMalformedDateWithoutCallingTheService() throws Exception {
+        mockMvc.perform(get("/api/agent/briefings/news/2026-08-15-extra"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(TEXT_PLAIN_UTF8))
+                .andExpect(content().string("Date must be yyyy-MM-dd.\n"));
+
+        verify(briefingService, never()).findByKindAndDate(anyString(), any());
+    }
+
+    @Test
     void latest_ReturnsTheStoredContentAsPlainText() throws Exception {
         when(briefingService.findLatest("news"))
                 .thenReturn(Optional.of(briefing("news", "2026-08-12", "# 오늘의 뉴스\n\n본문")));
@@ -184,6 +219,8 @@ class AgentBriefingApiControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.TEXT_PLAIN))
                 .andExpect(content().string("# 오늘의 뉴스\n\n본문"));
+
+        verify(briefingService, never()).findByKindAndDate(anyString(), any());
     }
 
     @Test

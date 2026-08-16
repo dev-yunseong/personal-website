@@ -7,6 +7,7 @@
 #   printf '# 오늘의 뉴스\n\n본문\n' | bin/briefing publish news
 #   bin/briefing publish jobs 2026-08-12 < body.md
 #   bin/briefing last news
+#   bin/briefing show news 2026-08-12
 #   bin/briefing kinds
 #
 # Environment:
@@ -23,6 +24,7 @@ usage() {
 usage:
   briefing publish <kind> [yyyy-MM-dd] < body.md
   briefing last <kind>
+  briefing show <kind> <yyyy-MM-dd>
   briefing kinds
 
 env:
@@ -39,26 +41,43 @@ require_token() {
     fi
 }
 
-# curl exits 0 on a 4xx, so the status is written to the tail of the output and
-# checked here. Without this a rejected publish would look like a successful one.
+# Keep response bytes in a file: shell command substitution strips trailing newlines.
+# curl writes only the HTTP status to the variable, never the response body.
 request() {
     method="$1"
     url="$2"
     shift 2
+    output=$(mktemp)
+    trap 'rm -f "$output"' 0 1 2 3 15
 
-    response=$(curl -sS -X "$method" "$url" \
-        -H "X-Briefing-Token: ${BRIEFING_TOKEN}" \
-        -w '\n%{http_code}' "$@")
-
-    status=$(printf '%s' "$response" | tail -n1)
-    body=$(printf '%s' "$response" | sed '$d')
-
-    printf '%s\n' "$body"
+    if status=$(curl -sS -X "$method" \
+            --url "$url" \
+            -H "X-Briefing-Token: ${BRIEFING_TOKEN}" \
+            -o "$output" \
+            -w '%{http_code}' "$@"); then
+        :
+    else
+        code=$?
+        rm -f "$output"
+        trap - 0 1 2 3 15
+        return "$code"
+    fi
 
     case "$status" in
-        2*) return 0 ;;
-        *) echo "request failed with HTTP $status" >&2; return 1 ;;
+        2*)
+            cat "$output"
+            ;;
+        *)
+            cat "$output" >&2
+            printf 'request failed with HTTP %s\n' "$status" >&2
+            rm -f "$output"
+            trap - 0 1 2 3 15
+            return 1
+            ;;
     esac
+
+    rm -f "$output"
+    trap - 0 1 2 3 15
 }
 
 require_token
@@ -84,6 +103,10 @@ case "$command" in
     last)
         [ $# -ge 1 ] || usage
         request GET "${API}/$1/latest"
+        ;;
+    show)
+        [ $# -eq 2 ] || usage
+        request GET "${API}/$1/$2"
         ;;
     kinds)
         request GET "${API}/kinds"
