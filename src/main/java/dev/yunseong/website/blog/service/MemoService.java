@@ -77,7 +77,7 @@ public class MemoService {
     }
 
     public Memo softDeleteMemo(long memoId) {
-        Memo memo = getMemo(memoId);
+        Memo memo = getMemoWithoutVisibilityFilter(memoId);
         memo.setName(buildDeletedMemoName(memo));
         return memo;
     }
@@ -141,6 +141,14 @@ public class MemoService {
     @FilterVisibleContent
     @Transactional(readOnly = true)
     public Memo getMemo(long memoId) {
+        return getMemoWithoutVisibilityFilter(memoId);
+    }
+
+    /**
+     * 가시성 필터를 거치지 않는 조회. 관리자 전용 쓰기 경로(수정/삭제)가 사용한다.
+     * {@code private} 이므로 프록시를 태울 수 없고, 필터 미적용이 의도임이 코드에 드러난다.
+     */
+    private Memo getMemoWithoutVisibilityFilter(long memoId) {
         return memoRepository.findById(memoId)
                 .orElseThrow(MemoNotFoundException::new);
     }
@@ -153,7 +161,7 @@ public class MemoService {
     }
 
     public void updateMemo(long memoId, String title, String content) {
-        Memo memo = getMemo(memoId);
+        Memo memo = getMemoWithoutVisibilityFilter(memoId);
         memo.setName(title);
         memo.setContent(content);
     }
