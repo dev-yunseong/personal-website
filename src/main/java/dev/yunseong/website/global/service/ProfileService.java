@@ -16,7 +16,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ProfileService {
 
-    private static final String PROFILE_MEMO_NAME = "/profile";
+    private static final String PROFILE_MEMO_NAME = Memo.PROFILE_NAME;
 
     private final MemoService memoService;
     private final ProfileMemoParser profileMemoParser;

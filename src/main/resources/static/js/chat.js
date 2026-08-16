@@ -187,7 +187,7 @@ class ChatApplication {
         messageElement.classList.add('message', 'llm-message');
 
         const toolStatusHtml = `
-            <div class="tool-status">
+            <div class="tool-status" role="status">
                 <div class="tool-in-progress">
                     <span class="tool-current-label">Thinking</span><span class="tool-current-dots">...</span>
                 </div>

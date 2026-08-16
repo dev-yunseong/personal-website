@@ -10,52 +10,45 @@
               href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
               integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
               crossorigin="">
+        <link rel="stylesheet" th:href="@{/css/console.css}">
         <link rel="stylesheet" th:href="@{/css/console-geo.css}">
     </th:block>
 </head>
 
 <body>
 <th:block layout:fragment="content">
-    <div class="container mt-4">
-        <h1 class="mb-2">Admin Console</h1>
-        <div class="mb-3">
+    <div class="container console mt-4">
+        <div class="console-head">
+            <h1>Admin Console</h1>
             <a th:href="@{/admin/chat}" class="btn btn-sm btn-outline-secondary">Chat History</a>
         </div>
-        <div class="mb-4 d-flex align-items-center gap-3 flex-wrap">
+
+        <div class="console-toolbar">
             <div class="btn-group" role="group" aria-label="Time period">
                 <button class="btn btn-outline-primary btn-sm js-days" th:classappend="${days == 1} ? 'active'" data-days="1" type="button">1일</button>
                 <button class="btn btn-outline-primary btn-sm js-days" th:classappend="${days == 7} ? 'active'" data-days="7" type="button">7일</button>
                 <button class="btn btn-outline-primary btn-sm js-days" th:classappend="${days == 30} ? 'active'" data-days="30" type="button">30일</button>
                 <button class="btn btn-outline-primary btn-sm js-days" th:classappend="${days == 90} ? 'active'" data-days="90" type="button">90일</button>
             </div>
-            <span class="text-muted js-days-label" th:text="'최근 ' + ${days} + '일 통계'"></span>
+            <span class="console-toolbar__label js-days-label" th:text="'최근 ' + ${days} + '일 통계'"></span>
         </div>
 
         <!-- Summary Cards -->
-        <div class="row mb-4" id="summary-cards">
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Total Requests</h5>
-                        <p class="card-text display-4" id="stat-total-requests"><span class="text-muted">…</span></p>
-                    </div>
-                </div>
+        <div class="stat-grid stat-grid--lead" id="summary-cards">
+            <div class="stat">
+                <div class="stat__label">Total Requests</div>
+                <div class="stat__value" id="stat-total-requests"><span class="stat__pending">—</span></div>
+                <p class="stat__hint">수집 대상 요청 수</p>
             </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Unique Pages</h5>
-                        <p class="card-text display-4" id="stat-unique-uris"><span class="text-muted">…</span></p>
-                    </div>
-                </div>
+            <div class="stat">
+                <div class="stat__label">Unique Pages</div>
+                <div class="stat__value" id="stat-unique-uris"><span class="stat__pending">—</span></div>
+                <p class="stat__hint">서로 다른 URI</p>
             </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Data Points</h5>
-                        <p class="card-text display-4" id="stat-data-points"><span class="text-muted">…</span></p>
-                    </div>
-                </div>
+            <div class="stat">
+                <div class="stat__label">Data Points</div>
+                <div class="stat__value" id="stat-data-points"><span class="stat__pending">—</span></div>
+                <p class="stat__hint">저장된 집계 행</p>
             </div>
         </div>
 
@@ -254,10 +247,19 @@
             });
         }
 
+        // Reads a semantic token so the chart below stays inside the design system.
+        function token(name) {
+            return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        }
+
+        // The code itself is the label, so the chip never relies on colour alone.
         function statusBadge(code) {
-            if (!code) return '<span class="badge bg-secondary">-</span>';
-            const cls = code >= 500 ? 'bg-danger' : code >= 400 ? 'bg-warning text-dark' : code >= 300 ? 'bg-info text-dark' : 'bg-success';
-            return `<span class="badge ${cls}">${code}</span>`;
+            if (!code) return '<span class="status status--muted">—</span>';
+            const cls = code >= 500 ? 'status--danger'
+                      : code >= 400 ? 'status--warn'
+                      : code >= 300 ? 'status--muted'
+                      : 'status--ok';
+            return `<span class="status ${cls}">${code}</span>`;
         }
 
         function paginationHtml(number, totalPages, onClickAttr) {
@@ -277,11 +279,17 @@
         }
 
         // ── summary ────────────────────────────────────────────────────
+        // Grouped digits: six-figure counts are unreadable as one run.
+        function figure(value) {
+            const n = Number(value);
+            return Number.isFinite(n) ? n.toLocaleString('en-US') : String(value);
+        }
+
         function loadSummary() {
             apiFetch('summary', {days: STATE.days, statusFilter: STATE.statusFilter}).then(d => {
-                document.getElementById('stat-total-requests').textContent = d.totalRequests;
-                document.getElementById('stat-unique-uris').textContent    = d.uniqueUris;
-                document.getElementById('stat-data-points').textContent    = d.dataPoints;
+                document.getElementById('stat-total-requests').textContent = figure(d.totalRequests);
+                document.getElementById('stat-unique-uris').textContent    = figure(d.uniqueUris);
+                document.getElementById('stat-data-points').textContent    = figure(d.dataPoints);
             }).catch(() => {});
         }
 
@@ -303,11 +311,12 @@
                     el.innerHTML = '<div class="alert alert-info">No request data available yet. Statistics will appear after requests to /public/** endpoints are made.</div>';
                     return;
                 }
-                let html = `<table class="table table-striped"><thead><tr><th>${d.groupByLabel}</th><th>Total Requests</th></tr></thead><tbody>`;
+                let html = `<div class="table-responsive"><table class="table table-hover">`
+                    + `<thead><tr><th>${escHtml(d.groupByLabel)}</th><th class="num">Requests</th></tr></thead><tbody>`;
                 d.content.forEach(row => {
-                html += `<tr><td>${escHtml(row.uri)}</td><td>${escHtml(String(row.requestCount))}</td></tr>`;
+                html += `<tr><td>${escHtml(row.uri)}</td><td class="num">${escHtml(String(row.requestCount))}</td></tr>`;
                 });
-                html += '</tbody></table>';
+                html += '</tbody></table></div>';
                 html += paginationHtml(d.number, d.totalPages, 'data-top-page');
                 el.innerHTML = html;
 
@@ -334,19 +343,20 @@
                     el.innerHTML = '<div class="alert alert-info">No request statistics available yet. Statistics are saved every 5 minutes.</div>';
                     return;
                 }
-                let html = '<table class="table table-striped table-hover"><thead><tr><th>Timestamp</th><th>Method</th><th>Status</th><th>URI</th><th>Referer</th><th>User Agent</th></tr></thead><tbody>';
+                let html = '<div class="table-responsive"><table class="table table-hover">'
+                    + '<thead><tr><th>Timestamp</th><th>Method</th><th>Status</th><th>URI</th><th>Referer</th><th>User Agent</th></tr></thead><tbody>';
                 d.content.forEach(row => {
                     const ts = row.createdAt ? row.createdAt.replace('T', ' ').substring(0, 19) : '-';
                     html += `<tr>
-                        <td>${escHtml(ts)}</td>
-                        <td><span class="badge bg-primary">${escHtml(row.method || '')}</span></td>
+                        <td class="mono">${escHtml(ts)}</td>
+                        <td><span class="method">${escHtml(row.method || '')}</span></td>
                         <td>${statusBadge(row.statusCode)}</td>
                         <td>${escHtml(row.uri || '')}</td>
-                        <td><small class="text-muted">${escHtml(row.referer || '-')}</small></td>
-                        <td><small class="text-muted">${escHtml((row.userAgent || '').substring(0, 50) || '-')}</small></td>
+                        <td class="cell-dim"><span class="cell-clip">${escHtml(row.referer || '-')}</span></td>
+                        <td class="cell-dim"><span class="cell-clip">${escHtml((row.userAgent || '').substring(0, 50) || '-')}</span></td>
                     </tr>`;
                 });
-                html += '</tbody></table>';
+                html += '</tbody></table></div>';
                 html += paginationHtml(d.number, d.totalPages, 'data-hist-page');
                 el.innerHTML = html;
 
@@ -377,6 +387,10 @@
                 }
                 el.innerHTML = '<canvas id="timelineChart" style="max-height:400px;"></canvas>';
                 if (timelineChart) { timelineChart.destroy(); timelineChart = null; }
+                // Chart colours come from the token layer, never from literals.
+                const accent = token('--accent-solid');
+                const hairline = token('--hairline');
+                const axisText = token('--text-tertiary');
                 timelineChart = new Chart(document.getElementById('timelineChart'), {
                     type: 'bar',
                     data: {
@@ -384,20 +398,32 @@
                         datasets: [{
                             label: 'Requests',
                             data:  data.map(d => d.count),
-                            backgroundColor: 'rgba(13,110,253,0.6)',
-                            borderColor: 'rgba(13,110,253,1)',
-                            borderWidth: 1
+                            backgroundColor: accent,
+                            borderColor: accent,
+                            borderWidth: 0,
+                            borderRadius: 0,
+                            maxBarThickness: 28
                         }]
                     },
                     options: {
                         responsive: true,
+                        font: { family: token('--font-sans') },
                         plugins: {
                             legend: { display: false },
                             tooltip: { mode: 'index', intersect: false }
                         },
                         scales: {
-                            x: { title: { display: true, text: 'Period' } },
-                            y: { beginAtZero: true, title: { display: true, text: 'Request Count' } }
+                            x: {
+                                grid: { display: false },
+                                border: { color: hairline },
+                                ticks: { color: axisText, font: { size: 11 } }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: hairline },
+                                border: { display: false },
+                                ticks: { color: axisText, font: { size: 11 }, precision: 0 }
+                            }
                         }
                     }
                 });

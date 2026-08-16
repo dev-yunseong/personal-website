@@ -71,7 +71,7 @@ public class MemoService {
 
     public Memo moveMemo(String sourceName, String targetName) {
         Memo memo = memoRepository.findByName(sourceName)
-                .orElseThrow(() -> new IllegalArgumentException("Memo Not Found"));
+                .orElseThrow(MemoNotFoundException::new);
         memo.setName(targetName);
         return memo;
     }
@@ -93,7 +93,7 @@ public class MemoService {
     @Transactional(readOnly = true)
     public Memo getMemo(String name) {
         return memoRepository.findByName(name)
-                .orElseThrow(() -> new IllegalArgumentException("Memo Not Found"));
+                .orElseThrow(MemoNotFoundException::new);
     }
 
     @FilterVisibleContent
@@ -113,11 +113,16 @@ public class MemoService {
         return memoRepository.findPublic(pageOnly(pageable));
     }
 
+    @Transactional(readOnly = true)
+    public Page<Memo> getPublicMemosUpdatedAfter(LocalDateTime updatedAfter, Pageable pageable) {
+        return memoRepository.findPublicUpdatedAfter(updatedAfter, pageable);
+    }
+
     @FilterVisibleContent
     @Transactional(readOnly = true)
     public List<Memo> getRecentMemos(int limit) {
         PageRequest pageRequest = PageRequest.of(0, limit, Sort.by("updatedAt").descending());
-        return memoRepository.findRecentPublicMemos("/profile", pageRequest).getContent();
+        return memoRepository.findPublic(pageRequest).getContent();
     }
 
     @Transactional(readOnly = true)
@@ -137,14 +142,14 @@ public class MemoService {
     @Transactional(readOnly = true)
     public Memo getMemo(long memoId) {
         return memoRepository.findById(memoId)
-                .orElseThrow(() -> new IllegalArgumentException("Memo Not Found"));
+                .orElseThrow(MemoNotFoundException::new);
     }
 
     @FilterVisibleContent
     @Transactional(readOnly = true)
     public Memo getPublicMemo(long memoId) {
         return memoRepository.findPublicById(memoId)
-                .orElseThrow(() -> new IllegalArgumentException("Memo Not Found"));
+                .orElseThrow(MemoNotFoundException::new);
     }
 
     public void updateMemo(long memoId, String title, String content) {
