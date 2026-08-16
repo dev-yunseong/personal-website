@@ -95,6 +95,20 @@ public class AgentBriefingApiController {
         return new String(body, charset == null ? StandardCharsets.UTF_8 : charset);
     }
 
+    /** One briefing selected by kind and publication date, as stored. */
+    @GetMapping("/{kind}/{date}")
+    public ResponseEntity<String> historical(
+            @PathVariable String kind,
+            @PathVariable String date) {
+        LocalDate briefingDate = BriefingService.parseRequiredDate(date);
+        return briefingService.findByKindAndDate(kind, briefingDate)
+                .map(memo -> ResponseEntity.ok(memo.getContent()))
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .contentType(TEXT_PLAIN_UTF8)
+                        .body("No briefing published for kind '" + kind
+                                + "' on " + briefingDate.format(BriefingService.DATE_FORMATTER) + ".\n"));
+    }
+
     /** The most recent briefing of one kind, as stored. */
     @GetMapping("/{kind}/latest")
     public ResponseEntity<String> latest(@PathVariable String kind) {

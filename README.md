@@ -149,6 +149,7 @@ export BRIEFING_URL=http://localhost:8080   # defaults to https://yunseong.dev
 printf '# 오늘의 뉴스\n\n본문\n' | bin/briefing publish news
 bin/briefing publish jobs 2026-08-12 < body.md   # explicit date, default is today
 bin/briefing last news                           # most recent briefing of a kind
+bin/briefing show news 2026-08-12                # briefing for an exact date
 bin/briefing kinds                               # kinds published recently
 ```
 
@@ -159,6 +160,9 @@ curl -X POST "$BRIEFING_URL/api/agent/briefings/news" \
   -H "X-Briefing-Token: $BRIEFING_TOKEN" \
   -H 'Content-Type: text/plain; charset=utf-8' \
   --data-binary @body.md
+
+curl "$BRIEFING_URL/api/agent/briefings/news/2026-08-12" \
+  -H "X-Briefing-Token: $BRIEFING_TOKEN"
 ```
 
 ### Tests

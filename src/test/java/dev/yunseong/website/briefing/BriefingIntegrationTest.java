@@ -168,9 +168,22 @@ class BriefingIntegrationTest {
     }
 
     @Test
+    void historicalReadReturnsTheSelectedStoredBriefingWithKoreanIntact() throws Exception {
+        publish("news", "# 오늘의 뉴스\n\n첫 소식입니다.\n", TOKEN);
+
+        MvcResult result = mockMvc.perform(get("/api/agent/briefings/news/" + TODAY)
+                        .header(BriefingTokenFilter.TOKEN_HEADER, TOKEN))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        assertThat(bodyOf(result)).contains("오늘의 뉴스").contains("첫 소식입니다.");
+    }
+
+    @Test
     void readEndpointsAlsoRequireTheToken() throws Exception {
         mockMvc.perform(get("/api/agent/briefings/kinds")).andExpect(status().isUnauthorized());
         mockMvc.perform(get("/api/agent/briefings/news/latest")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/agent/briefings/news/" + TODAY)).andExpect(status().isUnauthorized());
     }
 
     /** A leaked briefing token must not become a way into the admin area. */
