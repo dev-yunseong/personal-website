@@ -97,8 +97,10 @@ public interface MemoRepository extends JpaRepository<Memo, Long> {
     )
     Page<Memo> findPublicByPath(String path, Pageable pageable);
 
-    @Query("SELECT m FROM Memo m WHERE m.name NOT LIKE '/private%'")
+    @Query("SELECT m FROM Memo m WHERE m.name NOT LIKE '/private%' ORDER BY m.updatedAt DESC")
     Page<Memo> findPublic(Pageable pageable);
+
+    Page<Memo> findAllByOrderByUpdatedAtDesc(Pageable pageable);
 
     @Query("SELECT m FROM Memo m WHERE m.name NOT LIKE '/private%' AND m.updatedAt > :updatedAfter")
     Page<Memo> findPublicUpdatedAfter(
