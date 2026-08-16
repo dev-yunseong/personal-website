@@ -17,6 +17,7 @@
     <!-- Prism.js CSS for syntax highlighting - GitHub style theme -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism-themes/1.9.0/prism-ghcolors.min.css">
     <link rel="stylesheet" th:href="@{/css/memo-view.css}">
+    <link rel="stylesheet" th:href="@{/css/showcase.css}">
     <th:block th:replace="~{fragments/game_player_fragment :: gamePlayerCss}"></th:block>
 </th:block>
 
@@ -26,11 +27,12 @@
         <div class="row justify-content-center">
             <div class="col-12 col-lg-12">
                 <!-- Game Title -->
-                <h1 class="my-3 my-md-4" th:text="${gameProject.getTitle()}">Game Title</h1>
-                
+                <h1 class="page-title" th:text="${gameProject.getTitle()}">Game Title</h1>
+                <p class="showcase-status">실행 가능</p>
+
                 <!-- Game iframe Section -->
                 <div th:replace="~{fragments/game_player_fragment :: gamePlayer(gameUrl=${gameProject.gameUrl})}"></div>
-                
+
                 <!-- Project Description Section -->
                 <div th:replace="~{fragments/memo_fragment :: memoFragment}"></div>
             </div>

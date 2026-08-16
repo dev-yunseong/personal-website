@@ -148,7 +148,7 @@ public class AdminMemoController {
     }
 
     private boolean isProfileMemo(String title) {
-        return "/profile".equals(title) || "profile".equals(title);
+        return Memo.PROFILE_NAME.equals(title);
     }
 
     @PostMapping(value = "/profile/validate", produces = MediaType.APPLICATION_JSON_VALUE)

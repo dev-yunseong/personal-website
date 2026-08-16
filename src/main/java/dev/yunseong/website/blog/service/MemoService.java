@@ -29,12 +29,12 @@ public class MemoService {
 
     @FilterVisibleContent
     public Page<Memo> searchMemo(String query, Pageable pageable) {
-        return memoRepository.findByQuery(query, pageable);
+        return memoRepository.findByQuery(query, pageOnly(pageable));
     }
 
     @FilterVisibleContent
     public Page<Memo> searchPublicMemo(String query, Pageable pageable) {
-        return memoRepository.findPublicByQuery(query, pageable);
+        return memoRepository.findPublicByQuery(query, pageOnly(pageable));
     }
 
     public long saveMemo(String title, String content) {
@@ -71,13 +71,13 @@ public class MemoService {
 
     public Memo moveMemo(String sourceName, String targetName) {
         Memo memo = memoRepository.findByName(sourceName)
-                .orElseThrow(() -> new IllegalArgumentException("Memo Not Found"));
+                .orElseThrow(MemoNotFoundException::new);
         memo.setName(targetName);
         return memo;
     }
 
     public Memo softDeleteMemo(long memoId) {
-        Memo memo = getMemo(memoId);
+        Memo memo = getMemoWithoutVisibilityFilter(memoId);
         memo.setName(buildDeletedMemoName(memo));
         return memo;
     }
@@ -93,7 +93,7 @@ public class MemoService {
     @Transactional(readOnly = true)
     public Memo getMemo(String name) {
         return memoRepository.findByName(name)
-                .orElseThrow(() -> new IllegalArgumentException("Memo Not Found"));
+                .orElseThrow(MemoNotFoundException::new);
     }
 
     @FilterVisibleContent
@@ -104,53 +104,64 @@ public class MemoService {
 
     @Transactional(readOnly = true)
     public Page<Memo> getMemos(Pageable pageable) {
-        return memoRepository.findAll(pageable);
+        return memoRepository.findAllByOrderByUpdatedAtDesc(pageOnly(pageable));
     }
 
     @FilterVisibleContent
     @Transactional(readOnly = true)
     public Page<Memo> getPublicMemos(Pageable pageable) {
-        return memoRepository.findPublic(pageable);
+        return memoRepository.findPublic(pageOnly(pageable));
+    }
+
+    @Transactional(readOnly = true)
+    public Page<Memo> getPublicMemosUpdatedAfter(LocalDateTime updatedAfter, Pageable pageable) {
+        return memoRepository.findPublicUpdatedAfter(updatedAfter, pageable);
     }
 
     @FilterVisibleContent
     @Transactional(readOnly = true)
     public List<Memo> getRecentMemos(int limit) {
         PageRequest pageRequest = PageRequest.of(0, limit, Sort.by("updatedAt").descending());
-        return memoRepository.findRecentPublicMemos("/profile", pageRequest).getContent();
+        return memoRepository.findPublic(pageRequest).getContent();
     }
 
     @Transactional(readOnly = true)
     public Page<Memo> getMemos(String category, Pageable pageable) {
         category = normalizeCategory(category);
-        PageRequest pageRequest = getCategoryPageRequest(pageable);
-        return memoRepository.findAllByPath(category, pageRequest);
+        return memoRepository.findAllByPath(category, pageOnly(pageable));
     }
 
     @FilterVisibleContent
     @Transactional(readOnly = true)
     public Page<Memo> getPublicMemos(String category, Pageable pageable) {
         category = normalizeCategory(category);
-        PageRequest pageRequest = getCategoryPageRequest(pageable);
-        return memoRepository.findPublicByPath(category, pageRequest);
+        return memoRepository.findPublicByPath(category, pageOnly(pageable));
     }
 
     @FilterVisibleContent
     @Transactional(readOnly = true)
     public Memo getMemo(long memoId) {
+        return getMemoWithoutVisibilityFilter(memoId);
+    }
+
+    /**
+     * 가시성 필터를 거치지 않는 조회. 관리자 전용 쓰기 경로(수정/삭제)가 사용한다.
+     * {@code private} 이므로 프록시를 태울 수 없고, 필터 미적용이 의도임이 코드에 드러난다.
+     */
+    private Memo getMemoWithoutVisibilityFilter(long memoId) {
         return memoRepository.findById(memoId)
-                .orElseThrow(() -> new IllegalArgumentException("Memo Not Found"));
+                .orElseThrow(MemoNotFoundException::new);
     }
 
     @FilterVisibleContent
     @Transactional(readOnly = true)
     public Memo getPublicMemo(long memoId) {
         return memoRepository.findPublicById(memoId)
-                .orElseThrow(() -> new IllegalArgumentException("Memo Not Found"));
+                .orElseThrow(MemoNotFoundException::new);
     }
 
     public void updateMemo(long memoId, String title, String content) {
-        Memo memo = getMemo(memoId);
+        Memo memo = getMemoWithoutVisibilityFilter(memoId);
         memo.setName(title);
         memo.setContent(content);
     }
@@ -162,8 +173,14 @@ public class MemoService {
         return category;
     }
 
-    private PageRequest getCategoryPageRequest(Pageable pageable) {
-        return PageRequest
-                .of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by("created_at").descending());
+    /**
+     * Memo listings are always ordered newest-updated-first, and that order is declared by the
+     * query itself (the native {@code ORDER BY updated_at DESC} / the JPQL {@code ORDER BY
+     * m.updatedAt DESC}). Client sorting is therefore not supported: dropping it here keeps the
+     * order rule in one place and stops a stray {@code ?sort=} from being appended to a native
+     * query as a non-existent column.
+     */
+    private PageRequest pageOnly(Pageable pageable) {
+        return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
     }
 }

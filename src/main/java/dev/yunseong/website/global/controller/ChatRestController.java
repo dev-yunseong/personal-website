@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import dev.yunseong.website.ai.service.ChatService;
+import dev.yunseong.website.global.util.ClientIpResolver;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 
@@ -23,6 +24,6 @@ public class ChatRestController {
             HttpServletRequest httpServletRequest
     ) {
 
-        return chatService.getChatResponse(message, httpServletRequest.getRemoteAddr());
+        return chatService.getChatResponse(message, ClientIpResolver.resolve(httpServletRequest));
     }
 }

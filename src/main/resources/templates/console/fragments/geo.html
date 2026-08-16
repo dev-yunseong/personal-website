@@ -45,6 +45,10 @@
                 .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         }
 
+        function token(name) {
+            return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+        }
+
         function flagEmoji(code) {
             if (!/^[A-Za-z]{2}$/.test(code)) return '🏳️';
             return String.fromCodePoint(...[...code.toUpperCase()].map(c => 0x1F1E6 + c.charCodeAt(0) - 65));
@@ -113,19 +117,19 @@
                 content.innerHTML = html;
                 return;
             }
-            html += '<div class="table-responsive"><table class="table table-striped table-hover align-middle">' +
-                '<thead><tr><th>Country</th><th class="text-end">Total Requests</th></tr></thead><tbody>';
+            html += '<div class="table-responsive"><table class="table table-hover">' +
+                '<thead><tr><th>Country</th><th class="num">Requests</th></tr></thead><tbody>';
             data.content.forEach(row => {
                 const code = row.countryCode || '';
                 html += '<tr><td>' +
                     `<button class="geo-country-action" data-country="${escHtml(code)}" type="button" aria-label="${escHtml(countryName(code))} 상세 보기">` +
-                    `<span aria-hidden="true">${flagEmoji(code)}</span><span>${escHtml(countryName(code))} <small class="text-muted">${escHtml(code)}</small></span>` +
+                    `<span aria-hidden="true">${flagEmoji(code)}</span><span>${escHtml(countryName(code))} <span class="geo-country-action__code">${escHtml(code)}</span></span>` +
                     '<i class="bi bi-arrow-right" aria-hidden="true"></i></button></td>' +
-                    `<td class="text-end">${escHtml(row.requestCount)}</td></tr>`;
+                    `<td class="num">${escHtml(row.requestCount)}</td></tr>`;
             });
             html += '</tbody></table></div>';
             html += paginationHtml(data, 'data-geo-page');
-            html += `<p class="text-muted mb-0"><small>국가 미해석 요청 ${escHtml(data.unresolvedRequests)}건</small></p>`;
+            html += `<p class="geo-note">국가 미해석 요청 ${escHtml(data.unresolvedRequests)}건</p>`;
             content.innerHTML = html;
 
             content.querySelectorAll('[data-country]').forEach(button => {
@@ -159,14 +163,15 @@
 
         function cityListHtml(cities) {
             if (!cities.length) {
-                return '<div class="alert alert-light border mb-0">해석된 도시가 없습니다.</div>';
+                return '<div class="alert mb-0">해석된 도시가 없습니다.</div>';
             }
-            return '<div class="geo-city-list border rounded" aria-label="도시별 요청">' +
+            return '<div class="geo-city-list" aria-label="도시별 요청">' +
                 cities.map(city => {
                     const botRate = city.requestCount ? Math.round(city.botRequestCount * 100 / city.requestCount) : 0;
                     return `<button class="geo-city-action ${String(city.cityId) === String(selectedCityId) ? 'active' : ''}" data-city-id="${escHtml(city.cityId)}" type="button">` +
-                        `<span><strong>${escHtml(city.cityName || 'Unknown')}</strong><br><small class="text-muted">봇 ${botRate}% · 오차 반경 최대 ${escHtml(city.accuracyRadiusKm || '?')}km</small></span>` +
-                        `<span class="badge text-bg-primary rounded-pill">${escHtml(city.requestCount)}</span></button>`;
+                        `<span><span class="geo-city-action__name">${escHtml(city.cityName || 'Unknown')}</span>` +
+                        `<span class="geo-city-action__meta">봇 ${botRate}% · 오차 반경 최대 ${escHtml(city.accuracyRadiusKm || '?')}km</span></span>` +
+                        `<span class="geo-city-action__count">${escHtml(city.requestCount)}</span></button>`;
                 }).join('') + '</div>';
         }
 
@@ -176,14 +181,14 @@
             document.getElementById('geo-content').innerHTML =
                 '<div class="geo-detail-header d-flex justify-content-between align-items-start gap-3 mb-3">' +
                 '<div><button class="btn btn-sm btn-link p-0 mb-2" id="geo-country-back" type="button"><i class="bi bi-arrow-left me-1" aria-hidden="true"></i>국가 목록</button>' +
-                `<h4 class="mb-1">${flagEmoji(selectedCountry)} ${escHtml(name)} <small class="text-muted">${escHtml(selectedCountry)}</small></h4>` +
-                '<p class="text-muted mb-0 small">도시 위치는 MaxMind 근사 위치입니다. 실제 사용자 위치를 나타내지 않습니다.</p></div>' +
+                `<h4 class="mb-1">${flagEmoji(selectedCountry)} ${escHtml(name)} <span class="geo-detail-header__code">${escHtml(selectedCountry)}</span></h4>` +
+                '<p class="geo-note">도시 위치는 MaxMind 근사 위치입니다. 실제 사용자 위치를 나타내지 않습니다.</p></div>' +
                 `<button class="btn btn-sm btn-outline-secondary ${selectedCityId == null ? 'd-none' : ''}" id="geo-clear-city" type="button">도시 필터 해제</button></div>` +
                 '<div class="row g-3 mb-4"><div class="col-lg-8">' +
                 '<div id="geo-map" class="geo-map" role="region" aria-label="도시별 요청 지도"></div>' +
-                '<div id="geo-map-notice" class="small text-muted mt-2"></div></div>' +
+                '<div id="geo-map-notice" class="geo-note"></div></div>' +
                 `<div class="col-lg-4">${cityListHtml(cities)}` +
-                `<p class="small text-muted mt-2 mb-0">도시 미해석 요청 ${escHtml(data.unresolvedRequests)}건</p></div></div>` +
+                `<p class="geo-note">도시 미해석 요청 ${escHtml(data.unresolvedRequests)}건</p></div></div>` +
                 '<div id="geo-requests"></div>';
 
             document.getElementById('geo-country-back').addEventListener('click', () => {
@@ -203,11 +208,11 @@
             const notice = document.getElementById('geo-map-notice');
             const container = document.getElementById('geo-map');
             if (!cities.length) {
-                container.innerHTML = '<div class="d-flex h-100 align-items-center justify-content-center text-muted">표시할 도시 좌표가 없습니다.</div>';
+                container.innerHTML = '<div class="console-empty">표시할 도시 좌표가 없습니다.</div>';
                 return;
             }
             if (!window.L) {
-                container.innerHTML = '<div class="d-flex h-100 align-items-center justify-content-center text-muted">지도 라이브러리를 불러오지 못했습니다.</div>';
+                container.innerHTML = '<div class="console-empty">지도 라이브러리를 불러오지 못했습니다.</div>';
                 return;
             }
             map = L.map(container, {scrollWheelZoom: false});
@@ -222,16 +227,19 @@
                     notice.textContent = '배경 지도를 불러오지 못했습니다. 도시 목록과 요청 데이터는 계속 사용할 수 있습니다.';
                 }
             });
+            // Marker colours are read off the token layer, not hard-coded.
+            const markerStroke = token('--accent-soft-text');
+            const markerFill = token('--accent-solid');
             const bounds = [];
             cities.forEach(city => {
                 const latLng = [city.latitude, city.longitude];
                 bounds.push(latLng);
                 const marker = L.circleMarker(latLng, {
                     radius: Math.min(28, Math.max(6, 4 + 3 * Math.sqrt(city.requestCount))),
-                    color: '#084298',
+                    color: markerStroke,
                     weight: 2,
-                    fillColor: '#0d6efd',
-                    fillOpacity: String(city.cityId) === String(selectedCityId) ? 0.9 : 0.58
+                    fillColor: markerFill,
+                    fillOpacity: String(city.cityId) === String(selectedCityId) ? 0.9 : 0.5
                 }).addTo(map);
                 marker.bindPopup(`<strong>${escHtml(city.cityName || 'Unknown')}</strong><br>${escHtml(city.requestCount)} requests<br>오차 반경 최대 ${escHtml(city.accuracyRadiusKm || '?')}km`);
                 marker.on('click', () => selectCity(city.cityId));
@@ -258,24 +266,25 @@
         }
 
         function statusBadge(statusCode) {
-            if (!statusCode) return '<span class="badge text-bg-secondary">-</span>';
-            const style = statusCode >= 500 ? 'danger' : statusCode >= 400 ? 'warning' :
-                statusCode >= 300 ? 'info' : 'success';
-            return `<span class="badge text-bg-${style}">${escHtml(statusCode)}</span>`;
+            if (!statusCode) return '<span class="status status--muted">—</span>';
+            const style = statusCode >= 500 ? 'danger' : statusCode >= 400 ? 'warn' :
+                statusCode >= 300 ? 'muted' : 'ok';
+            return `<span class="status status--${style}">${escHtml(statusCode)}</span>`;
         }
 
         function renderRequests(data) {
             const container = document.getElementById('geo-requests');
             if (!data.content || !data.content.length) {
-                container.innerHTML = '<div class="alert alert-light border mb-0">조건에 맞는 요청이 없습니다.</div>';
+                container.innerHTML = '<div class="alert mb-0">조건에 맞는 요청이 없습니다.</div>';
                 return;
             }
-            let html = '<h5 class="mb-3">Requests</h5><div class="table-responsive"><table class="table table-sm align-middle">' +
+            let html = '<h6>Requests</h6><div class="table-responsive"><table class="table table-sm table-hover">' +
                 '<thead><tr><th>Time</th><th>City</th><th>Status</th><th>Bot</th><th>URI</th></tr></thead><tbody>';
             data.content.forEach(row => {
                 const timestamp = row.createdAt ? row.createdAt.replace('T', ' ').substring(0, 19) : '-';
-                html += `<tr><td class="text-nowrap">${escHtml(timestamp)}</td><td>${escHtml(row.cityName || '-')}</td>` +
-                    `<td>${statusBadge(row.statusCode)}</td><td>${row.bot ? 'Yes' : 'No'}</td>` +
+                html += `<tr><td class="mono">${escHtml(timestamp)}</td><td>${escHtml(row.cityName || '-')}</td>` +
+                    `<td>${statusBadge(row.statusCode)}</td>` +
+                    `<td>${row.bot ? '<span class="tag tag--muted">Bot</span>' : '<span class="cell-dim">—</span>'}</td>` +
                     `<td class="geo-request-uri">${escHtml(row.uri)}</td></tr>`;
             });
             html += '</tbody></table></div>' + paginationHtml(data, 'data-geo-request-page');

@@ -63,6 +63,7 @@ dependencies {
 
     // mark down
     implementation 'org.commonmark:commonmark:0.25.1'
+    implementation 'org.commonmark:commonmark-ext-gfm-tables:0.25.1'
     implementation 'org.yaml:snakeyaml'
 
     // database
@@ -83,7 +84,7 @@ dependencies {
     // S3 storage
     implementation 'software.amazon.awssdk:s3:2.20.26'
 
-    implementation 'dev.yunseong:api-limit-mvc:0.0.1'
+    implementation 'dev.yunseong:api-limit-mvc:0.1.1'
 }
 
 tasks.named('test') {

@@ -9,32 +9,40 @@
         pageKeywords='미니앱, 데모, 웹 앱, 개발',
         pageUrl='/public/apps'">
 
-<th:block layout:fragment="css"></th:block>
+<th:block layout:fragment="css">
+    <link rel="stylesheet" th:href="@{/css/showcase.css}">
+</th:block>
 
 <body>
 <th:block layout:fragment="content">
     <div class="container px-3 px-md-4">
         <h1 class="page-title">Mini Apps</h1>
-        <a sec:authorize="isAuthenticated()" href="/admin/miniapps" class="btn btn-primary mb-3">
-          <i class="bi bi-plus-lg"></i> Manage Mini App
-        </a>
-        <div class="row g-3">
-            <div class="col-12 col-sm-6 col-lg-4" th:each="app : ${miniApps}">
-                <a th:href="@{/public/apps/{id}(id=${app.id})}" class="text-decoration-none">
-                    <div class="card app-card h-100 shadow">
-                        <div class="card-body">
-                            <h5 class="card-title" th:text="${app.title}">App Title</h5>
-                            <p class="card-text text-muted small" th:text="${app.description}" th:if="${app.description != null and !app.description.isEmpty()}"></p>
-                            <span class="badge bg-success">Open</span>
-                        </div>
-                    </div>
-                </a>
-            </div>
+
+        <div class="showcase-toolbar">
+            <p class="showcase-count"><span th:text="${#lists.size(miniApps)}">0</span> apps</p>
+            <a sec:authorize="isAuthenticated()" href="/admin/miniapps" class="btn btn-outline-secondary btn-sm">
+              <i class="bi bi-plus-lg"></i> Manage Mini App
+            </a>
         </div>
 
-        <div th:if="${miniApps.isEmpty()}" class="alert alert-info" role="alert">
+        <!-- Mini apps carry no screenshot, so every item is a plain text row. -->
+        <ul class="showcase-list" th:if="${!miniApps.isEmpty()}">
+            <li class="showcase-row" th:each="app : ${miniApps}">
+                <a th:href="@{/public/apps/{id}(id=${app.id})}" class="showcase-row__link">
+                    <span class="showcase-row__body">
+                        <span class="showcase-row__title" th:text="${app.title}">App Title</span>
+                        <span class="showcase-row__desc" th:text="${app.description}" th:if="${app.description != null and !app.description.isEmpty()}"></span>
+                        <span class="showcase-row__meta">
+                            <span class="showcase-status">실행 가능</span>
+                        </span>
+                    </span>
+                </a>
+            </li>
+        </ul>
+
+        <p th:if="${miniApps.isEmpty()}" class="showcase-empty" role="status">
             No mini apps available at the moment.
-        </div>
+        </p>
     </div>
 </th:block>
 </body>

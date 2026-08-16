@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -96,16 +97,20 @@ public interface MemoRepository extends JpaRepository<Memo, Long> {
     )
     Page<Memo> findPublicByPath(String path, Pageable pageable);
 
-    @Query("SELECT m FROM Memo m WHERE m.name NOT LIKE '/private%'")
+    @Query("SELECT m FROM Memo m WHERE m.name NOT LIKE '/private%' ORDER BY m.updatedAt DESC")
     Page<Memo> findPublic(Pageable pageable);
+
+    Page<Memo> findAllByOrderByUpdatedAtDesc(Pageable pageable);
+
+    @Query("SELECT m FROM Memo m WHERE m.name NOT LIKE '/private%' AND m.updatedAt > :updatedAfter")
+    Page<Memo> findPublicUpdatedAfter(
+            @Param("updatedAfter") LocalDateTime updatedAfter,
+            Pageable pageable);
 
     Page<Memo> findAllByNameStartingWith(String name, Pageable pageable);
 
     @Query("SELECT m FROM Memo m WHERE m.name LIKE CONCAT(:prefix, '%') AND m.name NOT LIKE CONCAT(:excludedPrefix, '%')")
     Page<Memo> findAllByNamePrefixExcludingPrefix(String prefix, String excludedPrefix, Pageable pageable);
-
-    @Query("SELECT m FROM Memo m WHERE m.name <> :excludedName AND m.name NOT LIKE '/private%'")
-    Page<Memo> findRecentPublicMemos(String excludedName, Pageable pageable);
 
     List<Memo> findAllByUpdatedAtGreaterThan(LocalDateTime time);
 }
