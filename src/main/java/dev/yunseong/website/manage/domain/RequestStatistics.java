@@ -69,14 +69,26 @@ public class RequestStatistics {
     @Column(name = "accuracy_radius_km")
     private Integer accuracyRadiusKm;
 
+    /**
+     * Evidence total behind {@link #isBot}, from {@link BotDetector}. Null on
+     * rows written before the scoring model existed; headers are not stored, so
+     * those can never be backfilled.
+     */
+    @Column(name = "bot_score")
+    private Integer botScore;
+
+    /** Comma-separated names of the signals that fired, for tuning the weights. */
+    @Column(name = "bot_signals", length = 128)
+    private String botSignals;
+
     public RequestStatistics(String uri, String method, String referer, String userAgent, String ipAddress) {
         this(null, uri, method, referer, userAgent, ipAddress, null, null, false, null,
-                null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null);
     }
 
     public RequestStatistics(String uri, String method, String referer, String userAgent, String ipAddress, Integer statusCode) {
         this(null, uri, method, referer, userAgent, ipAddress, statusCode, null, false, null,
-                null, null, null, null, null, null);
+                null, null, null, null, null, null, null, null);
     }
 
     public RequestStatistics(String uri, String method, String referer, String userAgent, String ipAddress,
@@ -87,17 +99,22 @@ public class RequestStatistics {
     public RequestStatistics(String uri, String method, String referer, String userAgent, String ipAddress,
                              Integer statusCode, boolean isBot, Integer durationMs, String countryCode) {
         this(null, uri, method, referer, userAgent, ipAddress, statusCode, null, isBot, durationMs,
-                countryCode, null, null, null, null, null);
+                countryCode, null, null, null, null, null, null, null);
     }
 
+    /**
+     * The request-path constructor: stores the decision together with the
+     * evidence that produced it, so the weights can be tuned from recorded data.
+     */
     public RequestStatistics(String uri, String method, String referer, String userAgent, String ipAddress,
-                             Integer statusCode, boolean isBot, Integer durationMs, GeoLocation location) {
-        this(null, uri, method, referer, userAgent, ipAddress, statusCode, null, isBot, durationMs,
+                             Integer statusCode, BotVerdict verdict, Integer durationMs, GeoLocation location) {
+        this(null, uri, method, referer, userAgent, ipAddress, statusCode, null, verdict.bot(), durationMs,
                 location == null ? null : location.countryCode(),
                 location == null ? null : location.cityGeoNameId(),
                 location == null ? null : location.cityName(),
                 location == null ? null : location.latitude(),
                 location == null ? null : location.longitude(),
-                location == null ? null : location.accuracyRadiusKm());
+                location == null ? null : location.accuracyRadiusKm(),
+                verdict.score(), verdict.signals());
     }
 }
