@@ -10,6 +10,11 @@ spring:
       chat:
         options:
           model: ${OPENAI_CHAT_MODEL:gpt-5.6-luna}
+          # Spring AI's OpenAiChatProperties defaults this to 0.7, and reasoning
+          # models reject anything but 1, so leaving it unset is a 400 on every
+          # request. 1 is also OpenAI's own default for the older models, so it
+          # stays correct whatever OPENAI_CHAT_MODEL is set to.
+          temperature: 1.0
 
       embedding:
         options:
