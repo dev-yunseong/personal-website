@@ -97,12 +97,18 @@ public interface MemoRepository extends JpaRepository<Memo, Long> {
     )
     Page<Memo> findPublicByPath(String path, Pageable pageable);
 
-    @Query("SELECT m FROM Memo m WHERE m.name NOT LIKE '/private%' ORDER BY m.updatedAt DESC")
+    /**
+     * Id breaks {@code updatedAt} ties so paging is stable. Without it two memos
+     * sharing a timestamp have no defined order between them, and a page
+     * boundary falling between them can repeat one memo and skip the other.
+     */
+    @Query("SELECT m FROM Memo m WHERE m.name NOT LIKE '/private%' ORDER BY m.updatedAt DESC, m.id ASC")
     Page<Memo> findPublic(Pageable pageable);
 
     Page<Memo> findAllByOrderByUpdatedAtDesc(Pageable pageable);
 
-    @Query("SELECT m FROM Memo m WHERE m.name NOT LIKE '/private%' AND m.updatedAt > :updatedAfter")
+    @Query("SELECT m FROM Memo m WHERE m.name NOT LIKE '/private%' AND m.updatedAt > :updatedAfter "
+            + "ORDER BY m.updatedAt DESC, m.id ASC")
     Page<Memo> findPublicUpdatedAfter(
             @Param("updatedAfter") LocalDateTime updatedAfter,
             Pageable pageable);
