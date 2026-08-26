@@ -8,8 +8,6 @@ import dev.yunseong.website.global.util.MetadataUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.SortDefault;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -28,7 +26,7 @@ public class PublicMemoController {
     public String blog(
             Model model,
             @RequestParam(required = false) String category,
-            @SortDefault(sort = "updatedAt", direction = Sort.Direction.DESC) Pageable pageable,
+            Pageable pageable,
             Authentication authentication
     ) {
         boolean authenticated = AuthenticationUtil.isAuthenticated(authentication);
@@ -49,7 +47,7 @@ public class PublicMemoController {
     public String showMemo(
             @PathVariable Long memoId,
             Model model,
-            @SortDefault(sort = "updatedAt", direction = Sort.Direction.DESC) Pageable pageable,
+            Pageable pageable,
             Authentication authentication) {
         boolean authenticated = AuthenticationUtil.isAuthenticated(authentication);
         Memo memo = authenticated ? memoService.getMemo(memoId) : memoService.getPublicMemo(memoId);

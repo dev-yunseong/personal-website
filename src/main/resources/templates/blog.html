@@ -36,13 +36,12 @@
             </div>
             <!-- Main content -->
             <div th:classappend="${keyword != null} ? 'col-12' : 'col-md-9 order-md-1'">
-                <div th:if="${memos.hasContent()}" th:each="memo : ${memos.content}">
-                    <div th:replace="~{fragments/memo_card_fragment :: memoCard(memo=${memo})}">
-                    </div>
-                </div>
-                <div th:if="${!memos.hasContent()}">
-                    <p>No memos found.</p>
-                </div>
+                <ul class="memo-list" th:if="${memos.hasContent()}">
+                    <th:block th:each="memo : ${memos.content}">
+                        <th:block th:replace="~{fragments/memo_card_fragment :: memoRow(memo=${memo})}"></th:block>
+                    </th:block>
+                </ul>
+                <p class="memo-list__empty" th:if="${!memos.hasContent()}">No memos found.</p>
                 <div th:replace="~{fragments/page_navi_fragment :: pageNavi(memos=${memos}, selectedCategory=${selectedCategory})}"></div>
             </div>
         </div>

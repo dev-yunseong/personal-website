@@ -49,7 +49,7 @@ class AdminMemoControllerTest {
         MockHttpServletResponse response = new MockHttpServletResponse();
 
         String view = controller.postMemo(
-                "/profile",
+                "/private/profile",
                 "invalid",
                 null,
                 null,
@@ -59,14 +59,14 @@ class AdminMemoControllerTest {
 
         assertEquals("memo/new", view);
         assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatus());
-        verify(memoService, never()).saveMemo("/profile", "invalid");
+        verify(memoService, never()).saveMemo("/private/profile", "invalid");
         verify(model).addAttribute("validationError", "about is required");
         verify(model).addAttribute("content", "invalid");
     }
 
     @Test
     void editMemo_RejectsInvalidProfileBeforeDatabaseUpdate() {
-        Memo memo = new Memo(1L, "/profile", "old content", null, null);
+        Memo memo = new Memo(1L, "/private/profile", "old content", null, null);
         when(memoService.getMemo(1L)).thenReturn(memo);
         doThrow(new IllegalArgumentException("name is required"))
                 .when(profileService).validate("invalid");
@@ -74,7 +74,7 @@ class AdminMemoControllerTest {
 
         String view = controller.editMemo(
                 1L,
-                "/profile",
+                "/private/profile",
                 "invalid",
                 null,
                 null,
@@ -84,20 +84,20 @@ class AdminMemoControllerTest {
 
         assertEquals("memo/edit", view);
         assertEquals(HttpStatus.BAD_REQUEST.value(), response.getStatus());
-        verify(memoService, never()).updateMemo(1L, "/profile", "invalid");
+        verify(memoService, never()).updateMemo(1L, "/private/profile", "invalid");
         verify(model).addAttribute("validationError", "name is required");
         verify(model).addAttribute("memo", memo);
     }
 
     @Test
     void editMemo_ValidatesProfileThenUpdatesDatabase() {
-        Memo memo = new Memo(1L, "/profile", "valid", null, null);
+        Memo memo = new Memo(1L, "/private/profile", "valid", null, null);
         when(memoService.getMemo(1L)).thenReturn(memo);
         MockHttpServletResponse response = new MockHttpServletResponse();
 
         String view = controller.editMemo(
                 1L,
-                "/profile",
+                "/private/profile",
                 "valid",
                 null,
                 null,
@@ -107,7 +107,7 @@ class AdminMemoControllerTest {
 
         assertEquals("redirect:/public/memos/1", view);
         verify(profileService).validate("valid");
-        verify(memoService).updateMemo(1L, "/profile", "valid");
+        verify(memoService).updateMemo(1L, "/private/profile", "valid");
     }
 
     @Test

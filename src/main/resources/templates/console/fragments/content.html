@@ -22,15 +22,8 @@
 
     <script>
 (function () {
-    let categoryChart = null;
     let includeBots = false;
     let days = 7;
-
-    const CATEGORY_COLORS = [
-        'rgba(13,110,253,0.7)', 'rgba(25,135,84,0.7)', 'rgba(255,193,7,0.7)',
-        'rgba(220,53,69,0.7)', 'rgba(13,202,240,0.7)', 'rgba(111,66,193,0.7)',
-        'rgba(253,126,20,0.7)', 'rgba(108,117,125,0.7)'
-    ];
 
     function esc(s) {
         return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -41,10 +34,10 @@
     }
 
     function lifecycleBadge(row) {
-        if (!row.memoId) return '<span class="badge bg-secondary">Unresolved</span>';
+        if (!row.memoId) return '<span class="tag tag--muted">Unresolved</span>';
         return row.evergreen
-            ? '<span class="badge bg-success">Evergreen</span>'
-            : '<span class="badge bg-primary">New</span>';
+            ? '<span class="tag tag--ok">Evergreen</span>'
+            : '<span class="tag tag--accent">New</span>';
     }
 
     function titleCell(row) {
@@ -55,39 +48,42 @@
     }
 
     function tableHtml(rows) {
-        let html = '<table class="table table-striped align-middle">'
-            + '<thead><tr><th>Title</th><th>Category</th><th>Requests</th><th>Published</th><th>State</th></tr></thead><tbody>';
+        let html = '<div class="table-responsive"><table class="table table-hover">'
+            + '<thead><tr><th>Title</th><th>Category</th><th class="num">Requests</th><th>Published</th><th>State</th></tr></thead><tbody>';
         rows.forEach(row => {
             html += `<tr>
                 <td>${titleCell(row)}</td>
-                <td><small class="text-muted">${esc(row.category || '-')}</small></td>
-                <td>${esc(String(row.requestCount))}</td>
-                <td><small class="text-muted">${esc(publishedLabel(row))}</small></td>
+                <td class="cell-dim">${esc(row.category || '-')}</td>
+                <td class="num">${esc(String(row.requestCount))}</td>
+                <td class="mono cell-dim">${esc(publishedLabel(row))}</td>
                 <td>${lifecycleBadge(row)}</td>
             </tr>`;
         });
-        return html + '</tbody></table>';
+        return html + '</tbody></table></div>';
     }
 
-    function renderCategoryChart(categories) {
-        if (categoryChart) { categoryChart.destroy(); categoryChart = null; }
-        if (!categories || categories.length === 0) return;
-        categoryChart = new Chart(document.getElementById('categoryChart'), {
-            type: 'doughnut',
-            data: {
-                labels: categories.map(c => c.category),
-                datasets: [{
-                    data: categories.map(c => c.requestCount),
-                    backgroundColor: categories.map((c, i) => CATEGORY_COLORS[i % CATEGORY_COLORS.length]),
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { position: 'right' } }
-            }
+    // A ranked bar list instead of a doughnut: eight categorical hues would have
+    // spent the state ramps on decoration, and a sorted bar answers "which
+    // category carries the traffic" without a legend round-trip.
+    function categoryBarsHtml(categories) {
+        if (!categories || categories.length === 0) return '';
+        const ranked = categories.slice().sort((a, b) => b.requestCount - a.requestCount);
+        const max = Math.max(1, ...ranked.map(c => c.requestCount));
+        const total = ranked.reduce((sum, c) => sum + c.requestCount, 0);
+        let html = '<h6>Traffic by Category</h6><div class="bar-list mb-4">';
+        ranked.forEach((c, i) => {
+            const width = (100 * c.requestCount / max).toFixed(1);
+            const share = total === 0 ? '0.0' : (100 * c.requestCount / total).toFixed(1);
+            const name = esc(c.category || '-');
+            html += `<div class="bar-row">
+                <div class="bar-row__name" title="${name}">${name}</div>
+                <div class="bar-track" role="img" aria-label="${name}: ${esc(String(c.requestCount))} requests, ${share}% of traffic">
+                    <span class="bar-fill${i === 0 ? ' bar-fill--lead' : ''}" style="width:${width}%"></span>
+                </div>
+                <div class="bar-row__value">${esc(String(c.requestCount))} · ${share}%</div>
+            </div>`;
         });
+        return html + '</div>';
     }
 
     function load() {
@@ -102,14 +98,11 @@
         }).then(d => {
             if (!d.content || d.content.length === 0) {
                 el.innerHTML = '<div class="alert alert-info">No memo traffic in this period yet.</div>';
-                if (categoryChart) { categoryChart.destroy(); categoryChart = null; }
                 return;
             }
-            el.innerHTML = '<h6 class="text-muted">Traffic by Category</h6>'
-                + '<div style="height:260px;" class="mb-4"><canvas id="categoryChart"></canvas></div>'
-                + '<h6 class="text-muted">Popular Content</h6>'
+            el.innerHTML = categoryBarsHtml(d.categories)
+                + '<h6>Popular Content</h6>'
                 + tableHtml(d.content);
-            renderCategoryChart(d.categories);
         }).catch(() => {
             el.innerHTML = '<div class="alert alert-danger">Failed to load data.</div>';
         });
