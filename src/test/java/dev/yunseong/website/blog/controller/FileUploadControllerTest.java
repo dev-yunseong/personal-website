@@ -36,7 +36,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     "spring.datasource.driver-class-name=org.h2.Driver",
     "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect",
     "spring.security.user.name=admin",
-    "spring.security.user.password=admin"
+    "spring.security.user.password=admin",
+    "spring.ai.openai.api-key=test"
 })
 class FileUploadControllerTest {
 
