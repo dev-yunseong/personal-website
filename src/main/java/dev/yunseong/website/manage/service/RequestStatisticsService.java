@@ -1,7 +1,9 @@
 package dev.yunseong.website.manage.service;
 
 import dev.yunseong.website.manage.domain.BotDetector;
+import dev.yunseong.website.manage.domain.BotVerdict;
 import dev.yunseong.website.manage.domain.GeoLocation;
+import dev.yunseong.website.manage.domain.RequestFingerprint;
 import dev.yunseong.website.manage.domain.RequestStatistics;
 import dev.yunseong.website.manage.domain.TimelineStat;
 import dev.yunseong.website.manage.domain.UriStat;
@@ -42,18 +44,18 @@ public class RequestStatisticsService {
     // In-memory storage for request statistics
     private final Queue<RequestStatistics> requestQueue = new ConcurrentLinkedDeque<>();
 
-    public void recordRequest(String uri, String method, String referer, String userAgent, String ipAddress,
+    public void recordRequest(String uri, String method, String referer, RequestFingerprint client, String ipAddress,
                               Integer statusCode, Integer durationMs) {
         if (!isCollectedUri(uri)) {
             return;
         }
-        boolean isBot = BotDetector.isBot(userAgent);
+        BotVerdict verdict = BotDetector.classify(client);
         // Resolved here, not on read: a local mmdb lookup, so reads stay a plain GROUP BY.
         GeoLocation location = geoIpLocationResolver.resolve(ipAddress);
         requestQueue.add(new RequestStatistics(
-                uri, method, referer, userAgent, ipAddress, statusCode, isBot, durationMs, location));
-        log.debug("Recorded request: {} {} {} bot={} {}ms country={} city={} (total in memory: {})",
-                method, uri, statusCode, isBot, durationMs,
+                uri, method, referer, client.userAgent(), ipAddress, statusCode, verdict, durationMs, location));
+        log.debug("Recorded request: {} {} {} bot={} score={} signals={} {}ms country={} city={} (total in memory: {})",
+                method, uri, statusCode, verdict.bot(), verdict.score(), verdict.signals(), durationMs,
                 location == null ? null : location.countryCode(),
                 location == null ? null : location.cityName(),
                 requestQueue.size());

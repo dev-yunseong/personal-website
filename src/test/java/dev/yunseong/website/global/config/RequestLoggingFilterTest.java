@@ -1,6 +1,7 @@
 package dev.yunseong.website.global.config;
 
 import dev.yunseong.website.global.util.ClientIpResolver;
+import dev.yunseong.website.manage.domain.RequestFingerprint;
 import dev.yunseong.website.manage.service.RequestStatisticsService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,6 +45,13 @@ class RequestLoggingFilterTest {
         return ip.getValue();
     }
 
+    private RequestFingerprint recordedFingerprint() {
+        ArgumentCaptor<RequestFingerprint> client = ArgumentCaptor.forClass(RequestFingerprint.class);
+        verify(requestStatisticsService).recordRequest(
+                eq("/"), eq("GET"), any(), client.capture(), any(), any(), anyInt());
+        return client.getValue();
+    }
+
     @Test
     void recordsTheVisitorAddressCloudflareForwards() throws Exception {
         new RequestLoggingFilter(requestStatisticsService).doFilter(request("203.0.113.42"), response, chain);
@@ -56,6 +64,33 @@ class RequestLoggingFilterTest {
         new RequestLoggingFilter(requestStatisticsService).doFilter(request(null), response, chain);
 
         assertThat(recordedIp()).isEqualTo(EDGE_IP);
+    }
+
+    @Test
+    void recordsTheBrowserHeadersBotClassificationWeighs() throws Exception {
+        MockHttpServletRequest request = request("203.0.113.42");
+        request.addHeader("User-Agent", "Mozilla/5.0 Chrome/131.0.0.0");
+        request.addHeader("Accept", "text/html");
+        request.addHeader("Accept-Language", "ko-KR");
+        request.addHeader("Sec-Fetch-Site", "none");
+        request.addHeader("Sec-Fetch-Mode", "navigate");
+        request.addHeader("Sec-Fetch-Dest", "document");
+        request.addHeader("Sec-CH-UA", "\"Chromium\";v=\"131\"");
+
+        new RequestLoggingFilter(requestStatisticsService).doFilter(request, response, chain);
+
+        assertThat(recordedFingerprint()).isEqualTo(new RequestFingerprint(
+                "Mozilla/5.0 Chrome/131.0.0.0", "text/html", "ko-KR",
+                "none", "navigate", "document", "\"Chromium\";v=\"131\""));
+    }
+
+    @Test
+    void leavesHeadersTheClientDidNotSendNull() throws Exception {
+        // Absence is the evidence, so no placeholder may be substituted.
+        new RequestLoggingFilter(requestStatisticsService).doFilter(request("203.0.113.42"), response, chain);
+
+        assertThat(recordedFingerprint()).isEqualTo(
+                new RequestFingerprint(null, null, null, null, null, null, null));
     }
 
     @Test

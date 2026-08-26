@@ -262,6 +262,14 @@
             return `<span class="status ${cls}">${code}</span>`;
         }
 
+        // Why a row was classified, so the BotDetector weights can be tuned from
+        // recorded traffic. Rows written before the scoring model carry no score.
+        function botEvidence(row) {
+            if (row.botScore === null || row.botScore === undefined) return row.bot ? 'bot' : '-';
+            if (!row.botSignals) return `${row.botScore}`;
+            return `${row.botScore} ${row.botSignals}`;
+        }
+
         function paginationHtml(number, totalPages, onClickAttr) {
             if (totalPages <= 1) return '';
             let html = '<nav><ul class="pagination pagination-sm flex-wrap justify-content-center">';
@@ -344,7 +352,7 @@
                     return;
                 }
                 let html = '<div class="table-responsive"><table class="table table-hover">'
-                    + '<thead><tr><th>Timestamp</th><th>Method</th><th>Status</th><th>URI</th><th>Referer</th><th>User Agent</th></tr></thead><tbody>';
+                    + '<thead><tr><th>Timestamp</th><th>Method</th><th>Status</th><th>URI</th><th>Referer</th><th>User Agent</th><th>Bot</th></tr></thead><tbody>';
                 d.content.forEach(row => {
                     const ts = row.createdAt ? row.createdAt.replace('T', ' ').substring(0, 19) : '-';
                     html += `<tr>
@@ -354,6 +362,7 @@
                         <td>${escHtml(row.uri || '')}</td>
                         <td class="cell-dim"><span class="cell-clip">${escHtml(row.referer || '-')}</span></td>
                         <td class="cell-dim"><span class="cell-clip">${escHtml((row.userAgent || '').substring(0, 50) || '-')}</span></td>
+                        <td class="cell-dim"><span class="cell-clip">${escHtml(botEvidence(row))}</span></td>
                     </tr>`;
                 });
                 html += '</tbody></table></div>';

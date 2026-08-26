@@ -1,5 +1,6 @@
 package dev.yunseong.website.manage.service;
 
+import dev.yunseong.website.manage.domain.RequestFingerprint;
 import dev.yunseong.website.manage.domain.RequestStatistics;
 import dev.yunseong.website.manage.domain.GeoLocation;
 import dev.yunseong.website.manage.domain.TimelineStat;
@@ -47,12 +48,23 @@ class RequestStatisticsServiceTest {
         requestStatisticsService = new RequestStatisticsService(requestStatisticsRepository, geoIpLocationResolver);
     }
 
+    /** A User-Agent and nothing else — the shape a scripted client sends. */
+    private static RequestFingerprint bare(String userAgent) {
+        return RequestFingerprint.ofUserAgent(userAgent);
+    }
+
+    /** The header set a current browser sends on a navigation. */
+    private static RequestFingerprint browser(String userAgent) {
+        return new RequestFingerprint(userAgent, "text/html,application/xhtml+xml", "ko-KR,ko;q=0.9",
+                "same-origin", "navigate", "document", null);
+    }
+
     @Test
     void recordRequest_WithPublicUrl_RecordsStatistics() {
         // When
-        requestStatisticsService.recordRequest("/public/memos/1", "GET", "https://example.com", "Mozilla/5.0", "1.1.1.1", 200, 12);
-        requestStatisticsService.recordRequest("/public/memos/1", "GET", "https://example.com", "Mozilla/5.0", "1.1.1.1", 200, 12);
-        requestStatisticsService.recordRequest("/public/memos/2", "GET", null, "Chrome/91.0", "1.1.1.1", 200, 12);
+        requestStatisticsService.recordRequest("/public/memos/1", "GET", "https://example.com", bare("Mozilla/5.0"), "1.1.1.1", 200, 12);
+        requestStatisticsService.recordRequest("/public/memos/1", "GET", "https://example.com", bare("Mozilla/5.0"), "1.1.1.1", 200, 12);
+        requestStatisticsService.recordRequest("/public/memos/2", "GET", null, bare("Chrome/91.0"), "1.1.1.1", 200, 12);
 
         // Then - verify by persisting
         requestStatisticsService.persistStatistics();
@@ -67,9 +79,9 @@ class RequestStatisticsServiceTest {
     @Test
     void recordRequest_WithWhitelistedPublicSurface_RecordsStatistics() {
         // When
-        requestStatisticsService.recordRequest("/", "GET", null, "Mozilla/5.0", "1.1.1.1", 200, 5);
-        requestStatisticsService.recordRequest("/public/search", "GET", null, "Mozilla/5.0", "1.1.1.1", 200, 5);
-        requestStatisticsService.recordRequest("/api/public/search/suggestions", "GET", null, "Mozilla/5.0", "1.1.1.1", 200, 5);
+        requestStatisticsService.recordRequest("/", "GET", null, bare("Mozilla/5.0"), "1.1.1.1", 200, 5);
+        requestStatisticsService.recordRequest("/public/search", "GET", null, bare("Mozilla/5.0"), "1.1.1.1", 200, 5);
+        requestStatisticsService.recordRequest("/api/public/search/suggestions", "GET", null, bare("Mozilla/5.0"), "1.1.1.1", 200, 5);
 
         // Then
         requestStatisticsService.persistStatistics();
@@ -83,15 +95,15 @@ class RequestStatisticsServiceTest {
     @Test
     void recordRequest_WithNonPublicUrl_DoesNotRecordStatistics() {
         // When
-        requestStatisticsService.recordRequest("/admin/console", "GET", null, "Mozilla/5.0", "1.1.1.1", 200, 5);
-        requestStatisticsService.recordRequest("/api/admin/console/summary", "GET", null, "Mozilla/5.0", "1.1.1.1", 200, 5);
-        requestStatisticsService.recordRequest("/css/main.css", "GET", null, "Mozilla/5.0", "1.1.1.1", 200, 5);
-        requestStatisticsService.recordRequest("/js/chat.js", "GET", null, "Mozilla/5.0", "1.1.1.1", 200, 5);
-        requestStatisticsService.recordRequest("/images/logo.png", "GET", null, "Mozilla/5.0", "1.1.1.1", 200, 5);
-        requestStatisticsService.recordRequest("/favicon.ico", "GET", null, "Mozilla/5.0", "1.1.1.1", 200, 5);
-        requestStatisticsService.recordRequest("/robots.txt", "GET", null, "Mozilla/5.0", "1.1.1.1", 200, 5);
-        requestStatisticsService.recordRequest("/sitemap.xml", "GET", null, "Mozilla/5.0", "1.1.1.1", 200, 5);
-        requestStatisticsService.recordRequest("/.well-known/security.txt", "GET", null, "Mozilla/5.0", "1.1.1.1", 200, 5);
+        requestStatisticsService.recordRequest("/admin/console", "GET", null, bare("Mozilla/5.0"), "1.1.1.1", 200, 5);
+        requestStatisticsService.recordRequest("/api/admin/console/summary", "GET", null, bare("Mozilla/5.0"), "1.1.1.1", 200, 5);
+        requestStatisticsService.recordRequest("/css/main.css", "GET", null, bare("Mozilla/5.0"), "1.1.1.1", 200, 5);
+        requestStatisticsService.recordRequest("/js/chat.js", "GET", null, bare("Mozilla/5.0"), "1.1.1.1", 200, 5);
+        requestStatisticsService.recordRequest("/images/logo.png", "GET", null, bare("Mozilla/5.0"), "1.1.1.1", 200, 5);
+        requestStatisticsService.recordRequest("/favicon.ico", "GET", null, bare("Mozilla/5.0"), "1.1.1.1", 200, 5);
+        requestStatisticsService.recordRequest("/robots.txt", "GET", null, bare("Mozilla/5.0"), "1.1.1.1", 200, 5);
+        requestStatisticsService.recordRequest("/sitemap.xml", "GET", null, bare("Mozilla/5.0"), "1.1.1.1", 200, 5);
+        requestStatisticsService.recordRequest("/.well-known/security.txt", "GET", null, bare("Mozilla/5.0"), "1.1.1.1", 200, 5);
 
         // Then - verify by persisting
         requestStatisticsService.persistStatistics();
@@ -102,16 +114,16 @@ class RequestStatisticsServiceTest {
     @Test
     void recordRequest_WithNullUri_DoesNotThrowException() {
         // When/Then
-        assertDoesNotThrow(() -> requestStatisticsService.recordRequest(null, "GET", null, "Mozilla/5.0", "1.1.1.1", 200, 5));
+        assertDoesNotThrow(() -> requestStatisticsService.recordRequest(null, "GET", null, bare("Mozilla/5.0"), "1.1.1.1", 200, 5));
     }
 
     @Test
     void recordRequest_StoresBotFlagAndDuration() {
         // When
         requestStatisticsService.recordRequest("/", "GET", null,
-                "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)", "1.1.1.1", 200, 42);
+                bare("Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"), "1.1.1.1", 200, 42);
         requestStatisticsService.recordRequest("/", "GET", null,
-                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15",
+                browser("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15"),
                 "1.1.1.1", 200, 7);
 
         // Then
@@ -134,7 +146,7 @@ class RequestStatisticsServiceTest {
                 .thenReturn(new GeoLocation("AU", 2158177L, "Melbourne", -37.814, 144.9633, 20));
 
         // When
-        requestStatisticsService.recordRequest("/", "GET", null, "Mozilla/5.0", "1.1.1.1", 200, 5);
+        requestStatisticsService.recordRequest("/", "GET", null, bare("Mozilla/5.0"), "1.1.1.1", 200, 5);
         requestStatisticsService.persistStatistics();
 
         // Then
@@ -153,7 +165,7 @@ class RequestStatisticsServiceTest {
         when(geoIpLocationResolver.resolve("1.1.1.1")).thenReturn(null);
 
         // When
-        requestStatisticsService.recordRequest("/", "GET", null, "Mozilla/5.0", "1.1.1.1", 200, 5);
+        requestStatisticsService.recordRequest("/", "GET", null, bare("Mozilla/5.0"), "1.1.1.1", 200, 5);
         requestStatisticsService.persistStatistics();
 
         // Then
@@ -174,9 +186,9 @@ class RequestStatisticsServiceTest {
     @Test
     void persistStatistics_SavesCorrectData() {
         // Given
-        requestStatisticsService.recordRequest("/public/memos/1", "GET", "https://referer.com", "Mozilla/5.0", "1.1.1.1", 200, 11);
-        requestStatisticsService.recordRequest("/public/memos/1", "GET", "https://another-referer.com", "Chrome/91.0", "1.1.1.1", 200, 22);
-        requestStatisticsService.recordRequest("/public/memos/1", "GET", "https://last-referer.com", "Safari/14.0", "1.1.1.1", 200, 33);
+        requestStatisticsService.recordRequest("/public/memos/1", "GET", "https://referer.com", bare("Mozilla/5.0"), "1.1.1.1", 200, 11);
+        requestStatisticsService.recordRequest("/public/memos/1", "GET", "https://another-referer.com", bare("Chrome/91.0"), "1.1.1.1", 200, 22);
+        requestStatisticsService.recordRequest("/public/memos/1", "GET", "https://last-referer.com", bare("Safari/14.0"), "1.1.1.1", 200, 33);
 
         // When
         requestStatisticsService.persistStatistics();
