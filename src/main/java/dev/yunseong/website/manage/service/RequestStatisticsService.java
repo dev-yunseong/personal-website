@@ -1,5 +1,6 @@
 package dev.yunseong.website.manage.service;
 
+import dev.yunseong.website.manage.domain.AutonomousSystem;
 import dev.yunseong.website.manage.domain.BotDetector;
 import dev.yunseong.website.manage.domain.BotVerdict;
 import dev.yunseong.website.manage.domain.GeoLocation;
@@ -40,6 +41,7 @@ public class RequestStatisticsService {
 
     private final RequestStatisticsRepository requestStatisticsRepository;
     private final GeoIpLocationResolver geoIpLocationResolver;
+    private final AsnResolver asnResolver;
 
     // In-memory storage for request statistics
     private final Queue<RequestStatistics> requestQueue = new ConcurrentLinkedDeque<>();
@@ -49,8 +51,10 @@ public class RequestStatisticsService {
         if (!isCollectedUri(uri)) {
             return;
         }
-        BotVerdict verdict = BotDetector.classify(client);
-        // Resolved here, not on read: a local mmdb lookup, so reads stay a plain GROUP BY.
+        // Both resolved here, not on read: local mmdb lookups, so reads stay a plain
+        // GROUP BY. The network is evidence for the verdict, so it is looked up first.
+        AutonomousSystem network = asnResolver.resolve(ipAddress);
+        BotVerdict verdict = BotDetector.classify(client, network);
         GeoLocation location = geoIpLocationResolver.resolve(ipAddress);
         requestQueue.add(new RequestStatistics(
                 uri, method, referer, client.userAgent(), ipAddress, statusCode, verdict, durationMs, location));

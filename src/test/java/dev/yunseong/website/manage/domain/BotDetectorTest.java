@@ -18,6 +18,11 @@ class BotDetectorTest {
     private static final String IPHONE_CHROME =
             "Mozilla/5.0 (iPhone; CPU iPhone OS 17_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/131.0.0.0 Mobile/15E148 Safari/604.1";
 
+    /** Classification with no ASN database loaded, which is most of these cases. */
+    private static BotVerdict classify(RequestFingerprint client) {
+        return BotDetector.classify(client, null);
+    }
+
     private static Fingerprint browser(String userAgent) {
         return new Fingerprint(userAgent);
     }
@@ -84,7 +89,7 @@ class BotDetectorTest {
             "CURL/8.4.0",
     })
     void classify_WithCrawlerOrToolUserAgent_ConvictsRegardlessOfCase(String userAgent) {
-        assertTrue(BotDetector.classify(browser(userAgent).withFullBrowserHeaders().build()).bot());
+        assertTrue(classify(browser(userAgent).withFullBrowserHeaders().build()).bot());
     }
 
     @ParameterizedTest
@@ -94,7 +99,7 @@ class BotDetectorTest {
             "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
     })
     void classify_WithBrowserSendingItsUsualHeaders_Acquits(String userAgent) {
-        assertFalse(BotDetector.classify(browser(userAgent)
+        assertFalse(classify(browser(userAgent)
                 .withFullBrowserHeaders()
                 .secChUa("\"Chromium\";v=\"131\"")
                 .build()).bot());
@@ -103,7 +108,7 @@ class BotDetectorTest {
     @ParameterizedTest
     @ValueSource(strings = {"", "   "})
     void classify_WithBlankUserAgent_Convicts(String userAgent) {
-        assertTrue(BotDetector.classify(browser(userAgent).withFullBrowserHeaders().build()).bot());
+        assertTrue(classify(browser(userAgent).withFullBrowserHeaders().build()).bot());
     }
 
     @Nested
@@ -111,7 +116,7 @@ class BotDetectorTest {
 
         @Test
         void aCrawlerTokenConvictsWhateverElseTheRequestCarries() {
-            BotVerdict verdict = BotDetector.classify(browser("Mozilla/5.0 (compatible; Googlebot/2.1)")
+            BotVerdict verdict = classify(browser("Mozilla/5.0 (compatible; Googlebot/2.1)")
                     .withFullBrowserHeaders()
                     .build());
 
@@ -122,7 +127,7 @@ class BotDetectorTest {
 
         @Test
         void aMissingUserAgentConvicts() {
-            BotVerdict verdict = BotDetector.classify(browser(null).withFullBrowserHeaders().build());
+            BotVerdict verdict = classify(browser(null).withFullBrowserHeaders().build());
 
             assertThat(verdict.bot()).isTrue();
             assertThat(verdict.score()).isEqualTo(BotDetector.CERTAIN_BOT_SCORE);
@@ -135,7 +140,7 @@ class BotDetectorTest {
 
         @Test
         void chromeSendingClientHintsAndFetchMetadataScoresZero() {
-            BotVerdict verdict = BotDetector.classify(browser(CHROME)
+            BotVerdict verdict = classify(browser(CHROME)
                     .withFullBrowserHeaders()
                     .secChUa("\"Chromium\";v=\"131\", \"Not_A Brand\";v=\"24\"")
                     .build());
@@ -148,7 +153,7 @@ class BotDetectorTest {
         @Test
         void safariScoresZeroWithoutClientHints() {
             // Client hints are Chromium-only, so their absence must not count here.
-            BotVerdict verdict = BotDetector.classify(browser(SAFARI).withFullBrowserHeaders().build());
+            BotVerdict verdict = classify(browser(SAFARI).withFullBrowserHeaders().build());
 
             assertThat(verdict.bot()).isFalse();
             assertThat(verdict.score()).isZero();
@@ -157,7 +162,7 @@ class BotDetectorTest {
         @Test
         void iosChromeScoresZeroWithoutClientHints() {
             // CriOS is WebKit underneath and sends none; matching it would convict every iPhone.
-            BotVerdict verdict = BotDetector.classify(browser(IPHONE_CHROME).withFullBrowserHeaders().build());
+            BotVerdict verdict = classify(browser(IPHONE_CHROME).withFullBrowserHeaders().build());
 
             assertThat(verdict.bot()).isFalse();
             assertThat(verdict.score()).isZero();
@@ -166,7 +171,7 @@ class BotDetectorTest {
         @Test
         void aBrowserTooOldForFetchMetadataStaysUnderTheThreshold() {
             // Safari before 16.4 sends no Sec-Fetch-* at all. One quirk must not convict.
-            BotVerdict verdict = BotDetector.classify(browser(SAFARI)
+            BotVerdict verdict = classify(browser(SAFARI)
                     .accept("text/html,application/xhtml+xml")
                     .acceptLanguage("ko-KR,ko;q=0.9")
                     .build());
@@ -181,7 +186,7 @@ class BotDetectorTest {
 
         @Test
         void aUserAgentClaimingChromiumWithoutClientHintsIsWeighed() {
-            BotVerdict verdict = BotDetector.classify(browser(CHROME).withFullBrowserHeaders().build());
+            BotVerdict verdict = classify(browser(CHROME).withFullBrowserHeaders().build());
 
             assertThat(verdict.signals()).isEqualTo("no-client-hints");
             // Alone it stays under the threshold: an old embedded WebView looks the same.
@@ -190,7 +195,7 @@ class BotDetectorTest {
 
         @Test
         void aSpoofedChromeSendingNoBrowserHeadersConvicts() {
-            BotVerdict verdict = BotDetector.classify(browser(CHROME).build());
+            BotVerdict verdict = classify(browser(CHROME).build());
 
             assertThat(verdict.bot()).isTrue();
             assertThat(verdict.signals())
@@ -204,7 +209,7 @@ class BotDetectorTest {
         @Test
         void aSpoofedSafariSendingNoAcceptLanguageNorFetchMetadataConvicts() {
             // The cheapest shape that reaches the threshold without any client-hint evidence.
-            BotVerdict verdict = BotDetector.classify(browser(SAFARI).accept("*/*").build());
+            BotVerdict verdict = classify(browser(SAFARI).accept("*/*").build());
 
             assertThat(verdict.bot()).isTrue();
             assertThat(verdict.score()).isEqualTo(3);
@@ -213,13 +218,92 @@ class BotDetectorTest {
 
         @Test
         void aBlankHeaderCountsTheSameAsAMissingOne() {
-            BotVerdict verdict = BotDetector.classify(browser(SAFARI)
+            BotVerdict verdict = classify(browser(SAFARI)
                     .accept("   ")
                     .acceptLanguage("")
                     .build());
 
             assertThat(verdict.bot()).isTrue();
             assertThat(verdict.signals()).isEqualTo("no-sec-fetch,no-accept-language,no-accept");
+        }
+    }
+
+    @Nested
+    class DatacenterNetworks {
+
+        private static final AutonomousSystem AWS = new AutonomousSystem(16509L, "AMAZON-02");
+        private static final AutonomousSystem KOREA_TELECOM = new AutonomousSystem(4766L, "Korea Telecom");
+
+        @Test
+        void aBrowserRequestFromARentedMachineStaysUnderTheThreshold() {
+            BotVerdict verdict = BotDetector.classify(browser(SAFARI).withFullBrowserHeaders().build(), AWS);
+
+            assertThat(verdict.bot()).isFalse();
+            assertThat(verdict.signals()).isEqualTo("datacenter-ip");
+        }
+
+        @Test
+        void theNetworkTipsAnOtherwiseUndecidedRequestOver() {
+            // Sends no Sec-Fetch-* and nothing else suspicious: 2, one short of
+            // the threshold. Where it came from decides it.
+            Fingerprint borderline = browser(SAFARI).accept("text/html").acceptLanguage("ko-KR");
+
+            assertThat(BotDetector.classify(borderline.build(), KOREA_TELECOM).bot()).isFalse();
+
+            BotVerdict fromHosting = BotDetector.classify(borderline.build(), AWS);
+            assertThat(fromHosting.bot()).isTrue();
+            assertThat(fromHosting.score()).isEqualTo(3);
+            assertThat(fromHosting.signals()).isEqualTo("no-sec-fetch,datacenter-ip");
+        }
+
+        @Test
+        void aConsumerIspAddsNothing() {
+            BotVerdict verdict = BotDetector.classify(
+                    browser(SAFARI).withFullBrowserHeaders().build(), KOREA_TELECOM);
+
+            assertThat(verdict.score()).isZero();
+            assertThat(verdict.signals()).isEmpty();
+        }
+
+        @Test
+        void anAbsentAsnDatabaseLeavesEveryOtherSignalIntact() {
+            BotVerdict verdict = BotDetector.classify(browser(CHROME).build(), null);
+
+            assertThat(verdict.bot()).isTrue();
+            assertThat(verdict.signals()).doesNotContain("datacenter-ip");
+        }
+
+        @Test
+        void anUnnamedOrganisationAddsNothing() {
+            BotVerdict verdict = BotDetector.classify(browser(SAFARI).withFullBrowserHeaders().build(),
+                    new AutonomousSystem(64512L, null));
+
+            assertThat(verdict.score()).isZero();
+        }
+
+        /**
+         * iCloud Private Relay egresses through these, so matching them would
+         * convict real Safari visitors.
+         */
+        @ParameterizedTest
+        @ValueSource(strings = {"CLOUDFLARENET", "AKAMAI-AS", "FASTLY"})
+        void edgeNetworksCarryingPrivateRelayAreNotTreatedAsHosting(String organisation) {
+            BotVerdict verdict = BotDetector.classify(browser(SAFARI).withFullBrowserHeaders().build(),
+                    new AutonomousSystem(13335L, organisation));
+
+            assertThat(verdict.signals()).isEmpty();
+        }
+
+        /** Google Fiber is a consumer ISP; only the cloud arm counts. */
+        @Test
+        void googleFiberIsNotTreatedAsHosting() {
+            BotVerdict fiber = BotDetector.classify(browser(SAFARI).withFullBrowserHeaders().build(),
+                    new AutonomousSystem(16591L, "Google Fiber Inc."));
+            BotVerdict cloud = BotDetector.classify(browser(SAFARI).withFullBrowserHeaders().build(),
+                    new AutonomousSystem(396982L, "GOOGLE-CLOUD-PLATFORM"));
+
+            assertThat(fiber.signals()).isEmpty();
+            assertThat(cloud.signals()).isEqualTo("datacenter-ip");
         }
     }
 }

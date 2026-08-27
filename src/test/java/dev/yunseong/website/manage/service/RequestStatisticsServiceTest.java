@@ -40,12 +40,15 @@ class RequestStatisticsServiceTest {
     @Mock
     private GeoIpLocationResolver geoIpLocationResolver;
 
+    @Mock
+    private AsnResolver asnResolver;
+
     @InjectMocks
     private RequestStatisticsService requestStatisticsService;
 
     @BeforeEach
     void setUp() {
-        requestStatisticsService = new RequestStatisticsService(requestStatisticsRepository, geoIpLocationResolver);
+        requestStatisticsService = new RequestStatisticsService(requestStatisticsRepository, geoIpLocationResolver, asnResolver);
     }
 
     /** A User-Agent and nothing else — the shape a scripted client sends. */
