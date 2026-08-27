@@ -24,6 +24,15 @@ import java.net.InetAddress;
  * built without a MaxMind licence key — every lookup returns {@code null} and
  * the datacenter signal simply never fires. Bot classification keeps working on
  * headers alone.
+ *
+ * <p>Cloudflare sits in front of this origin and could carry the network in a
+ * header instead, but not the part that matters. Its managed transforms cover
+ * geography only, and a Transform Rule built on {@code ip.src.asnum} yields the
+ * AS number alone — the ruleset engine exposes no organisation name. Matching
+ * numbers would mean maintaining a list of them, and one provider owns dozens:
+ * Amazon alone answers for AS16509, AS14618, AS8987 and more, all of which the
+ * single fragment "amazon" covers. The organisation name is only reachable from
+ * a Worker, which is a lot of moving parts on the request path for one signal.
  */
 @Slf4j
 @Component
