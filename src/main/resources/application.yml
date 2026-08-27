@@ -19,9 +19,11 @@ spring:
       password: ${APPLICATION_PW}
 
 app:
-  # Local MaxMind GeoLite2 City database. Absent file => geo fields stay null.
+  # Local MaxMind GeoLite2 databases. Absent file => geo fields stay null and the
+  # datacenter bot signal never fires.
   geoip:
     database-path: ${GEOIP_DATABASE_PATH:/app/geoip/GeoLite2-City.mmdb}
+    asn-database-path: ${GEOIP_ASN_DATABASE_PATH:/app/geoip/GeoLite2-ASN.mmdb}
   base-url: ${BASE_URL:https://yunseong.dev}
   profile-image-url: ${PROFILE_IMAGE_URL:https://s3.yunseong.dev/agent-artifacts/profile-yunseong.jpg}
   briefing:
