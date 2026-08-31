@@ -23,8 +23,16 @@ import org.springframework.data.domain.Sort;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -591,6 +599,83 @@ class RequestStatisticsServiceTest {
         assertEquals(1, result.size());
         assertEquals("2024-01", result.get(0).label());
         verify(requestStatisticsRepository, times(1)).findMonthlyRequestCounts(any(LocalDateTime.class));
+    }
+
+    /**
+     * Records a known number of requests from many threads while a drain runs
+     * concurrently, and asserts every single one reaches saveAll.
+     *
+     * <p>With the old copy-then-clear drain, requests recorded between the copy
+     * and the clear were dropped, so the saved total came out short.
+     *
+     * <p>The assertion itself is exact and never flaky (saved == RECORDS is true
+     * for any interleaving of a correct drain). Whether a broken drain is caught
+     * depends on the scheduler hitting the window, which the volume here makes
+     * very likely but not guaranteed.
+     */
+    @Test
+    void persistStatistics_ConcurrentRecording_LosesNoRequests() throws Exception {
+        // Given - a real resolver with no database (returns null, thread-safe) so the
+        // producer threads do not hammer a Mockito mock.
+        int producers = 8;
+        int perProducer = 500;
+        int records = producers * perProducer;
+        RequestStatisticsService service =
+                new RequestStatisticsService(requestStatisticsRepository, new GeoIpLocationResolver(""));
+
+        ConcurrentLinkedQueue<RequestStatistics> saved = new ConcurrentLinkedQueue<>();
+        when(requestStatisticsRepository.saveAll(any())).thenAnswer(invocation -> {
+            List<RequestStatistics> batch = invocation.getArgument(0);
+            saved.addAll(batch);
+            return batch;
+        });
+
+        CountDownLatch start = new CountDownLatch(1);
+        CountDownLatch finished = new CountDownLatch(producers);
+        AtomicBoolean recording = new AtomicBoolean(true);
+        ExecutorService pool = Executors.newFixedThreadPool(producers + 1);
+
+        // When - producers record while one drainer keeps draining
+        for (int p = 0; p < producers; p++) {
+            int producerId = p;
+            pool.execute(() -> {
+                try {
+                    start.await();
+                    for (int i = 0; i < perProducer; i++) {
+                        service.recordRequest("/public/p" + producerId + "-" + i, "GET", null,
+                                "Mozilla/5.0", "1.1.1.1", 200, 1);
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                } finally {
+                    finished.countDown();
+                }
+            });
+        }
+        pool.execute(() -> {
+            try {
+                start.await();
+                while (recording.get()) {
+                    service.persistStatistics();
+                    Thread.onSpinWait();
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        });
+
+        start.countDown();
+        assertTrue(finished.await(30, TimeUnit.SECONDS), "producers did not finish in time");
+        recording.set(false);
+        pool.shutdown();
+        assertTrue(pool.awaitTermination(30, TimeUnit.SECONDS), "drainer did not stop in time");
+        service.persistStatistics(); // final drain of whatever the loop left behind
+
+        // Then - nothing lost, nothing duplicated
+        assertEquals(records, saved.size());
+        Set<String> uris = new HashSet<>();
+        saved.forEach(stat -> uris.add(stat.getUri()));
+        assertEquals(records, uris.size());
     }
 
 }
