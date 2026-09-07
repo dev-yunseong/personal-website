@@ -22,6 +22,9 @@ RUN --mount=type=secret,id=GITHUB_USERNAME \
 # GeoLite2 City and ASN databases for request statistics (issues #126, #179).
 # City resolves country and city; ASN resolves the network, which bot
 # classification weighs as the datacenter signal.
+# -L matters: the endpoint answers 302 and redirects to the archive. Without it
+# curl writes an empty file and still exits 0, so the failure only surfaces as a
+# broken tar and the image ships with no database at all.
 # Best effort on purpose: without a licence key, without network, or on a
 # MaxMind error the build still succeeds and the application runs with
 # geo fields null and the datacenter signal off. Each edition is fetched
@@ -35,7 +38,7 @@ RUN --mount=type=secret,id=MAXMIND_LICENCE_KEY sh -c '\
     fi; \
     command -v curl >/dev/null || (apt-get update && apt-get install -y --no-install-recommends curl ca-certificates); \
     for edition in City ASN; do \
-        curl -fsS "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-${edition}&suffix=tar.gz&license_key=$(cat /run/secrets/MAXMIND_LICENCE_KEY)" \
+        curl -fsSL "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-${edition}&suffix=tar.gz&license_key=$(cat /run/secrets/MAXMIND_LICENCE_KEY)" \
             -o /tmp/geolite2.tar.gz \
             && tar -xzf /tmp/geolite2.tar.gz -C /tmp \
             && find /tmp -name "GeoLite2-${edition}.mmdb" -exec mv {} /geoip/ \; \
