@@ -140,7 +140,7 @@
                 </div>
             </div>
             <div class="card-body">
-                <p class="panel-note mb-3">행을 클릭하면 IP, 위치, ASN 등 저장된 모든 정보를 아래에 펼쳐 볼 수 있습니다.</p>
+                <p class="panel-note mb-3">행을 클릭하면 그 요청의 상세 페이지가 열립니다.</p>
                 <div id="history-content">
                     <div class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>
                 </div>
@@ -250,6 +250,45 @@
             });
         }
 
+        // ── drill-down links ──────────────────────────────────────────
+        // Every aggregate/history row that leads somewhere else builds its
+        // href through here so the frozen URL contract (days, statusFilter,
+        // one column filter, from) is assembled in exactly one place.
+        const TOP_FILTER_PARAM = {uri: 'uri', ip: 'ip', ua: 'userAgent'};
+
+        function requestsListHref(overrides) {
+            const params = Object.assign({days: STATE.days}, overrides);
+            const parts = [];
+            if (params.days !== undefined && params.days !== null && params.days !== '') {
+                parts.push('days=' + encodeURIComponent(params.days));
+            }
+            if (params.statusFilter) parts.push('statusFilter=' + encodeURIComponent(params.statusFilter));
+            if (params.filter && params.value !== undefined && params.value !== null && params.value !== '') {
+                parts.push(encodeURIComponent(params.filter) + '=' + encodeURIComponent(params.value));
+            }
+            parts.push('from=' + encodeURIComponent(location.pathname + location.search));
+            return '/admin/console/requests?' + parts.join('&');
+        }
+
+        function requestDetailHref(id) {
+            return '/admin/console/requests/' + encodeURIComponent(id)
+                + '?from=' + encodeURIComponent(location.pathname + location.search);
+        }
+
+        // A row with exactly one destination gets a delegated click-to-navigate
+        // so the whole row is clickable; a click that already landed on the
+        // row's own <a> is left alone so it isn't handled twice.
+        function wireRowLinkDelegate(container) {
+            if (!container) return;
+            container.addEventListener('click', (e) => {
+                if (e.target.closest('a')) return;
+                const row = e.target.closest('tr.console-row-clickable');
+                if (!row) return;
+                const link = row.querySelector('.console-row-link');
+                if (link) location.href = link.href;
+            });
+        }
+
         // Reads a semantic token so the chart below stays inside the design system.
         function token(name) {
             return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -325,11 +364,16 @@
                 let html = `<div class="table-responsive"><table class="table table-hover">`
                     + `<thead><tr><th>${escHtml(d.groupByLabel)}</th><th class="num">Requests</th></tr></thead><tbody>`;
                 d.content.forEach(row => {
-                html += `<tr><td>${escHtml(row.uri)}</td><td class="num">${escHtml(String(row.requestCount))}</td></tr>`;
+                const filterParam = TOP_FILTER_PARAM[STATE.topGroupBy] || 'uri';
+                const href = escHtml(requestsListHref({filter: filterParam, value: row.uri, statusFilter: STATE.topStatusFilter}));
+                const ariaLabel = escHtml(`${d.groupByLabel}: ${row.uri} 요청 목록 보기`);
+                html += `<tr class="console-row-clickable"><td><a class="console-row-link" href="${href}" aria-label="${ariaLabel}">${escHtml(row.uri)}</a></td><td class="num">${escHtml(String(row.requestCount))}</td></tr>`;
                 });
                 html += '</tbody></table></div>';
                 html += paginationHtml(d.number, d.totalPages, 'data-top-page');
                 el.innerHTML = html;
+
+                wireRowLinkDelegate(el.querySelector('tbody'));
 
                 el.querySelectorAll('[data-top-page]').forEach(btn => {
                     btn.addEventListener('click', () => {
@@ -344,88 +388,6 @@
         }
 
         // ── Request History ───────────────────────────────────────────
-        // Every stored field, rendered only inside the (initially hidden)
-        // detail row — the request row itself stays a compact scan line.
-        function historyDetailValue(v) {
-            return (v === null || v === undefined || v === '') ? '—' : escHtml(String(v));
-        }
-
-        // MaxMind's IP geolocation is an approximation, same wording as the
-        // Countries tab, plus the radius MaxMind itself reports for the point.
-        function historyCoords(row) {
-            if (row.latitude === null || row.latitude === undefined
-                || row.longitude === null || row.longitude === undefined) {
-                return '—';
-            }
-            const radius = (row.accuracyRadiusKm === null || row.accuracyRadiusKm === undefined)
-                ? ''
-                : ` · 오차 반경 최대 ${escHtml(String(row.accuracyRadiusKm))}km`;
-            return `${escHtml(String(row.latitude))}, ${escHtml(String(row.longitude))}${radius} (MaxMind 근사 위치)`;
-        }
-
-        function historyNetwork(row) {
-            if (row.asnNumber === null || row.asnNumber === undefined) return '—';
-            const org = row.asnOrganisation ? ' ' + escHtml(row.asnOrganisation) : '';
-            return `AS${escHtml(String(row.asnNumber))}${org}`;
-        }
-
-        function historyDetailHtml(row) {
-            const ts = row.createdAt ? escHtml(row.createdAt.replace('T', ' ').substring(0, 19)) : '—';
-            const duration = (row.durationMs === null || row.durationMs === undefined)
-                ? '—' : `${escHtml(String(row.durationMs))}ms`;
-            return `<div class="hist-detail">
-                <section class="hist-detail__group">
-                    <h6 class="hist-detail__heading">요청</h6>
-                    <dl class="hist-detail__grid">
-                        <dt>시각</dt><dd>${ts}</dd>
-                        <dt>Method</dt><dd>${historyDetailValue(row.method)}</dd>
-                        <dt class="hist-detail__full">URI</dt><dd class="hist-detail__full hist-detail__wrap">${historyDetailValue(row.uri)}</dd>
-                        <dt>Status</dt><dd>${historyDetailValue(row.statusCode)}</dd>
-                        <dt>응답 시간</dt><dd>${duration}</dd>
-                    </dl>
-                </section>
-                <section class="hist-detail__group">
-                    <h6 class="hist-detail__heading">출처</h6>
-                    <dl class="hist-detail__grid">
-                        <dt>IP</dt><dd class="mono">${historyDetailValue(row.ip)}</dd>
-                        <dt>국가</dt><dd>${historyDetailValue(row.countryCode)}</dd>
-                        <dt>도시</dt><dd>${historyDetailValue(row.cityName)}</dd>
-                        <dt>좌표</dt><dd>${historyCoords(row)}</dd>
-                        <dt>네트워크</dt><dd>${historyNetwork(row)}</dd>
-                        <dt class="hist-detail__full">Referer</dt><dd class="hist-detail__full hist-detail__wrap">${historyDetailValue(row.referer)}</dd>
-                    </dl>
-                </section>
-                <section class="hist-detail__group">
-                    <h6 class="hist-detail__heading">클라이언트</h6>
-                    <dl class="hist-detail__grid">
-                        <dt class="hist-detail__full">User-Agent</dt><dd class="hist-detail__full hist-detail__wrap">${historyDetailValue(row.userAgent)}</dd>
-                    </dl>
-                </section>
-                <section class="hist-detail__group">
-                    <h6 class="hist-detail__heading">Bot 판정</h6>
-                    <dl class="hist-detail__grid">
-                        <dt>Bot 여부</dt><dd>${row.bot ? '예' : '아니오'}</dd>
-                        <dt>Bot Score</dt><dd>${historyDetailValue(row.botScore)}</dd>
-                        <dt class="hist-detail__full">Bot Signals</dt><dd class="hist-detail__full hist-detail__wrap">${historyDetailValue(row.botSignals)}</dd>
-                    </dl>
-                </section>
-            </div>`;
-        }
-
-        // Keeps aria-expanded, the button's own label, and the hidden
-        // attribute of the detail row in lockstep for one toggle press.
-        function toggleHistoryDetail(rowEl) {
-            const btn = rowEl.querySelector('.hist-toggle');
-            if (!btn) return;
-            const detail = document.getElementById(btn.getAttribute('aria-controls'));
-            if (!detail) return;
-            const expanded = btn.getAttribute('aria-expanded') === 'true';
-            const next = !expanded;
-            btn.setAttribute('aria-expanded', String(next));
-            btn.setAttribute('aria-label', next ? '요청 상세 정보 접기' : '요청 상세 정보 펼치기');
-            detail.hidden = expanded;
-        }
-
         function loadHistory() {
             const el = document.getElementById('history-content');
             el.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-primary" role="status"></div></div>';
@@ -438,44 +400,27 @@
                 }
                 let html = '<div class="table-responsive"><table class="table table-hover">'
                     + '<thead><tr>'
-                    + '<th class="hist-toggle-head"><span class="visually-hidden">상세정보</span></th>'
                     + '<th>Timestamp</th><th>Method</th><th>Status</th><th>URI</th><th>Referer</th><th>User Agent</th><th>Bot</th>'
                     + '</tr></thead><tbody>';
                 d.content.forEach(row => {
                     const ts = row.createdAt ? row.createdAt.replace('T', ' ').substring(0, 19) : '-';
-                    const detailId = 'hist-detail-' + escHtml(String(row.id));
-                    html += `<tr class="hist-row">
-                        <td class="hist-toggle-cell">
-                            <button type="button" class="hist-toggle" aria-expanded="false" aria-controls="${detailId}" aria-label="요청 상세 정보 펼치기">
-                                <i class="bi bi-chevron-right hist-toggle__icon" aria-hidden="true"></i>
-                            </button>
-                        </td>
-                        <td class="mono">${escHtml(ts)}</td>
+                    const href = escHtml(requestDetailHref(row.id));
+                    const ariaLabel = escHtml(`${ts} 요청 상세 보기`);
+                    html += `<tr class="hist-row console-row-clickable">
+                        <td class="mono"><a class="console-row-link" href="${href}" aria-label="${ariaLabel}">${escHtml(ts)}</a></td>
                         <td><span class="method">${escHtml(row.method || '')}</span></td>
                         <td>${statusBadge(row.statusCode)}</td>
                         <td>${escHtml(row.uri || '')}</td>
                         <td class="cell-dim"><span class="cell-clip">${escHtml(row.referer || '-')}</span></td>
                         <td class="cell-dim"><span class="cell-clip">${escHtml((row.userAgent || '').substring(0, 50) || '-')}</span></td>
                         <td class="cell-dim"><span class="cell-clip">${escHtml(botEvidence(row))}</span></td>
-                    </tr>
-                    <tr class="hist-detail-row" id="${detailId}" hidden>
-                        <td colspan="8">${historyDetailHtml(row)}</td>
                     </tr>`;
                 });
                 html += '</tbody></table></div>';
                 html += paginationHtml(d.number, d.totalPages, 'data-hist-page');
                 el.innerHTML = html;
 
-                // One delegated listener for every row: closest('tr.hist-row')
-                // means a click on the button and a click elsewhere in the row
-                // resolve to the same element, so neither path can double-toggle.
-                const tbody = el.querySelector('tbody');
-                if (tbody) {
-                    tbody.addEventListener('click', (e) => {
-                        const rowEl = e.target.closest('tr.hist-row');
-                        if (rowEl) toggleHistoryDetail(rowEl);
-                    });
-                }
+                wireRowLinkDelegate(el.querySelector('tbody'));
 
                 el.querySelectorAll('[data-hist-page]').forEach(btn => {
                     btn.addEventListener('click', () => {

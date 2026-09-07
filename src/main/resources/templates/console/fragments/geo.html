@@ -58,6 +58,23 @@
             try { return regionNames ? regionNames.of(code.toUpperCase()) : code; } catch (e) { return code; }
         }
 
+        // Country rows also link to the request list filtered to that
+        // country's countryCode — the frozen contract in #199. `days` is
+        // omitted when the "전체 기간" toggle is on: that period has no
+        // equivalent on the request list, so it is left to that page's own
+        // default rather than guessed.
+        function requestsListHref(overrides) {
+            const params = Object.assign({}, overrides);
+            const parts = [];
+            if (params.days) parts.push('days=' + encodeURIComponent(params.days));
+            if (params.statusFilter) parts.push('statusFilter=' + encodeURIComponent(params.statusFilter));
+            if (params.filter && params.value !== undefined && params.value !== null && params.value !== '') {
+                parts.push(encodeURIComponent(params.filter) + '=' + encodeURIComponent(params.value));
+            }
+            parts.push('from=' + encodeURIComponent(location.pathname + location.search));
+            return '/admin/console/requests?' + parts.join('&');
+        }
+
         function includeBots() {
             return document.getElementById('geo-include-bots').checked;
         }
@@ -121,10 +138,15 @@
                 '<thead><tr><th>Country</th><th class="num">Requests</th></tr></thead><tbody>';
             data.content.forEach(row => {
                 const code = row.countryCode || '';
-                html += '<tr><td>' +
+                const listHref = escHtml(requestsListHref({days: selectedDays(), filter: 'countryCode', value: code}));
+                const listAriaLabel = escHtml(`${countryName(code)} 요청 목록 보기`);
+                html += '<tr><td><div class="console-inline-actions">' +
                     `<button class="geo-country-action" data-country="${escHtml(code)}" type="button" aria-label="${escHtml(countryName(code))} 상세 보기">` +
                     `<span aria-hidden="true">${flagEmoji(code)}</span><span>${escHtml(countryName(code))} <span class="geo-country-action__code">${escHtml(code)}</span></span>` +
-                    '<i class="bi bi-arrow-right" aria-hidden="true"></i></button></td>' +
+                    '<i class="bi bi-arrow-right" aria-hidden="true"></i></button>' +
+                    `<a class="geo-country-action" href="${listHref}" aria-label="${listAriaLabel}">` +
+                    '<i class="bi bi-list-ul" aria-hidden="true"></i><span>요청 목록</span></a>' +
+                    '</div></td>' +
                     `<td class="num">${escHtml(row.requestCount)}</td></tr>`;
             });
             html += '</tbody></table></div>';

@@ -15,15 +15,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * from {@code GET /api/admin/console/history}), which a raw markup-selector
  * pass cannot exercise meaningfully — so this test only asserts on the static
  * markup a fragment selector can genuinely reach: the card shell, the
- * click-to-expand note the issue requires, and the still-present status
+ * click-to-detail note the issue requires, and the still-present status
  * filter and content mount point the existing script wires up.
+ *
+ * The accordion this once guarded (a toggle button plus a hidden detail row)
+ * is gone as of #199: Request History rows now link straight to
+ * {@code /admin/console/requests/{id}}, built inside that same inline
+ * script, so it is likewise outside what a fragment selector can reach.
  */
 class ConsoleHistoryTemplateTest {
 
     private final SpringTemplateEngine templateEngine = templateEngine();
 
     @Test
-    void requestHistoryPane_RendersCardShellAndExpandNote() {
+    void requestHistoryPane_RendersCardShellAndDetailNote() {
         String html = templateEngine.process("console/dashboard", Set.of("div#pane-history"), new Context());
 
         assertTrue(html.contains("id=\"pane-history\""));
@@ -31,9 +36,10 @@ class ConsoleHistoryTemplateTest {
         assertTrue(html.contains("id=\"history-content\""));
 
         // The note the issue requires above #history-content, telling the
-        // operator that a row click expands its detail panel.
+        // operator that a row click opens that request's detail page.
         assertTrue(html.contains("panel-note"));
         assertTrue(html.contains("행을 클릭하면"));
+        assertTrue(html.contains("상세 페이지"));
 
         // Status filter untouched by this change.
         assertTrue(html.contains("js-hist-status"));
