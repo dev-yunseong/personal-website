@@ -36,6 +36,40 @@ public interface RequestStatisticsRepository extends JpaRepository<RequestStatis
                                                    @Param("minStatus") int minStatus,
                                                    @Param("maxStatus") int maxStatus);
 
+    /**
+     * The request list behind {@code /admin/console/requests}: one paginated
+     * query where every filter is nullable and a null simply drops its clause,
+     * so the five columns combine with AND without a query per combination.
+     *
+     * <p>Matches are exact — no LIKE, no full-text. A null {@code minStatus}
+     * also keeps rows whose status code was never recorded, which a
+     * {@code BETWEEN} would silently drop.
+     */
+    @Query(value = "SELECT r FROM RequestStatistics r WHERE r.createdAt >= :startDate "
+            + "AND (:minStatus IS NULL OR (r.statusCode >= :minStatus AND r.statusCode <= :maxStatus)) "
+            + "AND (:uri IS NULL OR r.uri = :uri) "
+            + "AND (:ip IS NULL OR r.ip = :ip) "
+            + "AND (:userAgent IS NULL OR r.userAgent = :userAgent) "
+            + "AND (:referer IS NULL OR r.referer = :referer) "
+            + "AND (:countryCode IS NULL OR r.countryCode = :countryCode) "
+            + "ORDER BY r.createdAt DESC",
+            countQuery = "SELECT COUNT(r) FROM RequestStatistics r WHERE r.createdAt >= :startDate "
+                    + "AND (:minStatus IS NULL OR (r.statusCode >= :minStatus AND r.statusCode <= :maxStatus)) "
+                    + "AND (:uri IS NULL OR r.uri = :uri) "
+                    + "AND (:ip IS NULL OR r.ip = :ip) "
+                    + "AND (:userAgent IS NULL OR r.userAgent = :userAgent) "
+                    + "AND (:referer IS NULL OR r.referer = :referer) "
+                    + "AND (:countryCode IS NULL OR r.countryCode = :countryCode)")
+    Page<RequestStatistics> findMatchingRequests(@Param("startDate") LocalDateTime startDate,
+                                                 @Param("minStatus") Integer minStatus,
+                                                 @Param("maxStatus") Integer maxStatus,
+                                                 @Param("uri") String uri,
+                                                 @Param("ip") String ip,
+                                                 @Param("userAgent") String userAgent,
+                                                 @Param("referer") String referer,
+                                                 @Param("countryCode") String countryCode,
+                                                 Pageable pageable);
+
     @Query("SELECT r.uri, COUNT(r) as totalCount FROM RequestStatistics r WHERE r.createdAt >= :startDate GROUP BY r.uri ORDER BY totalCount DESC")
     List<Object[]> findTopUrisByRequestCount(@Param("startDate") LocalDateTime startDate);
 

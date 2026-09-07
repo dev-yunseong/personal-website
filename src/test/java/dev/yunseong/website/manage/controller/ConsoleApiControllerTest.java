@@ -1,6 +1,6 @@
 package dev.yunseong.website.manage.controller;
 
-import dev.yunseong.website.manage.domain.RequestDetail;
+import dev.yunseong.website.manage.domain.RequestSummary;
 import dev.yunseong.website.manage.service.RequestStatisticsService;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.Page;
@@ -24,47 +24,47 @@ class ConsoleApiControllerTest {
     private final ConsoleApiController controller = new ConsoleApiController(service);
 
     @Test
-    void history_ReturnsMappedRequestDetailPage() {
+    void history_ReturnsMappedRequestSummaryPage() {
         // Given
-        RequestDetail detail = new RequestDetail(
+        RequestSummary summary = new RequestSummary(
                 42L, LocalDateTime.of(2026, 7, 30, 12, 0), "GET", "/public/memos/1", 200, 12,
-                "1.1.1.1", "https://referer.com", "Mozilla/5.0", true, 87, "datacenter,ua_mismatch",
-                "AU", "Melbourne", -37.814, 144.9633, 20, 13335L, "Cloudflare, Inc.");
-        Page<RequestDetail> page = new PageImpl<>(List.of(detail), PageRequest.of(0, 10), 1);
-        when(service.getRequestDetailsForLastDays(eq(7), eq(""), any())).thenReturn(page);
+                "1.1.1.1", "https://referer.com", "Mozilla/5.0", true, 87, "datacenter,ua_mismatch", "AU");
+        Page<RequestSummary> page = new PageImpl<>(List.of(summary), PageRequest.of(0, 10), 1);
+        when(service.getRequestSummariesForLastDays(eq(7), eq(""), any())).thenReturn(page);
 
         // When
         Map<String, Object> body = controller.history(7, 0, "").getBody();
 
         // Then
-        assertEquals(List.of(detail), body.get("content"));
+        assertEquals(List.of(summary), body.get("content"));
         assertEquals(1, body.get("totalPages"));
         assertEquals(1L, body.get("totalElements"));
         assertEquals(0, body.get("number"));
         assertEquals(true, body.get("first"));
         assertEquals(true, body.get("last"));
 
-        RequestDetail mapped = ((List<RequestDetail>) body.get("content")).get(0);
-        assertEquals(13335L, mapped.asnNumber());
-        assertEquals("Cloudflare, Inc.", mapped.asnOrganisation());
+        RequestSummary mapped = ((List<RequestSummary>) body.get("content")).get(0);
+        assertEquals("/public/memos/1", mapped.uri());
+        assertEquals("AU", mapped.countryCode());
+        assertEquals("datacenter,ua_mismatch", mapped.botSignals());
     }
 
     @Test
-    void history_WithUnresolvedAsn_LeavesAsnFieldsNull() {
+    void history_WithUnresolvedGeoAndBotScore_LeavesThoseFieldsNull() {
         // Given
-        RequestDetail detail = new RequestDetail(
+        RequestSummary summary = new RequestSummary(
                 1L, LocalDateTime.of(2026, 7, 30, 12, 0), "GET", "/public/memos/1", 200, 12,
-                "10.0.0.1", null, "Mozilla/5.0", false, null, null,
-                null, null, null, null, null, null, null);
-        Page<RequestDetail> page = new PageImpl<>(List.of(detail), PageRequest.of(0, 10), 1);
-        when(service.getRequestDetailsForLastDays(eq(7), eq(""), any())).thenReturn(page);
+                "10.0.0.1", null, "Mozilla/5.0", false, null, null, null);
+        Page<RequestSummary> page = new PageImpl<>(List.of(summary), PageRequest.of(0, 10), 1);
+        when(service.getRequestSummariesForLastDays(eq(7), eq(""), any())).thenReturn(page);
 
         // When
         Map<String, Object> body = controller.history(7, 0, "").getBody();
 
         // Then
-        RequestDetail mapped = ((List<RequestDetail>) body.get("content")).get(0);
-        assertNull(mapped.asnNumber());
-        assertNull(mapped.asnOrganisation());
+        RequestSummary mapped = ((List<RequestSummary>) body.get("content")).get(0);
+        assertNull(mapped.countryCode());
+        assertNull(mapped.botScore());
+        assertNull(mapped.referer());
     }
 }
