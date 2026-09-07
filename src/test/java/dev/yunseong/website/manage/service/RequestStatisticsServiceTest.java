@@ -615,13 +615,14 @@ class RequestStatisticsServiceTest {
      */
     @Test
     void persistStatistics_ConcurrentRecording_LosesNoRequests() throws Exception {
-        // Given - a real resolver with no database (returns null, thread-safe) so the
-        // producer threads do not hammer a Mockito mock.
+        // Given - real resolvers with no database (they return null and are
+        // thread-safe) so the producer threads do not hammer a Mockito mock.
         int producers = 8;
         int perProducer = 500;
         int records = producers * perProducer;
         RequestStatisticsService service =
-                new RequestStatisticsService(requestStatisticsRepository, new GeoIpLocationResolver(""));
+                new RequestStatisticsService(requestStatisticsRepository, new GeoIpLocationResolver(""),
+                        new AsnResolver(""));
 
         ConcurrentLinkedQueue<RequestStatistics> saved = new ConcurrentLinkedQueue<>();
         when(requestStatisticsRepository.saveAll(any())).thenAnswer(invocation -> {
@@ -643,7 +644,7 @@ class RequestStatisticsServiceTest {
                     start.await();
                     for (int i = 0; i < perProducer; i++) {
                         service.recordRequest("/public/p" + producerId + "-" + i, "GET", null,
-                                "Mozilla/5.0", "1.1.1.1", 200, 1);
+                                bare("Mozilla/5.0"), "1.1.1.1", 200, 1);
                     }
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
