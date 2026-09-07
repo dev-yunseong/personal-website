@@ -61,8 +61,11 @@ class WebSecurityConfigTest {
             "/public/apps/1",
             "/public/search",
             "/public/chat",
+            "/briefing",
             "/api/public/chat",
             "/api/public/search/suggestions",
+            "/api/public/memos",
+            "/api/public/memos/1/content",
             "/sitemap.xml",
             "/robots.txt",
             "/error",
@@ -99,7 +102,8 @@ class WebSecurityConfigTest {
             "/api/admin/console/referer",
             "/api/admin/console/not-found",
             "/api/admin/console/content",
-            "/api/admin/console/geo/countries"
+            "/api/admin/console/geo/countries",
+            "/api/admin/console/geo/backfill"
     })
     void adminPaths_redirectAnonymousToLogin(String path) throws Exception {
         mockMvc.perform(get(path))
@@ -107,17 +111,21 @@ class WebSecurityConfigTest {
                 .andExpect(redirectedUrlPattern("**/login"));
     }
 
+    /**
+     * The point of the whitelist: an unlisted path is private, not public.
+     * <p>
+     * {@code /actuator/health} is in here rather than in a test of its own because
+     * spring-boot-starter-actuator is no longer a dependency, so nothing serves it
+     * today. It probes what happens if the starter comes back: closed by default,
+     * with no rule of its own needed to keep it that way.
+     */
     @ParameterizedTest
-    @ValueSource(strings = {"/actuator", "/actuator/health", "/actuator/metrics"})
-    void actuatorPaths_redirectAnonymousToLogin(String path) throws Exception {
-        mockMvc.perform(get(path))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrlPattern("**/login"));
-    }
-
-    /** The point of the whitelist: an unlisted path is private, not public. */
-    @ParameterizedTest
-    @ValueSource(strings = {"/api/admins/typo", "/admins/console", "/whatever/new/endpoint"})
+    @ValueSource(strings = {
+            "/api/admins/typo",
+            "/admins/console",
+            "/whatever/new/endpoint",
+            "/actuator/health"
+    })
     void unlistedPaths_defaultToAuthenticated(String path) throws Exception {
         mockMvc.perform(get(path))
                 .andExpect(status().is3xxRedirection())

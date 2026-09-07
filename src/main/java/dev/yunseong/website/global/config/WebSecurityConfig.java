@@ -19,6 +19,8 @@ public class WebSecurityConfig {
             "/",
             "/public/**",
             "/api/public/**",
+            // the briefing digest is public even though the memos behind it are not
+            "/briefing",
             "/login",
             "/error",
             "/sitemap.xml",
@@ -38,10 +40,6 @@ public class WebSecurityConfig {
         http
                 .authorizeHttpRequests((requests) -> requests
                         .requestMatchers(PUBLIC_PATHS).permitAll()
-                        // stated explicitly so that widening
-                        // management.endpoints.web.exposure never publishes an
-                        // operational endpoint anonymously by accident
-                        .requestMatchers("/actuator/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .formLogin(withDefaults())
