@@ -4,6 +4,7 @@ import dev.yunseong.website.manage.domain.AutonomousSystem;
 import dev.yunseong.website.manage.domain.BotDetector;
 import dev.yunseong.website.manage.domain.BotVerdict;
 import dev.yunseong.website.manage.domain.GeoLocation;
+import dev.yunseong.website.manage.domain.RequestDetail;
 import dev.yunseong.website.manage.domain.RequestFingerprint;
 import dev.yunseong.website.manage.domain.RequestStatistics;
 import dev.yunseong.website.manage.domain.TimelineStat;
@@ -117,6 +118,17 @@ public class RequestStatisticsService {
         }
         int[] range = statusCodeRange(statusFilter);
         return requestStatisticsRepository.findByCreatedAtAfterAndStatusCodeBetween(startDate, range[0], range[1], pageable);
+    }
+
+    /**
+     * The history table's read model: the entity flattened with each row's
+     * ASN, resolved here (not stored) so a missing database or a private
+     * range just yields a null ASN instead of failing the page.
+     */
+    @Transactional(readOnly = true)
+    public Page<RequestDetail> getRequestDetailsForLastDays(int days, String statusFilter, Pageable pageable) {
+        return getStatisticsForLastDays(days, statusFilter, pageable)
+                .map(row -> RequestDetail.of(row, asnResolver.resolve(row.getIp())));
     }
 
     @Transactional(readOnly = true)

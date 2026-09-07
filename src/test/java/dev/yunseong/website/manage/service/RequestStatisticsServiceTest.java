@@ -1,5 +1,7 @@
 package dev.yunseong.website.manage.service;
 
+import dev.yunseong.website.manage.domain.AutonomousSystem;
+import dev.yunseong.website.manage.domain.RequestDetail;
 import dev.yunseong.website.manage.domain.RequestFingerprint;
 import dev.yunseong.website.manage.domain.RequestStatistics;
 import dev.yunseong.website.manage.domain.GeoLocation;
@@ -304,6 +306,68 @@ class RequestStatisticsServiceTest {
         verify(requestStatisticsRepository, times(1)).findByCreatedAtAfterAndStatusCodeBetween(
                 any(LocalDateTime.class), eq(200), eq(299), eq(pageable));
         verify(requestStatisticsRepository, never()).findByCreatedAtAfter(any(LocalDateTime.class), any(Pageable.class));
+    }
+
+    @Test
+    void getRequestDetailsForLastDays_MapsEveryFieldAndAttachesAsn() {
+        // Given
+        LocalDateTime createdAt = LocalDateTime.of(2026, 7, 30, 12, 0);
+        RequestStatistics row = new RequestStatistics(42L, "/public/memos/1", "GET", "https://referer.com",
+                "Mozilla/5.0", "1.1.1.1", 200, createdAt, true, 12,
+                "AU", 2158177L, "Melbourne", -37.814, 144.9633, 20, 87, "datacenter,ua_mismatch");
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<RequestStatistics> mockPage = new PageImpl<>(List.of(row), pageable, 1);
+
+        when(requestStatisticsRepository.findByCreatedAtAfter(any(LocalDateTime.class), eq(pageable)))
+                .thenReturn(mockPage);
+        when(asnResolver.resolve("1.1.1.1")).thenReturn(new AutonomousSystem(13335L, "Cloudflare, Inc."));
+
+        // When
+        Page<RequestDetail> result = requestStatisticsService.getRequestDetailsForLastDays(7, "", pageable);
+
+        // Then
+        assertEquals(1, result.getTotalElements());
+        RequestDetail detail = result.getContent().get(0);
+        assertEquals(42L, detail.id());
+        assertEquals(createdAt, detail.createdAt());
+        assertEquals("GET", detail.method());
+        assertEquals("/public/memos/1", detail.uri());
+        assertEquals(200, detail.statusCode());
+        assertEquals(12, detail.durationMs());
+        assertEquals("1.1.1.1", detail.ip());
+        assertEquals("https://referer.com", detail.referer());
+        assertEquals("Mozilla/5.0", detail.userAgent());
+        assertTrue(detail.bot());
+        assertEquals(87, detail.botScore());
+        assertEquals("datacenter,ua_mismatch", detail.botSignals());
+        assertEquals("AU", detail.countryCode());
+        assertEquals("Melbourne", detail.cityName());
+        assertEquals(-37.814, detail.latitude());
+        assertEquals(144.9633, detail.longitude());
+        assertEquals(20, detail.accuracyRadiusKm());
+        assertEquals(13335L, detail.asnNumber());
+        assertEquals("Cloudflare, Inc.", detail.asnOrganisation());
+    }
+
+    @Test
+    void getRequestDetailsForLastDays_WithoutAsnMatch_LeavesAsnFieldsNull() {
+        // Given - AsnResolver returns null for a missing database, a private
+        // range, or a non-literal string; that must not surface as a failure.
+        RequestStatistics row = new RequestStatistics("/public/memos/1", "GET", null, "Mozilla/5.0", "10.0.0.1");
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<RequestStatistics> mockPage = new PageImpl<>(List.of(row), pageable, 1);
+
+        when(requestStatisticsRepository.findByCreatedAtAfter(any(LocalDateTime.class), eq(pageable)))
+                .thenReturn(mockPage);
+        when(asnResolver.resolve("10.0.0.1")).thenReturn(null);
+
+        // When
+        Page<RequestDetail> result = requestStatisticsService.getRequestDetailsForLastDays(7, "", pageable);
+
+        // Then
+        RequestDetail detail = result.getContent().get(0);
+        assertNull(detail.asnNumber());
+        assertNull(detail.asnOrganisation());
     }
 
     @Test
