@@ -5,32 +5,18 @@
 
 <head>
     <title>Chat History</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
-    <link rel="stylesheet" th:href="@{/css/chat.css}">
-    <style>
-        .ip-list-item.active {
-            background-color: var(--site-ink);
-            color: white;
-        }
-        .ip-list-item.active .text-muted {
-            color: #dee2e6 !important;
-        }
-        .chat-history-box {
-            max-height: 75vh;
-            overflow-y: auto;
-            padding: 20px;
-            background-color: var(--site-panel);
-            border-radius: 0;
-            border: 1px solid var(--site-line-strong);
-        }
-    </style>
+    <th:block layout:fragment="css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown.min.css">
+        <link rel="stylesheet" th:href="@{/css/chat.css}">
+        <link rel="stylesheet" th:href="@{/css/console.css}">
+    </th:block>
 </head>
 
 <body>
 <th:block layout:fragment="content">
-    <div class="container-fluid mt-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h1 class="h3 mb-0">Chat History</h1>
+    <div class="container-fluid console mt-4">
+        <div class="console-head">
+            <h1>Chat History</h1>
             <a th:href="@{/admin/console}" class="btn btn-sm btn-outline-secondary">← Admin Console</a>
         </div>
 
@@ -47,27 +33,37 @@
                            th:classappend="${entry.ip == selectedIp} ? 'active ip-list-item' : 'ip-list-item'"
                            class="list-group-item list-group-item-action">
                             <div class="fw-semibold" th:text="${entry.ip}"></div>
-                            <small class="text-muted"
+                            <small class="ip-list-item__time"
                                    th:text="${#temporals.format(entry.latest, 'yyyy-MM-dd HH:mm')}"></small>
                         </a>
                     </div>
-                    <div class="card-body text-muted" th:if="${ipList.isEmpty()}">
-                        <small>No conversations yet.</small>
+                    <div class="card-body" th:if="${ipList.isEmpty()}">
+                        <p class="panel-note mb-0">No conversations yet.</p>
                     </div>
                     <!-- IP list pagination -->
-                    <div class="card-footer p-2" th:if="${ipList.totalPages > 1}">
+                    <!-- Current ±2, same window as the JS pagers elsewhere in the console. -->
+                    <div class="card-footer p-2" th:if="${ipList.totalPages > 1}"
+                         th:with="ipWindowStart=${ipPage - 2 < 0 ? 0 : ipPage - 2},
+                                  ipWindowEnd=${ipPage + 2 > ipList.totalPages - 1 ? ipList.totalPages - 1 : ipPage + 2}">
                         <nav aria-label="IP page navigation">
                             <ul class="pagination pagination-sm mb-0 justify-content-center">
                                 <li class="page-item" th:classappend="${ipList.first} ? 'disabled'">
                                     <a class="page-link"
                                        th:href="@{/admin/chat(ip=${selectedIp}, page=${page}, ipPage=${ipPage - 1})}">&laquo;</a>
                                 </li>
+                                <li class="page-item disabled" th:if="${ipWindowStart > 0}">
+                                    <span class="page-link" aria-hidden="true">&hellip;</span>
+                                </li>
                                 <li class="page-item"
-                                    th:each="i : ${#numbers.sequence(0, ipList.totalPages - 1)}"
+                                    th:each="i : ${#numbers.sequence(ipWindowStart, ipWindowEnd)}"
                                     th:classappend="${i == ipPage} ? 'active'">
                                     <a class="page-link"
                                        th:href="@{/admin/chat(ip=${selectedIp}, page=${page}, ipPage=${i})}"
+                                       th:attr="aria-current=${i == ipPage} ? 'page' : null"
                                        th:text="${i + 1}"></a>
+                                </li>
+                                <li class="page-item disabled" th:if="${ipWindowEnd < ipList.totalPages - 1}">
+                                    <span class="page-link" aria-hidden="true">&hellip;</span>
                                 </li>
                                 <li class="page-item" th:classappend="${ipList.last} ? 'disabled'">
                                     <a class="page-link"
@@ -82,17 +78,17 @@
             <!-- Conversations Panel -->
             <div class="col-md-9">
                 <!-- No IP selected -->
-                <div th:if="${selectedIp == null}" class="text-center text-muted mt-5">
-                    <p>Select a visitor from the left to view their conversations.</p>
+                <div th:if="${selectedIp == null}" class="console-empty">
+                    <p class="mb-0">Select a visitor from the left to view their conversations.</p>
                 </div>
 
                 <!-- Conversations for selected IP -->
                 <div th:if="${selectedIp != null}">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="console-subhead">
                         <h5 class="mb-0">
                             Conversations for <code th:text="${selectedIp}"></code>
                         </h5>
-                        <span class="text-muted small"
+                        <span class="console-subhead__count"
                               th:if="${conversations != null}"
                               th:text="'Total: ' + ${conversations.totalElements}"></span>
                     </div>
@@ -105,26 +101,35 @@
                         </th:block>
                     </div>
 
-                    <div class="text-center text-muted mt-4"
+                    <div class="console-empty"
                          th:if="${conversations == null or conversations.isEmpty()}">
-                        <p>No conversations found for this IP.</p>
+                        <p class="mb-0">No conversations found for this IP.</p>
                     </div>
 
                     <!-- Conversation pagination -->
                     <nav aria-label="Conversation page navigation"
                          th:if="${conversations != null and conversations.totalPages > 1}"
-                         class="mt-3">
+                         class="mt-3"
+                         th:with="convWindowStart=${page - 2 < 0 ? 0 : page - 2},
+                                  convWindowEnd=${page + 2 > conversations.totalPages - 1 ? conversations.totalPages - 1 : page + 2}">
                         <ul class="pagination pagination-sm justify-content-center">
                             <li class="page-item" th:classappend="${conversations.first} ? 'disabled'">
                                 <a class="page-link"
                                    th:href="@{/admin/chat(ip=${selectedIp}, page=${page - 1}, ipPage=${ipPage})}">&laquo;</a>
                             </li>
+                            <li class="page-item disabled" th:if="${convWindowStart > 0}">
+                                <span class="page-link" aria-hidden="true">&hellip;</span>
+                            </li>
                             <li class="page-item"
-                                th:each="i : ${#numbers.sequence(0, conversations.totalPages - 1)}"
+                                th:each="i : ${#numbers.sequence(convWindowStart, convWindowEnd)}"
                                 th:classappend="${i == page} ? 'active'">
                                 <a class="page-link"
                                    th:href="@{/admin/chat(ip=${selectedIp}, page=${i}, ipPage=${ipPage})}"
+                                   th:attr="aria-current=${i == page} ? 'page' : null"
                                    th:text="${i + 1}"></a>
+                            </li>
+                            <li class="page-item disabled" th:if="${convWindowEnd < conversations.totalPages - 1}">
+                                <span class="page-link" aria-hidden="true">&hellip;</span>
                             </li>
                             <li class="page-item" th:classappend="${conversations.last} ? 'disabled'">
                                 <a class="page-link"

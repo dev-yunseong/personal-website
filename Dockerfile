@@ -19,23 +19,29 @@ RUN --mount=type=secret,id=GITHUB_USERNAME \
     GITHUB_TOKEN=$(cat /run/secrets/GITHUB_TOKEN) \
     ./gradlew clean build -x test --no-daemon
 
-# GeoLite2 City database for request statistics (issue #126).
+# GeoLite2 City and ASN databases for request statistics (issues #126, #179).
+# City resolves country and city; ASN resolves the network, which bot
+# classification weighs as the datacenter signal.
 # Best effort on purpose: without a licence key, without network, or on a
 # MaxMind error the build still succeeds and the application runs with
-# geo fields null. Placed after the source build so every code change
-# invalidates this layer and the database is re-downloaded on each deploy.
+# geo fields null and the datacenter signal off. Each edition is fetched
+# independently so one failing does not cost the other. Placed after the source
+# build so every code change invalidates this layer and the databases are
+# re-downloaded on each deploy.
 RUN --mount=type=secret,id=MAXMIND_LICENCE_KEY sh -c '\
     mkdir -p /geoip && touch /geoip/.keep; \
     if [ ! -s /run/secrets/MAXMIND_LICENCE_KEY ]; then \
         echo "MAXMIND_LICENCE_KEY absent: building without GeoLite2"; exit 0; \
     fi; \
     command -v curl >/dev/null || (apt-get update && apt-get install -y --no-install-recommends curl ca-certificates); \
-    curl -fsS "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-City&suffix=tar.gz&license_key=$(cat /run/secrets/MAXMIND_LICENCE_KEY)" \
-        -o /tmp/geolite2.tar.gz \
-        && tar -xzf /tmp/geolite2.tar.gz -C /tmp \
-        && find /tmp -name GeoLite2-City.mmdb -exec mv {} /geoip/ \; \
-        || echo "GeoLite2 download failed: building without it"; \
-    rm -f /tmp/geolite2.tar.gz'
+    for edition in City ASN; do \
+        curl -fsS "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-${edition}&suffix=tar.gz&license_key=$(cat /run/secrets/MAXMIND_LICENCE_KEY)" \
+            -o /tmp/geolite2.tar.gz \
+            && tar -xzf /tmp/geolite2.tar.gz -C /tmp \
+            && find /tmp -name "GeoLite2-${edition}.mmdb" -exec mv {} /geoip/ \; \
+            || echo "GeoLite2-${edition} download failed: building without it"; \
+        rm -f /tmp/geolite2.tar.gz; \
+    done'
 
 # Stage 2: Runtime
 FROM eclipse-temurin:21-jre
@@ -47,9 +53,10 @@ RUN apt install -y curl \
     && apt install -y nodejs
 
 COPY --from=build /app/build/libs/*.jar app.jar
-# Empty when the build had no licence key; app.geoip.database-path then finds
-# nothing and geo fields stay null. Override GEOIP_DATABASE_PATH to point at
-# a mounted volume instead.
+# Empty when the build had no licence key; app.geoip.database-path and
+# app.geoip.asn-database-path then find nothing, geo fields stay null and the
+# datacenter signal stays off. Override GEOIP_DATABASE_PATH and
+# GEOIP_ASN_DATABASE_PATH to point at a mounted volume instead.
 COPY --from=build /geoip/ /app/geoip/
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]

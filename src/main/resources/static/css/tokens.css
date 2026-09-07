@@ -1,0 +1,158 @@
+/*
+ * Design tokens — 3 layers: primitive -> semantic -> Bootstrap bridge.
+ *
+ * Components must only ever read layer 2 (semantic) names. Layer 1 exists so a
+ * palette swap stays a single-file edit; layer 3 hands the same values to
+ * Bootstrap so its components inherit the system instead of being overridden.
+ *
+ * Light mode only. Dark is intentionally not shipped; the semantic layer is the
+ * seam where a second value set would slot in without touching components.
+ *
+ * Every colour pair below is contrast-checked: body text >= 4.5:1, UI
+ * boundaries and focus rings >= 3:1 (WCAG 2.1 AA).
+ */
+
+:root {
+  /* ---------------------------------------------------------------- layer 1 */
+  /* Neutral ramp — cool grey, generated in OKLCH for even perceived steps. */
+  --n-0: #ffffff;
+  --n-50: #f9fafb;
+  --n-100: #f1f3f4;
+  --n-200: #e3e5e7;
+  --n-600: #85888a;
+  --n-700: #6b6e6f;
+  --n-800: #525456;
+  --n-950: #161718;
+
+  /* Accent ramp — teal. The only branded hue on the site. */
+  --teal-100: #d0eaea;
+  --teal-500: #009399;
+  --teal-700: #00757b;
+  --teal-800: #00575c;
+
+  /* State ramps — functional only, never decorative. */
+  --green-100: #e0f7e4;
+  --green-700: #137738;
+  --green-800: #005725;
+  --amber-100: #ffeed3;
+  --amber-700: #8c5f00;
+  --amber-800: #634000;
+  --red-100: #ffe9e6;
+  --red-700: #b63132;
+  --red-800: #8d1a1e;
+
+  /* ---------------------------------------------------------------- layer 2 */
+  /* Surfaces */
+  --canvas: var(--n-50);
+  --surface: var(--n-0);
+  --sunken: var(--n-100);
+
+  /* Lines. `hairline` separates rows and is decorative; `border` bounds
+     controls and must clear 3:1, which is why it is much darker. */
+  --hairline: var(--n-200);
+  --border: var(--n-600);
+  --border-strong: var(--n-950);
+
+  /* Text */
+  --text-primary: var(--n-950);
+  --text-secondary: var(--n-800);
+  --text-tertiary: var(--n-700);
+
+  /* Interactive default. Links and primary buttons are ink, not accent —
+     the accent is reserved for signalling state, not for every action. */
+  --ink: var(--n-950);
+  --ink-on: var(--n-0);
+
+  /* Accent — current location, active filter, focus, category marks. */
+  --accent: var(--teal-700);
+  --accent-line: var(--teal-500);
+  --accent-solid: var(--teal-700);
+  --accent-on: var(--n-0);
+  --accent-soft: var(--teal-100);
+  --accent-soft-text: var(--teal-800);
+  --focus: var(--teal-500);
+
+  /* States */
+  --ok: var(--green-700);
+  --ok-soft: var(--green-100);
+  --ok-soft-text: var(--green-800);
+  --warn: var(--amber-700);
+  --warn-soft: var(--amber-100);
+  --warn-soft-text: var(--amber-800);
+  --danger: var(--red-700);
+  --danger-soft: var(--red-100);
+  --danger-soft-text: var(--red-800);
+
+  /* Geometry. Split on purpose: rounding is a "you can press this" signal, so
+     it belongs on controls only. Content surfaces stay square. */
+  --r-control: 3px;
+  --r-surface: 0;
+
+  /* Spacing — 4px base. */
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.25rem;
+  --sp-6: 1.5rem;
+  --sp-8: 2rem;
+  --sp-10: 2.5rem;
+  --sp-12: 3rem;
+  --sp-16: 4rem;
+  --gutter: clamp(1rem, 4vw, 2rem);
+  --section-y: clamp(2rem, 6vw, 4.5rem);
+
+  /* Type */
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system, system-ui,
+    "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
+
+  --fs-meta: 0.75rem;
+  --fs-label: 0.8125rem;
+  --fs-body-sm: 0.875rem;
+  --fs-body: 0.9375rem;
+  --fs-row: 1rem;
+  --fs-h3: 1.125rem;
+  --fs-h2: 1.375rem;
+  --fs-h1: clamp(1.75rem, 4vw, 2.25rem);
+
+  --lh-tight: 1.35;
+  --lh-body: 1.75;
+
+  /* Elevation — used sparingly; the system leans on hairlines, not shadows. */
+  --shadow-sm: 0 1px 2px rgba(22, 23, 24, 0.06);
+  --shadow-md: 0 2px 4px rgba(22, 23, 24, 0.06), 0 8px 20px rgba(22, 23, 24, 0.05);
+
+  /* Motion */
+  --dur-fast: 120ms;
+  --dur-base: 180ms;
+  --ease: cubic-bezier(0.2, 0, 0.2, 1);
+
+  /* ---------------------------------------------------------------- layer 3 */
+  /* Bootstrap 5.3 bridge. Mapping these means Bootstrap components pick up the
+     system on their own, which is what removes the need for `!important`. */
+  --bs-body-bg: var(--canvas);
+  --bs-body-color: var(--text-primary);
+  --bs-body-font-family: var(--font-sans);
+  --bs-body-font-size: var(--fs-body);
+  --bs-body-line-height: var(--lh-body);
+  --bs-emphasis-color: var(--text-primary);
+  --bs-secondary-color: var(--text-tertiary);
+  --bs-secondary-bg: var(--sunken);
+  --bs-tertiary-bg: var(--sunken);
+  --bs-border-color: var(--hairline);
+  --bs-border-radius: var(--r-control);
+  --bs-border-radius-sm: var(--r-control);
+  --bs-border-radius-lg: var(--r-control);
+  --bs-link-color: var(--text-primary);
+  --bs-link-hover-color: var(--accent);
+  --bs-code-color: var(--accent);
+  --bs-highlight-bg: var(--accent-soft);
+  --bs-primary: var(--accent-solid);
+  --bs-primary-rgb: 0, 117, 123;
+  --bs-success: var(--ok);
+  --bs-warning: var(--warn);
+  --bs-danger: var(--danger);
+  --bs-focus-ring-color: rgba(0, 147, 153, 0.28);
+  --bs-focus-ring-width: 3px;
+}

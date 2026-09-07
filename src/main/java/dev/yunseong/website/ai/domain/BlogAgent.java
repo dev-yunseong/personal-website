@@ -24,7 +24,6 @@ import org.springframework.stereotype.Component;
 
 import dev.yunseong.website.ai.tool.DateTimeTools;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Sinks;
 
 @Component
 public class BlogAgent {
@@ -117,17 +116,23 @@ public class BlogAgent {
     }
 
     public Flux<String> prompt(String message, String conversationId) {
-        Sinks.Many<String> toolSink = toolEventPublisher.registerSink();
+        // Registered per subscription so an unsubscribed Flux never leaves a sink behind.
+        return Flux.defer(() -> {
+            ToolEventPublisher.Registration registration = toolEventPublisher.registerSink();
 
-        Flux<String> textStream = chatClient.prompt(message)
-                .system(buildSystemPrompt())
-                .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
-                .toolContext(Map.of(BlogTools.CONVERSATION_ID_KEY, conversationId))
-                .stream()
-                .content()
-                .map(StreamEvent::text)
-                .doFinally(signal -> toolEventPublisher.complete());
+            Flux<String> textStream = chatClient.prompt(message)
+                    .system(buildSystemPrompt())
+                    .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
+                    .toolContext(Map.of(
+                            BlogTools.CONVERSATION_ID_KEY, conversationId,
+                            ToolEventPublisher.REQUEST_ID_KEY, registration.requestId()))
+                    .stream()
+                    .content()
+                    .map(StreamEvent::text)
+                    // fires on complete, error and cancel, so the sink is always removed
+                    .doFinally(signal -> toolEventPublisher.complete(registration.requestId()));
 
-        return Flux.merge(textStream, toolSink.asFlux());
+            return Flux.merge(textStream, registration.sink().asFlux());
+        });
     }
 }

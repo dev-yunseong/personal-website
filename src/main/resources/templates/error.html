@@ -8,29 +8,20 @@
 </head>
 <body>
 <th:block layout:fragment="content">
-    <div class="container mt-5">
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <div class="card shadow-lg border-0">
-                    <div class="card-body text-center py-5">
-                        <div class="mb-4">
-                            <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 5rem;"></i>
-                        </div>
-                        
-                        <h1 class="display-4 fw-bold text-dark mb-3" th:text="${statusCode != null ? statusCode : 'Error'}">Error</h1>
-                        
-                        <h2 class="h3 mb-4 text-secondary" th:text="${statusMessage != null ? statusMessage : 'Error'}">Error</h2>
-                        
-                        <div class="mt-5">
-                            <a href="/" class="btn btn-dark btn-lg px-5 py-3">
-                                <i class="bi bi-house-fill me-2"></i>
-                                Go to Home
-                            </a>
-                        </div>
-                    </div>
-                </div>
+    <div class="container px-3 px-md-4">
+        <!-- Editorial, not an alert dialog: the status code carries the meaning,
+             so it is set as a figure rather than dressed with a warning icon. -->
+        <section class="error-page" role="status">
+            <p class="error-page__code" th:text="${statusCode != null ? statusCode : '—'}">500</p>
+            <h1 class="error-page__title" th:text="${statusMessage != null ? statusMessage : 'Something went wrong'}">Error</h1>
+            <p class="error-page__lead">
+                요청하신 페이지를 열 수 없습니다. 주소를 다시 확인하시거나 아래에서 이어가세요.
+            </p>
+            <div class="error-page__links">
+                <a href="/">홈으로</a>
+                <a href="/public/memos">글 목록 보기</a>
             </div>
-        </div>
+        </section>
     </div>
 </th:block>
 </body>

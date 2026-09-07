@@ -1,7 +1,10 @@
 package dev.yunseong.website.manage.service;
 
+import dev.yunseong.website.manage.domain.AutonomousSystem;
 import dev.yunseong.website.manage.domain.BotDetector;
+import dev.yunseong.website.manage.domain.BotVerdict;
 import dev.yunseong.website.manage.domain.GeoLocation;
+import dev.yunseong.website.manage.domain.RequestFingerprint;
 import dev.yunseong.website.manage.domain.RequestStatistics;
 import dev.yunseong.website.manage.domain.TimelineStat;
 import dev.yunseong.website.manage.domain.UriStat;
@@ -38,22 +41,25 @@ public class RequestStatisticsService {
 
     private final RequestStatisticsRepository requestStatisticsRepository;
     private final GeoIpLocationResolver geoIpLocationResolver;
+    private final AsnResolver asnResolver;
 
     // In-memory storage for request statistics
     private final Queue<RequestStatistics> requestQueue = new ConcurrentLinkedDeque<>();
 
-    public void recordRequest(String uri, String method, String referer, String userAgent, String ipAddress,
+    public void recordRequest(String uri, String method, String referer, RequestFingerprint client, String ipAddress,
                               Integer statusCode, Integer durationMs) {
         if (!isCollectedUri(uri)) {
             return;
         }
-        boolean isBot = BotDetector.isBot(userAgent);
-        // Resolved here, not on read: a local mmdb lookup, so reads stay a plain GROUP BY.
+        // Both resolved here, not on read: local mmdb lookups, so reads stay a plain
+        // GROUP BY. The network is evidence for the verdict, so it is looked up first.
+        AutonomousSystem network = asnResolver.resolve(ipAddress);
+        BotVerdict verdict = BotDetector.classify(client, network);
         GeoLocation location = geoIpLocationResolver.resolve(ipAddress);
         requestQueue.add(new RequestStatistics(
-                uri, method, referer, userAgent, ipAddress, statusCode, isBot, durationMs, location));
-        log.debug("Recorded request: {} {} {} bot={} {}ms country={} city={} (total in memory: {})",
-                method, uri, statusCode, isBot, durationMs,
+                uri, method, referer, client.userAgent(), ipAddress, statusCode, verdict, durationMs, location));
+        log.debug("Recorded request: {} {} {} bot={} score={} signals={} {}ms country={} city={} (total in memory: {})",
+                method, uri, statusCode, verdict.bot(), verdict.score(), verdict.signals(), durationMs,
                 location == null ? null : location.countryCode(),
                 location == null ? null : location.cityName(),
                 requestQueue.size());
@@ -80,10 +86,16 @@ public class RequestStatisticsService {
         }
 
         log.info("Persisting {} request statistics to database", requestQueue.size());
-        
-        // Create a snapshot of current statistics and clear the list
-        List<RequestStatistics> snapshot = new ArrayList<>(requestQueue);
-        requestQueue.clear();
+
+        // Drain with poll(): copy-then-clear is not atomic, so anything recorded
+        // between the copy and the clear was deleted without ever being saved.
+        // poll() takes and removes the head in one operation, so that window is gone.
+        // FIFO is preserved: add() appends at the tail, poll() takes the head.
+        List<RequestStatistics> snapshot = new ArrayList<>();
+        RequestStatistics item;
+        while ((item = requestQueue.poll()) != null) {
+            snapshot.add(item);
+        }
 
         // Persist to database
         requestStatisticsRepository.saveAll(snapshot);

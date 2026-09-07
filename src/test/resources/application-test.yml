@@ -1,0 +1,38 @@
+# The test runtime must reach nothing outside the JVM. Without this the suite
+# only passes on a machine holding a gitignored .env, which is why it never ran
+# in CI (#134): the OpenAI key, the Postgres credentials, and the stdio MCP
+# server all came from there.
+spring:
+  datasource:
+    # MODE=PostgreSQL so the statistics SQL under test parses the same way it
+    # does in production.
+    url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.H2Dialect
+  flyway:
+    # The migrations are PostgreSQL-specific; the schema comes from ddl-auto here.
+    enabled: false
+  security:
+    user:
+      name: admin
+      password: admin
+  ai:
+    openai:
+      # Spring AI refuses to build a chat model with a blank key, and it never
+      # calls out at context load, so a placeholder is enough.
+      api-key: test-key
+    mcp:
+      client:
+        # Otherwise the stdio client spawns `npx -y tavily-mcp@latest` and the
+        # context load dies on a 20-second timeout.
+        enabled: false
+  autoconfigure:
+    exclude:
+      # PgVectorStore needs a real PostgreSQL with the vector extension. The
+      # test profile supplies a SimpleVectorStore instead.
+      - org.springframework.ai.vectorstore.pgvector.autoconfigure.PgVectorStoreAutoConfiguration

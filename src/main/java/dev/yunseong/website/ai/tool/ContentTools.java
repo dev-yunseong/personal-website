@@ -7,6 +7,7 @@ import dev.yunseong.website.blog.service.GameProjectService;
 import dev.yunseong.website.blog.service.MiniAppService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.stereotype.Component;
 
@@ -22,18 +23,18 @@ public class ContentTools {
     private final ToolEventPublisher toolEventPublisher;
 
     @Tool(description = "Get a list of all projects. Returns each project's id and title.")
-    public List<String> listProjects() {
+    public List<String> listProjects(ToolContext toolContext) {
         log.info("listProjects");
-        toolEventPublisher.emitTool("listProjects", null);
+        toolEventPublisher.emitTool(toolContext, "listProjects", null);
         return gameProjectService.getAllGameProjects().stream()
                 .map(p -> "id=" + p.getId() + ", title=" + p.getTitle())
                 .toList();
     }
 
     @Tool(description = "Get detailed information about a specific project by its id, including its URL.")
-    public String getProject(Long id) {
+    public String getProject(Long id, ToolContext toolContext) {
         log.info("getProject: {}", id);
-        toolEventPublisher.emitTool("getProject", String.valueOf(id));
+        toolEventPublisher.emitTool(toolContext, "getProject", String.valueOf(id));
         try {
             GameProject project = gameProjectService.getGameProject(id);
             return "id=" + project.getId()
@@ -45,18 +46,18 @@ public class ContentTools {
     }
 
     @Tool(description = "Get a list of all mini-apps. Returns each mini-app's id and title.")
-    public List<String> listMiniApps() {
+    public List<String> listMiniApps(ToolContext toolContext) {
         log.info("listMiniApps");
-        toolEventPublisher.emitTool("listMiniApps", null);
+        toolEventPublisher.emitTool(toolContext, "listMiniApps", null);
         return miniAppService.getAllMiniApps().stream()
                 .map(a -> "id=" + a.getId() + ", title=" + a.getTitle())
                 .toList();
     }
 
     @Tool(description = "Get detailed information about a specific mini-app by its id, including its URL and description.")
-    public String getMiniApp(Long id) {
+    public String getMiniApp(Long id, ToolContext toolContext) {
         log.info("getMiniApp: {}", id);
-        toolEventPublisher.emitTool("getMiniApp", String.valueOf(id));
+        toolEventPublisher.emitTool(toolContext, "getMiniApp", String.valueOf(id));
         try {
             MiniApp app = miniAppService.getMiniApp(id);
             return "id=" + app.getId()

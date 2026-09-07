@@ -1,10 +1,16 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
-    <div th:fragment="pageNavi(memos, selectedCategory)" th:if="${memos.totalPages > 0}" class="pagination"
+    <!-- Only the pages around the current one are drawn. Listing every page put the
+         whole run on screen, which is why this used to need flex-wrap to survive.
+         Same window as the console's JS pagers (console/dashboard.html, referer.html):
+         current ±2, with an ellipsis on whichever side still has pages left. -->
+    <div th:fragment="pageNavi(memos, selectedCategory)" th:if="${memos.totalPages > 1}"
          th:with="pageNumber=${memos.number},
                     pageSize=${memos.size},
-                    totalPages=${memos.totalPages}">
+                    totalPages=${memos.totalPages},
+                    windowStart=${memos.number - 2 < 0 ? 0 : memos.number - 2},
+                    windowEnd=${memos.number + 2 > memos.totalPages - 1 ? memos.totalPages - 1 : memos.number + 2}">
         <nav aria-label="Page navigation">
             <ul class="pagination pagination-sm flex-wrap justify-content-center">
                 <li class="page-item" th:classappend="${memos.first} ? 'disabled'">
@@ -12,8 +18,16 @@
                         <span aria-hidden="true">&laquo;</span>
                     </a>
                 </li>
-                <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}" th:classappend="${i == pageNumber} ? 'active'">
-                    <a class="page-link" th:href="@{/public/memos(page=${i}, size=${pageSize}, category=${selectedCategory})}" th:text="${i + 1}"></a>
+                <li class="page-item disabled" th:if="${windowStart > 0}">
+                    <span class="page-link" aria-hidden="true">&hellip;</span>
+                </li>
+                <li class="page-item" th:each="i : ${#numbers.sequence(windowStart, windowEnd)}" th:classappend="${i == pageNumber} ? 'active'">
+                    <a class="page-link" th:href="@{/public/memos(page=${i}, size=${pageSize}, category=${selectedCategory})}"
+                       th:attr="aria-current=${i == pageNumber} ? 'page' : null"
+                       th:text="${i + 1}"></a>
+                </li>
+                <li class="page-item disabled" th:if="${windowEnd < totalPages - 1}">
+                    <span class="page-link" aria-hidden="true">&hellip;</span>
                 </li>
                 <li class="page-item" th:classappend="${memos.last} ? 'disabled'">
                     <a class="page-link" th:href="@{/public/memos(page=${pageNumber + 1}, size=${pageSize}, category=${selectedCategory})}" aria-label="Next">

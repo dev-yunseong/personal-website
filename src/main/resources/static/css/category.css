@@ -1,37 +1,39 @@
-/* Category tree styling */
+/* Category tree. Scoped to .category-tree — these used to be bare
+   .list-group-item selectors, which would have leaked to every list on any
+   page that happened to load this file. */
+
 .category-toggle {
   color: inherit;
   opacity: 0.65;
 }
 
 .category-toggle:hover {
-    opacity: 1;
+  opacity: 1;
 }
 
 .category-toggle i {
-  transition: transform 0.2s ease;
-    font-size: 0.875rem;
+  font-size: 0.875rem;
+  transition: transform var(--dur-base) var(--ease);
 }
 
 .category-toggle[aria-expanded="true"] i {
-    transform: rotate(180deg);
+  transform: rotate(180deg);
 }
 
-/* Smooth collapse transitions */
-.collapse {
-  transition: height 0.2s ease;
+.category-tree .collapse {
+  transition: height var(--dur-base) var(--ease);
 }
 
-/* Nested category items styling */
-.list-group-item {
-    border-left: none;
-    border-right: none;
+/* The card already draws the outer box; per-row side borders would double it. */
+.category-tree .list-group-item {
+  border-left: none;
+  border-right: none;
 }
 
-.list-group-item:first-child {
+.category-tree .list-group-item:first-child {
   border-top: none;
 }
 
-.list-group-item:last-child {
+.category-tree .list-group-item:last-child {
   border-bottom: none;
 }

@@ -1,5 +1,6 @@
 package dev.yunseong.website.blog.service;
 
+import dev.yunseong.website.blog.aspect.ContentVisibilityAspect;
 import dev.yunseong.website.blog.domain.Memo;
 import dev.yunseong.website.blog.repository.MemoRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,11 +10,13 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.aop.aspectj.annotation.AspectJProxyFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -26,6 +29,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -44,6 +49,8 @@ class MemoServiceTest {
 
     @BeforeEach
     void setUp() {
+        SecurityContextHolder.clearContext();
+
         // Category-level memo
         javaMemo = new Memo(1L, "/java", "Java content", LocalDateTime.now(), LocalDateTime.now());
         
@@ -78,11 +85,11 @@ class MemoServiceTest {
     }
 
     @Test
-    void getRecentMemos_ShouldLimitSortByUpdatedAtAndExcludeProfileAndPrivateMemos() {
+    void getRecentMemos_ShouldLimitSortByUpdatedAtAndExcludePrivateMemos() {
         // Given
         Memo recentMemo = new Memo(4L, "/notes/recent", "Recent content", LocalDateTime.now(), LocalDateTime.now());
         Page<Memo> page = new PageImpl<>(List.of(recentMemo));
-        when(memoRepository.findRecentPublicMemos(eq("/profile"), any(PageRequest.class))).thenReturn(page);
+        when(memoRepository.findPublic(any(PageRequest.class))).thenReturn(page);
 
         // When
         List<Memo> result = memoService.getRecentMemos(3);
@@ -91,7 +98,7 @@ class MemoServiceTest {
         assertThat(result).containsExactly(recentMemo);
 
         ArgumentCaptor<PageRequest> pageRequestCaptor = ArgumentCaptor.forClass(PageRequest.class);
-        verify(memoRepository).findRecentPublicMemos(eq("/profile"), pageRequestCaptor.capture());
+        verify(memoRepository).findPublic(pageRequestCaptor.capture());
 
         PageRequest pageRequest = pageRequestCaptor.getValue();
         assertThat(pageRequest.getPageNumber()).isZero();
@@ -349,6 +356,58 @@ class MemoServiceTest {
         assertNotNull(result);
         assertEquals(1L, result.getId());
         verify(memoRepository).findById(1L);
+    }
+
+    @Test
+    void getMemoById_WhenAnonymous_ShouldRejectPrivateMemo() {
+        // Given: 실제 프록시 + 어드바이스가 걸린 상태
+        Memo privateMemo = privateMemo();
+        when(memoRepository.findById(9L)).thenReturn(Optional.of(privateMemo));
+        MemoService proxied = proxyWithVisibilityFilter();
+
+        // When & Then: 외부 노출 조회 경로는 필터를 탄다
+        assertThrows(IllegalArgumentException.class, () -> proxied.getMemo(9L));
+    }
+
+    @Test
+    void updateMemo_ShouldNotUseVisibilityFilteredLookup() {
+        // Given: self-invocation 까지 기록되는 spy
+        Memo privateMemo = privateMemo();
+        when(memoRepository.findById(9L)).thenReturn(Optional.of(privateMemo));
+        MemoService spied = spy(memoService);
+
+        // When: 관리자 쓰기 경로
+        spied.updateMemo(9L, "/private/secret", "New Content");
+
+        // Then: 필터가 붙은 조회를 거치지 않고 비공개 메모를 수정한다
+        assertEquals("New Content", privateMemo.getContent());
+        verify(spied, never()).getMemo(9L);
+    }
+
+    @Test
+    void softDeleteMemo_ShouldNotUseVisibilityFilteredLookup() {
+        // Given
+        Memo privateMemo = privateMemo();
+        when(memoRepository.findById(9L)).thenReturn(Optional.of(privateMemo));
+        MemoService spied = spy(memoService);
+
+        // When
+        Memo result = spied.softDeleteMemo(9L);
+
+        // Then
+        assertEquals(privateMemo, result);
+        assertThat(privateMemo.getName()).matches("/private/deleted/\\d{8}T\\d{9}-private_secret");
+        verify(spied, never()).getMemo(9L);
+    }
+
+    private Memo privateMemo() {
+        return new Memo(9L, "/private/secret", "Secret content", LocalDateTime.now(), LocalDateTime.now());
+    }
+
+    private MemoService proxyWithVisibilityFilter() {
+        AspectJProxyFactory factory = new AspectJProxyFactory(memoService);
+        factory.addAspect(new ContentVisibilityAspect());
+        return factory.getProxy();
     }
 
     @Test

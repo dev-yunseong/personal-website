@@ -5,6 +5,7 @@ import dev.yunseong.website.blog.domain.Memo;
 import dev.yunseong.website.blog.service.MemoService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.stereotype.Component;
 
@@ -43,9 +44,9 @@ public class CuratorMemoryTools {
     private final ToolEventPublisher toolEventPublisher;
 
     @Tool(description = "List global curator memory memo paths stored under /private/curator.")
-    public List<String> listCuratorMemories() {
+    public List<String> listCuratorMemories(ToolContext toolContext) {
         log.info("listCuratorMemories");
-        toolEventPublisher.emitTool("listCuratorMemories", MEMORY_ROOT);
+        toolEventPublisher.emitTool(toolContext, "listCuratorMemories", MEMORY_ROOT);
         return memoService.getMemosByNamePrefixExcludingPrefix(
                         MEMORY_ROOT + "/", DELETED_MEMORY_ROOT + "/", MAX_MEMORY_COUNT)
                 .stream()
@@ -54,31 +55,31 @@ public class CuratorMemoryTools {
     }
 
     @Tool(description = "Read one global curator memory memo by path. The path must be under /private/curator.")
-    public String readCuratorMemory(String path) {
+    public String readCuratorMemory(String path, ToolContext toolContext) {
         String memoryPath = normalizeMemoryPath(path);
         log.info("readCuratorMemory: {}", memoryPath);
-        toolEventPublisher.emitTool("readCuratorMemory", memoryPath);
+        toolEventPublisher.emitTool(toolContext, "readCuratorMemory", memoryPath);
         return memoService.findMemoWithoutVisibilityFilter(memoryPath)
                 .map(Memo::getContent)
                 .orElse("No curator memory found at " + memoryPath + ".");
     }
 
     @Tool(description = "Create or update a global curator memory memo. The path must be under /private/curator. Content should be concise and factual.")
-    public String writeCuratorMemory(String path, String content) {
+    public String writeCuratorMemory(String path, String content, ToolContext toolContext) {
         String memoryPath = normalizeMemoryPath(path);
         String memoryContent = normalizeContent(content);
         log.info("writeCuratorMemory: {}", memoryPath);
-        toolEventPublisher.emitTool("writeCuratorMemory", memoryPath);
+        toolEventPublisher.emitTool(toolContext, "writeCuratorMemory", memoryPath);
         memoService.upsertMemo(memoryPath, memoryContent);
         return "Saved curator memory at " + memoryPath + ".";
     }
 
     @Tool(description = "Soft-delete one global curator memory memo. The path must be under /private/curator and not under /private/curator/deleted. The memo is moved into a hidden deleted area with a timestamped name.")
-    public String deleteCuratorMemory(String path) {
+    public String deleteCuratorMemory(String path, ToolContext toolContext) {
         String memoryPath = normalizeMemoryPath(path);
         String deletedPath = buildDeletedPath(memoryPath);
         log.info("deleteCuratorMemory: {} -> {}", memoryPath, deletedPath);
-        toolEventPublisher.emitTool("deleteCuratorMemory", memoryPath);
+        toolEventPublisher.emitTool(toolContext, "deleteCuratorMemory", memoryPath);
         memoService.moveMemo(memoryPath, deletedPath);
         return "Deleted curator memory at " + memoryPath + ".";
     }

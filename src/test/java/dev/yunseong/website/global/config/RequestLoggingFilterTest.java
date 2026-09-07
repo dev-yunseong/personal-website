@@ -1,0 +1,102 @@
+package dev.yunseong.website.global.config;
+
+import dev.yunseong.website.global.util.ClientIpResolver;
+import dev.yunseong.website.manage.domain.RequestFingerprint;
+import dev.yunseong.website.manage.service.RequestStatisticsService;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockFilterChain;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+
+@ExtendWith(MockitoExtension.class)
+class RequestLoggingFilterTest {
+
+    private static final String EDGE_IP = "172.71.18.5";
+
+    @Mock
+    private RequestStatisticsService requestStatisticsService;
+
+    private final MockHttpServletResponse response = new MockHttpServletResponse();
+    private final MockFilterChain chain = new MockFilterChain();
+
+    private static MockHttpServletRequest request(String cloudflareHeader) {
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/");
+        request.setRemoteAddr(EDGE_IP);
+        if (cloudflareHeader != null) {
+            request.addHeader(ClientIpResolver.CLOUDFLARE_HEADER, cloudflareHeader);
+        }
+        return request;
+    }
+
+    private String recordedIp() {
+        ArgumentCaptor<String> ip = ArgumentCaptor.forClass(String.class);
+        verify(requestStatisticsService).recordRequest(
+                eq("/"), eq("GET"), any(), any(), ip.capture(), any(), anyInt());
+        return ip.getValue();
+    }
+
+    private RequestFingerprint recordedFingerprint() {
+        ArgumentCaptor<RequestFingerprint> client = ArgumentCaptor.forClass(RequestFingerprint.class);
+        verify(requestStatisticsService).recordRequest(
+                eq("/"), eq("GET"), any(), client.capture(), any(), any(), anyInt());
+        return client.getValue();
+    }
+
+    @Test
+    void recordsTheVisitorAddressCloudflareForwards() throws Exception {
+        new RequestLoggingFilter(requestStatisticsService).doFilter(request("203.0.113.42"), response, chain);
+
+        assertThat(recordedIp()).isEqualTo("203.0.113.42");
+    }
+
+    @Test
+    void recordsTheSocketAddressWhenNoProxyHeaderIsPresent() throws Exception {
+        new RequestLoggingFilter(requestStatisticsService).doFilter(request(null), response, chain);
+
+        assertThat(recordedIp()).isEqualTo(EDGE_IP);
+    }
+
+    @Test
+    void recordsTheBrowserHeadersBotClassificationWeighs() throws Exception {
+        MockHttpServletRequest request = request("203.0.113.42");
+        request.addHeader("User-Agent", "Mozilla/5.0 Chrome/131.0.0.0");
+        request.addHeader("Accept", "text/html");
+        request.addHeader("Accept-Language", "ko-KR");
+        request.addHeader("Sec-Fetch-Site", "none");
+        request.addHeader("Sec-Fetch-Mode", "navigate");
+        request.addHeader("Sec-Fetch-Dest", "document");
+        request.addHeader("Sec-CH-UA", "\"Chromium\";v=\"131\"");
+
+        new RequestLoggingFilter(requestStatisticsService).doFilter(request, response, chain);
+
+        assertThat(recordedFingerprint()).isEqualTo(new RequestFingerprint(
+                "Mozilla/5.0 Chrome/131.0.0.0", "text/html", "ko-KR",
+                "none", "navigate", "document", "\"Chromium\";v=\"131\""));
+    }
+
+    @Test
+    void leavesHeadersTheClientDidNotSendNull() throws Exception {
+        // Absence is the evidence, so no placeholder may be substituted.
+        new RequestLoggingFilter(requestStatisticsService).doFilter(request("203.0.113.42"), response, chain);
+
+        assertThat(recordedFingerprint()).isEqualTo(
+                new RequestFingerprint(null, null, null, null, null, null, null));
+    }
+
+    @Test
+    void passesTheRequestDownTheChain() throws Exception {
+        new RequestLoggingFilter(requestStatisticsService).doFilter(request("203.0.113.42"), response, chain);
+
+        assertThat(chain.getRequest()).isNotNull();
+    }
+}

@@ -28,8 +28,11 @@ public final class StreamEvent {
         try {
             return MAPPER.writeValueAsString(new EventPayload(type, content));
         } catch (JsonProcessingException e) {
-            log.error("Failed to serialize stream event type='{}': {}", type, e.getMessage());
-            return "{\"type\":\"" + type + "\",\"content\":\"\"}";
+            // Defensive only: two Strings written to an in-memory writer have no failure path.
+            // Never swallow it - a dropped chunk would leave a silent hole in the answer and in
+            // the persisted conversation, so log the original content and fail loudly instead.
+            log.error("Failed to serialize stream event type='{}' content='{}'", type, content, e);
+            throw new IllegalStateException("Failed to serialize stream event type=" + type, e);
         }
     }
 

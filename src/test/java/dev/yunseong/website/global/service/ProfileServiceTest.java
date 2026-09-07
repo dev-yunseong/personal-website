@@ -32,7 +32,7 @@ class ProfileServiceTest {
 
     @Test
     void getProfile_LoadsCanonicalProfileMemo() {
-        Memo memo = new Memo("/profile", "name: Yunseong");
+        Memo memo = new Memo("/private/profile", "name: Yunseong");
         Profile profile = new Profile(
                 "Yunseong",
                 null,
@@ -45,19 +45,19 @@ class ProfileServiceTest {
                 List.of(),
                 List.of()
         );
-        when(memoService.findMemo("/profile")).thenReturn(Optional.of(memo));
+        when(memoService.findMemo("/private/profile")).thenReturn(Optional.of(memo));
         when(profileMemoParser.parse(memo.getContent())).thenReturn(profile);
 
         ProfileLoadResult result = profileService.getProfile();
 
         assertEquals(profile, result.profile());
         assertEquals(ProfileLoadResult.Status.AVAILABLE, result.status());
-        verify(memoService).findMemo("/profile");
+        verify(memoService).findMemo("/private/profile");
     }
 
     @Test
     void getProfile_ReturnsEmptyWhenMemoIsMissing() {
-        when(memoService.findMemo("/profile")).thenReturn(Optional.empty());
+        when(memoService.findMemo("/private/profile")).thenReturn(Optional.empty());
 
         ProfileLoadResult result = profileService.getProfile();
 
@@ -67,8 +67,8 @@ class ProfileServiceTest {
 
     @Test
     void getProfile_ReturnsEmptyWhenYamlIsInvalid() {
-        Memo memo = new Memo("/profile", "invalid");
-        when(memoService.findMemo("/profile")).thenReturn(Optional.of(memo));
+        Memo memo = new Memo("/private/profile", "invalid");
+        when(memoService.findMemo("/private/profile")).thenReturn(Optional.of(memo));
         when(profileMemoParser.parse(memo.getContent())).thenThrow(new IllegalArgumentException("Invalid YAML"));
 
         ProfileLoadResult result = profileService.getProfile();

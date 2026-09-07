@@ -22,16 +22,6 @@
 
     <script>
     (function () {
-        // Channel colours follow the order the API returns: search, social, referral, internal, direct.
-        const CHANNEL_COLORS = [
-            'rgba(13,110,253,0.7)',
-            'rgba(214,51,132,0.7)',
-            'rgba(255,193,7,0.7)',
-            'rgba(25,135,84,0.7)',
-            'rgba(108,117,125,0.7)'
-        ];
-
-        let channelChart = null;
         let days = 7;
         let excludeBots = true;
         let page = 0;
@@ -60,12 +50,25 @@
             return html;
         }
 
+        // The share column carries its own CSS bar, so the channel split is
+        // readable in place — a doughnut plus a legend was a second lookup for
+        // data the table already held.
         function channelTableHtml(channels, total) {
-            let html = '<table class="table table-sm table-striped mb-0"><thead><tr><th>Channel</th><th>Requests</th><th>Share</th></tr></thead><tbody>';
+            var max = Math.max.apply(null, [1].concat(channels.map(function (c) { return c.requestCount; })));
+            var html = '<h6>Channels</h6><table class="table table-sm table-hover mb-0">'
+                + '<thead><tr><th>Channel</th><th class="num">Requests</th><th>Share</th></tr></thead><tbody>';
             channels.forEach(function (row) {
-                html += '<tr><td>' + escHtml(row.label) + '</td><td>' + row.requestCount + '</td><td>' + share(row.requestCount, total) + '</td></tr>';
+                var label = escHtml(row.label);
+                var pct = share(row.requestCount, total);
+                var width = (100 * row.requestCount / max).toFixed(1);
+                html += '<tr><td>' + label + '</td>'
+                    + '<td class="num">' + row.requestCount + '</td>'
+                    + '<td><div class="bar-cell">'
+                    + '<div class="bar-track" role="img" aria-label="' + label + ': ' + row.requestCount + ' requests, ' + pct + ' of traffic">'
+                    + '<span class="bar-fill' + (row.requestCount === max ? ' bar-fill--lead' : '') + '" style="width:' + width + '%"></span>'
+                    + '</div><span class="bar-cell__value">' + pct + '</span></div></td></tr>';
             });
-            html += '</tbody><tfoot><tr><th>Total</th><th>' + total + '</th><th>100.0%</th></tr></tfoot></table>';
+            html += '</tbody><tfoot><tr><th>Total</th><th class="num">' + total + '</th><th>100.0%</th></tr></tfoot></table>';
             return html;
         }
 
@@ -73,33 +76,13 @@
             if (!data.content || data.content.length === 0) {
                 return '<div class="alert alert-info mb-0">No external referers in this period. Direct traffic carries no referer header.</div>';
             }
-            let html = '<table class="table table-striped mb-0"><thead><tr><th>External Domain</th><th>Requests</th></tr></thead><tbody>';
+            let html = '<div class="table-responsive"><table class="table table-hover mb-0"><thead><tr><th>External Domain</th><th class="num">Requests</th></tr></thead><tbody>';
             data.content.forEach(function (row) {
-                html += '<tr><td>' + escHtml(row.label) + '</td><td>' + row.requestCount + '</td></tr>';
+                html += '<tr><td>' + escHtml(row.label) + '</td><td class="num">' + row.requestCount + '</td></tr>';
             });
-            html += '</tbody></table>';
+            html += '</tbody></table></div>';
             html += paginationHtml(data.number, data.totalPages);
             return html;
-        }
-
-        function drawChannelChart(channels) {
-            if (channelChart) { channelChart.destroy(); channelChart = null; }
-            channelChart = new Chart(document.getElementById('refererChannelChart'), {
-                type: 'doughnut',
-                data: {
-                    labels: channels.map(function (c) { return c.label; }),
-                    datasets: [{
-                        data: channels.map(function (c) { return c.requestCount; }),
-                        backgroundColor: CHANNEL_COLORS,
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom' } }
-                }
-            });
         }
 
         function render() {
@@ -118,19 +101,13 @@
                 const total = d.channels.reduce(function (sum, c) { return sum + c.requestCount; }, 0);
                 if (total === 0) {
                     el.innerHTML = '<div class="alert alert-info">No request data available yet for this period.</div>';
-                    if (channelChart) { channelChart.destroy(); channelChart = null; }
                     return;
                 }
 
                 el.innerHTML =
-                    '<div class="row g-4 mb-4">' +
-                        '<div class="col-md-5"><div style="height:280px;"><canvas id="refererChannelChart"></canvas></div></div>' +
-                        '<div class="col-md-7">' + channelTableHtml(d.channels, total) + '</div>' +
-                    '</div>' +
-                    '<h6 class="mb-2">Top External Domains</h6>' +
+                    '<div class="mb-4">' + channelTableHtml(d.channels, total) + '</div>' +
+                    '<h6>Top External Domains</h6>' +
                     domainTableHtml(d);
-
-                drawChannelChart(d.channels);
 
                 el.querySelectorAll('[data-ref-page]').forEach(function (btn) {
                     btn.addEventListener('click', function () {

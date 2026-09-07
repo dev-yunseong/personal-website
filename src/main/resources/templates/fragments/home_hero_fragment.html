@@ -42,7 +42,7 @@
             </p>
             <div class="home-hero__links" sec:authorize="isAuthenticated()">
                 <a th:if="${profileStatus != null and profileStatus.name() == 'MISSING'}"
-                   href="/admin/memos/new?category=/profile">Create profile memo <i class="bi bi-arrow-up-right"></i></a>
+                   href="/admin/memos/new?category=/private/profile">Create profile memo <i class="bi bi-arrow-up-right"></i></a>
                 <a th:if="${profileStatus != null and profileStatus.name() == 'INVALID'}"
                    href="/public/search?keyword=profile">Find profile memo <i class="bi bi-arrow-up-right"></i></a>
             </div>

@@ -34,6 +34,11 @@ public class SitemapService {
         
         // Add public memos list page
         addUrl(sitemap, baseUrl + "/public/memos", null);
+
+        // Add the briefing digest page. Only the page itself: the briefings behind it
+        // are private memos, so they never reach the memo loop below, and dated URLs
+        // would be a crawl of one page per day with no separate content.
+        addUrl(sitemap, baseUrl + "/briefing", null);
         
         // Add all memo URLs
         List<Memo> allMemos = getAllMemos();

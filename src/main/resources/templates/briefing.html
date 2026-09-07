@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout}"
+      th:with="
+        selectedDateText=${#temporals.format(selectedDate, 'yyyy-MM-dd')},
+        pageTitle=${'Briefing ' + #temporals.format(selectedDate, 'yyyy-MM-dd') + ' | Yunseong'},
+        pageDescription=${#temporals.format(selectedDate, 'yyyy-MM-dd') + ' 에이전트 브리핑 모아보기입니다.'},
+        pageKeywords='브리핑, 뉴스, 채용, 에이전트, 데일리',
+        pageUrl=${'/briefing?date=' + #temporals.format(selectedDate, 'yyyy-MM-dd')}">
+
+<th:block layout:fragment="css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown-light.css">
+  <!-- Prism.js CSS for syntax highlighting - GitHub style theme -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism-themes/1.9.0/prism-ghcolors.min.css">
+  <!-- memo-view.css does the reading surface; briefing.css only adds what stacking
+       several posts into one column needs. -->
+  <link rel="stylesheet" th:href="@{/css/memo-view.css}">
+  <link rel="stylesheet" th:href="@{/css/briefing.css}">
+</th:block>
+
+<body>
+<th:block layout:fragment="content">
+  <!--
+    A day of briefings reads as one document, not as a list of links: the point of
+    the page is that you do not have to open anything. So it borrows the memo
+    article's measure and prose styling wholesale and stacks the day inside it.
+  -->
+  <div class="memo-page briefing-page">
+
+    <header class="memo-article__head">
+      <nav class="memo-article__crumbs" aria-label="위치">
+        <a class="memo-article__path" th:href="@{/briefing}">/briefing</a>
+      </nav>
+
+      <h1 class="memo-article__title">Briefing</h1>
+
+      <div class="memo-article__meta">
+        <span class="memo-article__date">
+          <span class="memo-article__date-label">날짜</span>
+          <time th:datetime="${selectedDateText}" th:text="${selectedDateText}">2026-08-12</time>
+        </span>
+        <span class="memo-article__date" th:if="${!entries.isEmpty()}">
+          <span class="memo-article__date-label">편수</span>
+          <span th:text="${entries.size()}">2</span>
+        </span>
+      </div>
+    </header>
+
+    <!-- Which kinds arrived today. Doubles as the jump list, so a long news post
+         does not bury the jobs post underneath it. -->
+    <nav class="briefing-kinds" th:if="${entries.size() > 1}" aria-label="브리핑 종류">
+      <a class="briefing-kinds__item"
+         th:each="entry : ${entries}"
+         th:href="${'#briefing-' + entry.kind}"
+         th:text="${entry.kind}">news</a>
+    </nav>
+
+    <!--
+      #markdown-content is the KaTeX render target and there is exactly one of them
+      per page (see fragments/mermaid_katex_parser.html), so the whole day has to
+      live inside this single container rather than one container per briefing.
+      .markdown-body is the github-markdown-css hook. Neither may be renamed.
+    -->
+    <div class="memo-article__body markdown-body"
+         id="markdown-content"
+         th:if="${!entries.isEmpty()}">
+      <th:block th:each="entry : ${entries}">
+        <section class="briefing-entry" th:id="${'briefing-' + entry.kind}">
+          <div th:utext="${entry.html}">Briefing content goes here.</div>
+          <!-- The memo itself is private, so this link 404s for anyone signed out —
+               showing it to them would only advertise a dead end. -->
+          <a sec:authorize="isAuthenticated()"
+             class="briefing-entry__source"
+             th:href="@{/public/memos/{id}(id=${entry.memo.id})}">
+            <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
+            <span>원본 메모</span>
+          </a>
+        </section>
+      </th:block>
+    </div>
+
+    <p class="briefing-empty" th:if="${entries.isEmpty()}">
+      이 날짜에는 브리핑이 없습니다.
+    </p>
+
+    <!-- Days that actually have something to read. Rendering a calendar would mostly
+         offer empty days; these links are all reachable content. -->
+    <nav class="briefing-dates" th:if="${!recentDates.isEmpty()}" aria-label="다른 날짜">
+      <div class="briefing-dates__head">
+        <h2>지난 브리핑</h2>
+      </div>
+      <ul class="briefing-dates__list">
+        <li th:each="date : ${recentDates}">
+          <a th:href="@{/briefing(date=${#temporals.format(date, 'yyyy-MM-dd')})}"
+             th:text="${#temporals.format(date, 'yyyy-MM-dd')}"
+             th:classappend="${date.equals(selectedDate)} ? 'briefing-dates__link--current'"
+             th:attr="aria-current=${date.equals(selectedDate)} ? 'page' : null"
+             class="briefing-dates__link">2026-08-12</a>
+        </li>
+      </ul>
+    </nav>
+
+    <div th:replace="~{fragments/mermaid_katex_parser.html :: parser}"></div>
+
+    <!-- Prism.js for syntax highlighting -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+  </div>
+</th:block>
+</body>
+</html>

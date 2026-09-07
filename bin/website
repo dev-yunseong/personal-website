@@ -1,0 +1,123 @@
+#!/bin/sh
+# Read public website memos through the stable public API.
+
+set -eu
+
+WEBSITE_URL="${WEBSITE_URL:-https://yunseong.dev}"
+MEMO_API="${WEBSITE_URL}/api/public/memos"
+
+usage() {
+    cat >&2 <<'EOF'
+usage:
+  website memo list [--updated-after <yyyy-MM-ddTHH:mm:ss>] [--page <n>] [--limit <1-100>]
+  website memo read <id>
+
+env:
+  WEBSITE_URL  defaults to https://yunseong.dev
+EOF
+    exit 2
+}
+
+is_unsigned_integer() {
+    case "$1" in
+        ''|*[!0-9]*) return 1 ;;
+        *) return 0 ;;
+    esac
+}
+
+request() {
+    output=$(mktemp)
+    trap 'rm -f "$output"' 0 1 2 3 15
+
+    if status=$(curl -sS \
+            --connect-timeout 5 \
+            --max-time 30 \
+            -o "$output" \
+            -w '%{http_code}' \
+            "$@"); then
+        :
+    else
+        code=$?
+        rm -f "$output"
+        trap - 0 1 2 3 15
+        return "$code"
+    fi
+
+    case "$status" in
+        2*)
+            cat "$output"
+            ;;
+        *)
+            cat "$output" >&2
+            printf 'request failed with HTTP %s\n' "$status" >&2
+            rm -f "$output"
+            trap - 0 1 2 3 15
+            return 1
+            ;;
+    esac
+
+    rm -f "$output"
+    trap - 0 1 2 3 15
+}
+
+[ $# -ge 2 ] || usage
+resource="$1"
+command="$2"
+shift 2
+
+[ "$resource" = "memo" ] || usage
+
+case "$command" in
+    list)
+        updated_after=""
+        page=""
+        limit=""
+
+        while [ $# -gt 0 ]; do
+            option="$1"
+            [ $# -ge 2 ] || usage
+            value="$2"
+            case "$option" in
+                --updated-after)
+                    [ -z "$updated_after" ] || usage
+                    [ -n "$value" ] || usage
+                    updated_after="$value"
+                    ;;
+                --page)
+                    [ -z "$page" ] || usage
+                    is_unsigned_integer "$value" || usage
+                    page="$value"
+                    ;;
+                --limit)
+                    [ -z "$limit" ] || usage
+                    is_unsigned_integer "$value" || usage
+                    [ "$value" -ge 1 ] && [ "$value" -le 100 ] || usage
+                    limit="$value"
+                    ;;
+                *) usage ;;
+            esac
+            shift 2
+        done
+
+        set -- --url "$MEMO_API" --get
+        if [ -n "$updated_after" ]; then
+            set -- "$@" --data-urlencode "updatedAfter=$updated_after"
+        fi
+        if [ -n "$page" ]; then
+            set -- "$@" --data-urlencode "page=$page"
+        fi
+        if [ -n "$limit" ]; then
+            set -- "$@" --data-urlencode "limit=$limit"
+        fi
+        request "$@"
+        ;;
+    read)
+        [ $# -eq 1 ] || usage
+        is_unsigned_integer "$1" || usage
+        [ "$1" -gt 0 ] || usage
+        request --url "${MEMO_API}/$1/content"
+        ;;
+    *)
+        usage
+        ;;
+esac

@@ -1,4 +1,9 @@
 api-limit:
+  # Behind Cloudflare the socket peer is the edge, so every visitor would share a
+  # single bucket and `limit` would act as a site-wide quota. Cloudflare overwrites
+  # this header on every proxied request, which is what makes it trustworthy — and
+  # only while the origin refuses traffic that bypasses Cloudflare.
+  client-ip-header: CF-Connecting-IP
   rules:
     - path: /api/public/chat
       limit: 5

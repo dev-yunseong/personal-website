@@ -18,6 +18,14 @@ bin/
 !**/src/main/**/bin/
 !**/src/test/**/bin/
 
+# The repository's own bin/ holds committed scripts, not Eclipse output. Git
+# cannot re-include a file whose parent directory is excluded, so the directory
+# has to be un-ignored first and its contents excluded one level down.
+!/bin/
+/bin/*
+!/bin/briefing
+!/bin/website
+
 ### IntelliJ IDEA ###
 .idea
 *.iws

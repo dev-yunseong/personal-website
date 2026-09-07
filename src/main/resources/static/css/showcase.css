@@ -1,0 +1,338 @@
+/*
+ * Showcase — projects (games), mini apps, and their admin screens.
+ *
+ * Same surface language as the blog list (`.memo-list` / `.memo-row` in
+ * site.css): rows separated by a hairline, no card, no shadow, no border box
+ * per item. A card around every item adds a frame and padding to each line
+ * without adding information.
+ *
+ * The one thing this section has that the blog list mostly does not is real
+ * imagery. Mini apps and games actually run, so a screenshot is content rather
+ * than decoration. Items without one are plain text rows on purpose — the list
+ * is meant to be uneven, and a coloured rectangle standing in for a missing
+ * screenshot would be decoration pretending to be content.
+ *
+ * Semantic tokens only (tokens.css). Light mode only.
+ */
+
+/* ------------------------------------------------------------------ intro */
+
+/* A sentence, so: sans, sentence case. The site's `.page-subtitle` is mono
+   uppercase, which is for labels and counts, not for prose. */
+.showcase-lede {
+  color: var(--text-secondary);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  margin: calc(var(--sp-4) * -1) 0 var(--sp-6);
+  max-width: 54ch;
+}
+
+.showcase-toolbar {
+  align-items: baseline;
+  border-bottom: 1px solid var(--hairline);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-3) var(--sp-4);
+  justify-content: space-between;
+  padding-bottom: var(--sp-3);
+}
+
+/* Count: short, numeric, identifier-ish — the sanctioned use of mono caps. */
+.showcase-count {
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+  letter-spacing: 0.06em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+/* ------------------------------------------------------------------- rows */
+
+.showcase-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.showcase-row + .showcase-row {
+  border-top: 1px solid var(--hairline);
+}
+
+.showcase-row__link {
+  align-items: flex-start;
+  color: inherit;
+  display: flex;
+  gap: var(--sp-4);
+  padding: var(--sp-4) 0;
+  text-decoration: none;
+}
+
+.showcase-row__link:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.showcase-row__body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.showcase-row__title {
+  color: var(--text-primary);
+  display: block;
+  font-size: var(--fs-row);
+  font-weight: 620;
+  line-height: var(--lh-tight);
+  transition: color var(--dur-fast) var(--ease);
+}
+
+.showcase-row__link:hover .showcase-row__title,
+.showcase-row__link:focus-visible .showcase-row__title {
+  color: var(--accent);
+}
+
+/* Prose. Sans, secondary — never mono, never uppercase. */
+.showcase-row__desc {
+  color: var(--text-secondary);
+  display: block;
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-tight);
+  margin-top: var(--sp-2);
+  max-width: 60ch;
+}
+
+.showcase-row__meta {
+  align-items: baseline;
+  color: var(--text-tertiary);
+  display: flex;
+  flex-wrap: wrap;
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+  gap: var(--sp-1) var(--sp-3);
+  margin-top: var(--sp-2);
+  min-width: 0;
+}
+
+/* A URL is an identifier: mono is right, but it must never push the page
+   sideways, so it is allowed to break anywhere. */
+.showcase-row__url {
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* ----------------------------------------------------------------- status */
+/*
+ * "Runnable" is the one genuinely stateful thing about this section, so it
+ * gets the accent — the same budget the blog list spends on `.memo-row__path`.
+ * The colour is never the message on its own: there is a written label beside
+ * a square tick, so it survives greyscale and colour-blind vision.
+ */
+
+.showcase-status {
+  align-items: center;
+  color: var(--accent);
+  display: inline-flex;
+  /* Korean label — the mono face has no business setting Hangul. */
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  gap: var(--sp-1);
+  line-height: var(--lh-tight);
+}
+
+.showcase-status::before {
+  background: var(--accent-line);
+  content: "";
+  flex: 0 0 auto;
+  height: 6px;
+  width: 6px;
+}
+
+/* Standalone on a detail page rather than inline in a row of meta. Sits on the
+   preceding element's bottom margin, so it reads the same whether or not the
+   page has a lede above it. */
+p.showcase-status {
+  display: flex;
+  margin: 0 0 var(--sp-5);
+}
+
+/* -------------------------------------------------------------- thumbnail */
+/*
+ * Overrides site.css `.game-thumbnail` (44px avatar). Loaded later than
+ * site.css and matched with two classes, so it wins on both order and
+ * specificity without `!important`.
+ *
+ * The box is reserved at a fixed aspect ratio and revealed by opacity rather
+ * than being switched from `display:none`, for two reasons: the image never
+ * resizes the row when it arrives (no layout shift), and `loading="lazy"` is
+ * ignored by Chromium on elements that are not being rendered — a
+ * `display:none` start state would mean the thumbnail never loads at all.
+ * Verified in Chromium 1.62 before committing to this.
+ *
+ * The inline `onerror` still collapses the element outright, which is what
+ * turns "no screenshot at this URL" into a plain text row.
+ */
+.showcase-row__thumb.game-thumbnail {
+  aspect-ratio: 16 / 9;
+  background: transparent;
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-surface);
+  display: block;
+  flex: 0 0 auto;
+  height: auto;
+  margin-right: 0;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity var(--dur-base) var(--ease);
+  width: 112px;
+}
+
+.showcase-row__thumb.game-thumbnail.loaded {
+  opacity: 1;
+}
+
+/* --------------------------------------------------------------- no items */
+
+.showcase-empty {
+  color: var(--text-tertiary);
+  font-size: var(--fs-body-sm);
+  margin: 0;
+  padding: var(--sp-6) 0;
+}
+
+.showcase-empty a {
+  color: var(--text-primary);
+}
+
+/* ------------------------------------------------------------ admin table */
+/*
+ * A real tabular record, so it stays a table — but framed with hairlines
+ * instead of the filled dark header bar site.css gives `.table thead`.
+ */
+
+.table-responsive.showcase-table {
+  border: 0;
+}
+
+.showcase-table .table {
+  --bs-table-bg: transparent;
+  --bs-table-hover-bg: var(--sunken);
+  margin: 0;
+}
+
+.showcase-table thead {
+  --bs-table-bg: transparent;
+  --bs-table-color: var(--text-tertiary);
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.showcase-table thead th {
+  background: transparent;
+  border-bottom: 1px solid var(--border-strong);
+  white-space: nowrap;
+}
+
+.showcase-table tbody td {
+  border-bottom: 1px solid var(--hairline);
+  font-size: var(--fs-body-sm);
+  vertical-align: middle;
+}
+
+.showcase-table__id {
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+}
+
+.showcase-table__title {
+  font-weight: 620;
+}
+
+.showcase-table__desc {
+  color: var(--text-secondary);
+  max-width: 32ch;
+}
+
+.showcase-table__url {
+  color: var(--text-tertiary);
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+  max-width: 28ch;
+  overflow-wrap: anywhere;
+}
+
+.showcase-table__actions {
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------ form panel */
+/*
+ * Not a card: a form is a surface, and surfaces stay square. Only the controls
+ * inside it get `--r-control`, which is what makes the rounding mean
+ * "pressable" instead of meaning nothing.
+ */
+
+.showcase-panel {
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-surface);
+}
+
+.showcase-panel__head {
+  border-bottom: 1px solid var(--hairline);
+  padding: var(--sp-4) var(--sp-5);
+}
+
+.showcase-panel__head h2 {
+  font-size: var(--fs-h3);
+  margin: 0;
+}
+
+.showcase-panel__body {
+  padding: var(--sp-5);
+}
+
+.showcase-form-actions {
+  border-top: 1px solid var(--hairline);
+  display: flex;
+  gap: var(--sp-2);
+  justify-content: flex-end;
+  margin-top: var(--sp-6);
+  padding-top: var(--sp-5);
+}
+
+.showcase-generate {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-3);
+}
+
+.showcase-generate__status {
+  color: var(--text-tertiary);
+  font-size: var(--fs-meta);
+}
+
+/* ------------------------------------------------------------------ small */
+
+@media (max-width: 575.98px) {
+  .showcase-row__thumb.game-thumbnail {
+    width: 84px;
+  }
+
+  .showcase-panel__head,
+  .showcase-panel__body {
+    padding: var(--sp-4);
+  }
+
+  .showcase-form-actions {
+    padding-top: var(--sp-4);
+  }
+}

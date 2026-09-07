@@ -1,0 +1,198 @@
+/*
+ * Daily briefing digest — a day's agent posts stacked into one reading column.
+ *
+ * memo-view.css already owns this surface: the 44rem measure, the header block,
+ * and every prose rule inside `.memo-article__body`. This file adds only what
+ * stacking several posts inside one `.markdown-body` needs — the separator
+ * between them, the kind jump list, and the date index.
+ *
+ * Colours come from the semantic layer in tokens.css only. Light mode only.
+ */
+
+/* ---------------------------------------------------------------- kind list */
+/*
+ * Which kinds arrived today, as anchors. Mono and quiet: this is a label row,
+ * not navigation between pages, so it reads like the meta line above it rather
+ * than like the site nav.
+ */
+
+.briefing-kinds {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  /* Pulled up under the header rule: the kind row belongs to the header block,
+     not to the first briefing. */
+  margin: calc(-1 * var(--sp-5)) 0 var(--sp-8);
+}
+
+.briefing-kinds__item {
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-control);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+  line-height: var(--lh-tight);
+  padding: var(--sp-1) var(--sp-3);
+  text-decoration: none;
+  transition: background-color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+
+.briefing-kinds__item:hover,
+.briefing-kinds__item:focus-visible {
+  background: var(--sunken);
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+
+.briefing-kinds__item:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* -------------------------------------------------------------- the entries */
+/*
+ * Each briefing keeps its own `# title` from the stored markdown, so the break
+ * between two of them has to be stronger than the space between two sections of
+ * one post — otherwise the jobs briefing reads as a chapter of the news one.
+ * A rule plus generous space does it; a card would fight the article surface
+ * that memo-view.css deliberately has no card on.
+ */
+
+.briefing-entry + .briefing-entry {
+  border-top: 1px solid var(--border-strong);
+  margin-top: var(--sp-16);
+  padding-top: var(--sp-10);
+}
+
+/* Every stored body opens with an h1, which carries a large top margin for use
+   mid-article. Here that margin lands on top of the separator's own padding and
+   doubles the gap, so the spacing above a title is the separator's job alone. */
+.briefing-entry > div > *:first-child {
+  margin-top: 0;
+}
+
+/* Anchor targets sit under the sticky-free header, but a jump still lands the
+   title flush against the viewport edge without this. */
+.briefing-entry {
+  scroll-margin-top: var(--sp-6);
+}
+
+/* Author-only. Same treatment as `.memo-article__edit`, since it is the same
+   kind of thing: a control only the author sees, on an otherwise square page. */
+.briefing-entry__source {
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: var(--r-control);
+  color: var(--text-primary) !important; /* memo-view.css accents links in this container */
+  display: inline-flex;
+  font-family: var(--font-sans);
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  gap: var(--sp-1);
+  margin-top: var(--sp-6);
+  padding: var(--sp-1) var(--sp-3);
+  text-decoration: none !important;
+  transition: background-color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease);
+}
+
+.briefing-entry__source:hover {
+  background: var(--sunken);
+  border-color: var(--border-strong);
+}
+
+.briefing-entry__source:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* ------------------------------------------------------------- empty state */
+
+.briefing-empty {
+  color: var(--text-tertiary);
+  margin: 0;
+  padding: var(--sp-10) 0;
+}
+
+/* ------------------------------------------------------------- date index */
+/*
+ * Only days that have a briefing. A calendar would be mostly empty cells; these
+ * are all live links. Matches `.memo-children` so the block below the article
+ * looks the same on both reading pages.
+ */
+
+.briefing-dates {
+  margin-top: var(--sp-16);
+}
+
+.briefing-dates__head {
+  align-items: baseline;
+  border-bottom: 1px solid var(--border-strong);
+  display: flex;
+  gap: var(--sp-4);
+  justify-content: space-between;
+  padding-bottom: var(--sp-2);
+}
+
+.briefing-dates__head h2 {
+  font-size: var(--fs-h3);
+  margin: 0;
+}
+
+.briefing-dates__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  list-style: none;
+  margin: var(--sp-4) 0 0;
+  padding: 0;
+}
+
+.briefing-dates__link {
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-control);
+  color: var(--text-secondary);
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+  line-height: var(--lh-tight);
+  padding: var(--sp-1) var(--sp-3);
+  text-decoration: none;
+  transition: background-color var(--dur-fast) var(--ease),
+    border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+
+.briefing-dates__link:hover,
+.briefing-dates__link:focus-visible {
+  background: var(--sunken);
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+
+.briefing-dates__link:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* Where you are. The accent's job on this site is exactly this — current
+   location — so the marker matches `.memo-article__path` above it. */
+.briefing-dates__link--current {
+  background: var(--accent-soft);
+  border-color: var(--accent-line);
+  color: var(--accent-soft-text);
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------------ mobile */
+
+@media (max-width: 767.98px) {
+  .briefing-entry + .briefing-entry {
+    margin-top: var(--sp-12);
+    padding-top: var(--sp-8);
+  }
+
+  .briefing-dates {
+    margin-top: var(--sp-12);
+  }
+}

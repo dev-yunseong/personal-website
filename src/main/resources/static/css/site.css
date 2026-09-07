@@ -1,21 +1,29 @@
+/*
+ * Legacy `--site-*` names are kept as aliases onto the semantic layer in
+ * tokens.css so this file keeps working while templates migrate. New rules
+ * should read the semantic names directly; these aliases get deleted once the
+ * last consumer is gone.
+ */
 :root {
-  --site-bg: #f3f0e8;
-  --site-panel: #faf8f2;
-  --site-panel-strong: #ffffff;
-  --site-ink: #171717;
-  --site-muted: #68665f;
-  --site-line: #c9c4b8;
-  --site-line-strong: #171717;
-  --site-accent: #31558f;
-  --site-accent-dark: #233f6d;
-  --site-sage: #667a68;
-  --site-sage-soft: #e3e9df;
-  --site-blue-soft: #e4e9f1;
-  --site-danger: #b42318;
-  --site-success: #176b48;
-  --site-display: "Manrope", ui-sans-serif, system-ui, sans-serif;
-  --site-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
-  --site-shadow: 7px 7px 0 rgba(23, 23, 23, 0.12);
+  --site-bg: var(--canvas);
+  --site-panel: var(--surface);
+  --site-panel-strong: var(--surface);
+  --site-ink: var(--ink);
+  --site-muted: var(--text-tertiary);
+  --site-line: var(--hairline);
+  --site-line-strong: var(--border);
+  --site-accent: var(--accent);
+  --site-accent-dark: var(--accent-soft-text);
+  /* Sage used to be a second, undefined accent. It now resolves to plain
+     tertiary text, which also clears the 4.05:1 contrast failure it had. */
+  --site-sage: var(--text-tertiary);
+  --site-sage-soft: var(--ok-soft);
+  --site-blue-soft: var(--accent-soft);
+  --site-danger: var(--danger);
+  --site-success: var(--ok);
+  --site-display: var(--font-sans);
+  --site-mono: var(--font-mono);
+  --site-shadow: var(--shadow-md);
 }
 
 * {
@@ -28,15 +36,19 @@ html {
 }
 
 body {
-  background-color: var(--site-bg);
-  color: var(--site-ink);
-  font-family: var(--site-display);
-  line-height: 1.65;
+  background-color: var(--canvas);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  /* Korean sets by phrase, not by syllable — without this, words break mid-token. */
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 
 ::selection {
-  background: var(--site-accent);
-  color: #fff;
+  background: var(--accent-soft);
+  color: var(--accent-soft-text);
 }
 
 a {
@@ -107,18 +119,15 @@ pre,
 }
 
 .site-navbar .nav-link {
-  color: var(--site-ink) !important;
-  font-family: var(--site-mono);
-  font-size: 0.75rem;
+  color: var(--text-primary);
+  font-size: var(--fs-label);
   font-weight: 500;
-  letter-spacing: 0.03em;
-  padding: 1.65rem 0.7rem !important;
+  padding: 1.4rem 0.7rem !important;
   position: relative;
-  text-transform: uppercase;
 }
 
 .site-navbar .nav-link::after {
-  background: var(--site-accent);
+  background: var(--accent-line);
   bottom: -1px;
   content: "";
   height: 3px;
@@ -145,23 +154,13 @@ pre,
 }
 
 .page-title {
-  border-bottom: 1px solid var(--site-line-strong);
-  font-size: clamp(2.75rem, 7vw, 6.25rem);
-  font-weight: 800;
-  letter-spacing: -0.07em;
-  line-height: 0.95;
-  margin: 0 0 1.25rem;
-  padding-bottom: 1.5rem;
-}
-
-.page-title::before {
-  color: var(--site-sage);
-  content: "//";
-  font-family: var(--site-mono);
-  font-size: 0.22em;
-  letter-spacing: 0;
-  margin-right: 0.7rem;
-  vertical-align: top;
+  border-bottom: 1px solid var(--border-strong);
+  font-size: var(--fs-h1);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: var(--lh-tight);
+  margin: 0 0 var(--sp-6);
+  padding-bottom: var(--sp-3);
 }
 
 .page-subtitle {
@@ -179,30 +178,26 @@ h3,
 h4,
 h5,
 h6 {
-  color: var(--site-ink);
-  font-weight: 750;
-  letter-spacing: -0.035em;
+  color: var(--text-primary);
+  font-weight: 680;
+  /* Pretendard is already tight; Manrope-era tracking crushed Hangul. */
+  letter-spacing: -0.02em;
+  line-height: var(--lh-tight);
 }
 
 .card {
-  background: var(--site-panel);
-  border: 1px solid var(--site-line-strong);
-  border-radius: 0;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-control);
   box-shadow: none !important;
 }
 
-a.card,
-.game-card,
-.app-card {
+a.card {
   transition: background-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
 
 a.card:hover,
-a.card:focus-visible,
-.game-card:hover,
-.game-card:focus-within,
-.app-card:hover,
-.app-card:focus-within {
+a.card:focus-visible {
   background: var(--site-panel-strong);
   box-shadow: var(--site-shadow) !important;
   color: var(--site-ink) !important;
@@ -210,20 +205,17 @@ a.card:focus-visible,
 }
 
 .card-header {
-  background: var(--site-ink);
-  border-bottom: 0;
-  color: #fff;
-  font-family: var(--site-mono);
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.055em;
-  padding: 0.85rem 1rem;
-  text-transform: uppercase;
+  background: var(--sunken);
+  border-bottom: 1px solid var(--hairline);
+  color: var(--text-primary);
+  font-size: var(--fs-label);
+  font-weight: 620;
+  padding: 0.75rem 1rem;
 }
 
 .card-header.bg-light {
-  background: var(--site-ink) !important;
-  color: #fff !important;
+  background: var(--sunken) !important;
+  color: var(--text-primary) !important;
 }
 
 .card-header h1,
@@ -253,47 +245,123 @@ a.card:focus-visible,
 .card-text,
 .text-muted,
 .form-text {
-  color: var(--site-muted) !important;
+  color: var(--text-tertiary);
 }
 
-.memo-card__meta {
-  color: var(--site-muted);
+/* --------------------------------------------------------------- memo list */
+/* Rows separated by a hairline. No card, no shadow, no per-item border box. */
+
+.memo-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.memo-row + .memo-row {
+  border-top: 1px solid var(--hairline);
+}
+
+.memo-row__link {
+  align-items: start;
+  color: inherit;
+  display: grid;
+  gap: var(--sp-4);
+  grid-template-columns: minmax(0, 1fr);
+  padding: var(--sp-4) 0;
+  text-decoration: none;
+}
+
+/* Only memos whose body contains an image get the second column. */
+.memo-row--media .memo-row__link {
+  grid-template-columns: minmax(0, 1fr) 104px;
+}
+
+.memo-row__body {
+  min-width: 0;
+}
+
+.memo-row__title {
+  color: var(--text-primary);
+  display: block;
+  font-size: var(--fs-row);
+  font-weight: 620;
+  line-height: var(--lh-tight);
+  transition: color var(--dur-fast) var(--ease);
+}
+
+.memo-row__link:hover .memo-row__title,
+.memo-row__link:focus-visible .memo-row__title {
+  color: var(--accent);
+}
+
+.memo-row__meta {
+  align-items: baseline;
+  color: var(--text-tertiary);
   display: flex;
+  flex-wrap: wrap;
   font-family: var(--site-mono);
-  font-size: 0.68rem;
-  justify-content: space-between;
-  letter-spacing: 0.02em;
-  margin-bottom: 1rem;
-  text-transform: uppercase;
+  font-size: var(--fs-meta);
+  gap: 0 var(--sp-3);
+  margin-top: var(--sp-2);
 }
 
-.memo-card__main {
-  align-items: flex-end;
+.memo-row__path {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.memo-row__thumb {
+  aspect-ratio: 4 / 3;
+  background: var(--sunken);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-surface);
+  display: block;
+  height: auto;
+  object-fit: cover;
+  width: 104px;
+}
+
+.memo-list__empty {
+  color: var(--text-tertiary);
+  font-size: var(--fs-body-sm);
+  margin: 0;
+  padding: var(--sp-6) 0;
+}
+
+/* ------------------------------------------------------------- section head */
+
+.section-head {
+  align-items: baseline;
+  border-bottom: 1px solid var(--border-strong);
   display: flex;
-  gap: 1rem;
+  gap: var(--sp-4);
   justify-content: space-between;
+  padding-bottom: var(--sp-2);
 }
 
-.memo-card__main .card-title {
-  font-size: clamp(1.05rem, 2.5vw, 1.45rem);
+.section-head h2 {
+  font-size: var(--fs-h2);
   margin: 0;
 }
 
-.memo-card__arrow {
-  color: var(--site-accent);
+.section-head__all {
+  color: var(--text-tertiary);
   flex: 0 0 auto;
-  font-size: 1.1rem;
+  font-size: var(--fs-meta);
+  text-decoration: none;
+}
+
+.section-head__all:hover,
+.section-head__all:focus-visible {
+  color: var(--accent);
 }
 
 .btn {
-  border-radius: 0;
-  font-family: var(--site-mono);
-  font-size: 0.74rem;
+  border-radius: var(--r-control);
+  font-size: var(--fs-label);
   font-weight: 600;
-  letter-spacing: 0.035em;
   min-height: 42px;
-  padding: 0.62rem 0.95rem;
-  text-transform: uppercase;
+  padding: 0.55rem 0.95rem;
 }
 
 .btn-sm {
@@ -306,15 +374,15 @@ a.card:focus-visible,
 .badge.bg-primary {
   background-color: var(--site-ink) !important;
   border-color: var(--site-ink) !important;
-  color: #fff !important;
+  color: var(--ink-on);
 }
 
 .btn-primary:hover,
 .btn-primary:focus,
 .btn-secondary:hover,
 .btn-secondary:focus {
-  background-color: #363636 !important;
-  border-color: #363636 !important;
+  background-color: var(--text-secondary);
+  border-color: var(--text-secondary);
 }
 
 .btn-outline-primary,
@@ -336,44 +404,41 @@ a.card:focus-visible,
 }
 
 .badge {
-  border-radius: 0;
-  font-family: var(--site-mono);
-  font-weight: 500;
+  border-radius: var(--r-control);
+  font-size: var(--fs-meta);
+  font-weight: 600;
 }
 
 .badge.bg-success {
-  background-color: var(--site-sage-soft) !important;
+  background-color: var(--ok-soft);
   border: 1px solid var(--site-sage);
-  color: #314434 !important;
+  color: var(--ok-soft-text);
 }
 
 .form-label {
-  font-family: var(--site-mono);
-  font-size: 0.72rem;
+  font-size: var(--fs-label);
   font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
 }
 
 .form-control,
 .form-select {
-  background-color: var(--site-panel-strong);
-  border: 1px solid var(--site-line-strong);
-  border-radius: 0;
-  color: var(--site-ink);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-control);
+  color: var(--text-primary);
   min-height: 44px;
 }
 
 .form-control:focus,
 .form-select:focus,
 .form-check-input:focus {
-  border-color: var(--site-accent);
-  box-shadow: 0 0 0 3px rgba(22, 70, 216, 0.14);
+  border-color: var(--focus);
+  box-shadow: 0 0 0 3px rgba(0, 147, 153, 0.22);
 }
 
 .form-check-input {
   border-color: var(--site-line-strong);
-  border-radius: 0 !important;
+  border-radius: var(--r-control);
 }
 
 .form-check-input:checked {
@@ -387,18 +452,20 @@ a.card:focus-visible,
 
 .search-container form {
   align-items: stretch;
-  background: var(--site-panel-strong);
-  border: 1px solid var(--site-line-strong);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-control);
   display: grid !important;
   gap: 0;
   grid-template-columns: 1fr auto;
+  overflow: hidden;
 }
 
 .search-container .form-control {
-  background: var(--site-panel-strong);
+  background: var(--surface);
   border: 0;
-  font-family: var(--site-mono);
-  font-size: 0.82rem;
+  border-radius: 0;
+  font-size: var(--fs-body);
   margin-right: 0 !important;
   min-height: 48px;
   padding: 0.7rem 1rem;
@@ -409,10 +476,9 @@ a.card:focus-visible,
 }
 
 .search-container .btn {
-  border-bottom: 0;
-  border-right: 0;
-  border-top: 0;
-  min-width: 112px;
+  border: 0;
+  border-radius: 0;
+  min-width: 96px;
 }
 
 .autocomplete-suggestions {
@@ -431,10 +497,8 @@ a.card:focus-visible,
   display: none;
 }
 
-.autocomplete-suggestions .list-group-item:hover,
-.autocomplete-suggestions .list-group-item.active {
-  background: var(--site-accent);
-  color: #fff;
+.autocomplete-suggestions .list-group-item:hover {
+  background: var(--sunken);
 }
 
 .list-group {
@@ -443,15 +507,19 @@ a.card:focus-visible,
 
 .list-group-item {
   background: transparent;
-  border-color: var(--site-line);
-  color: var(--site-ink);
-  font-family: var(--site-mono);
-  font-size: 0.76rem;
+  border-color: var(--hairline);
+  color: var(--text-primary);
+  font-size: var(--fs-body-sm);
 }
 
+/* Selected = where you are, so it takes the accent — as a soft field with a
+   solid edge, not a saturated block of white-on-teal. On a page held together
+   by hairlines, a filled block is the only thing that shouts. */
 .list-group-item.active {
-  background: var(--site-accent);
-  border-color: var(--site-accent);
+  background: var(--accent-soft);
+  border-color: var(--hairline);
+  box-shadow: inset 3px 0 0 var(--accent-solid);
+  color: var(--accent-soft-text);
 }
 
 .nav-tabs {
@@ -462,11 +530,9 @@ a.card:focus-visible,
   border: 0;
   border-bottom: 3px solid transparent;
   border-radius: 0;
-  color: var(--site-muted);
-  font-family: var(--site-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.035em;
-  text-transform: uppercase;
+  color: var(--text-tertiary);
+  font-size: var(--fs-label);
+  font-weight: 500;
 }
 
 .nav-tabs .nav-link:hover,
@@ -483,7 +549,7 @@ a.card:focus-visible,
 .table {
   --bs-table-bg: transparent;
   --bs-table-striped-bg: rgba(23, 23, 23, 0.035);
-  --bs-table-hover-bg: rgba(22, 70, 216, 0.065);
+  --bs-table-hover-bg: var(--sunken);
   color: var(--site-ink);
   margin: 0;
 }
@@ -493,14 +559,15 @@ a.card:focus-visible,
   padding: 0.85rem;
 }
 
-.table thead,
-.table-dark {
-  --bs-table-bg: var(--site-ink);
-  --bs-table-color: #fff;
-  font-family: var(--site-mono);
-  font-size: 0.7rem;
-  letter-spacing: 0.035em;
-  text-transform: uppercase;
+.table thead {
+  --bs-table-bg: transparent;
+  --bs-table-color: var(--text-secondary);
+  font-size: var(--fs-meta);
+  font-weight: 620;
+}
+
+.table thead th {
+  border-bottom: 1px solid var(--border-strong);
 }
 
 .pagination {
@@ -508,26 +575,32 @@ a.card:focus-visible,
 }
 
 .page-link {
-  background: var(--site-panel);
-  border-color: var(--site-line-strong);
-  border-radius: 0 !important;
-  color: var(--site-ink);
-  font-family: var(--site-mono);
+  background: var(--surface);
+  border-color: var(--hairline);
+  border-radius: var(--r-control);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
 }
 
-.page-link:hover,
+.page-link:hover {
+  background: var(--sunken);
+  color: var(--text-primary);
+}
+
 .page-item.active .page-link {
-  background: var(--site-accent);
-  border-color: var(--site-accent);
-  color: #fff;
+  background: var(--accent-soft);
+  border-color: var(--accent-line);
+  color: var(--accent-soft-text);
+  font-weight: 620;
 }
 
 .alert {
-  background: var(--site-panel);
-  border: 1px solid currentColor;
-  border-radius: 0;
-  font-family: var(--site-mono);
-  font-size: 0.78rem;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-left: 2px solid currentColor;
+  border-radius: var(--r-surface);
+  font-size: var(--fs-body-sm);
 }
 
 .dropdown-menu {
@@ -538,8 +611,7 @@ a.card:focus-visible,
 }
 
 .dropdown-item {
-  font-family: var(--site-mono);
-  font-size: 0.76rem;
+  font-size: var(--fs-body-sm);
 }
 
 .dropdown-item:hover,
@@ -548,93 +620,27 @@ a.card:focus-visible,
   color: #fff;
 }
 
-.game-card,
-.app-card {
-  cursor: pointer;
-  min-height: 100%;
-}
-
-.game-card {
-  background: var(--site-panel);
-  border-top: 4px solid var(--site-accent);
-}
-
-.app-card {
-  background: var(--site-panel);
-  border-top: 4px solid var(--site-sage);
-}
-
-.game-card .card-body,
-.app-card .card-body {
-  display: flex;
-  flex-direction: column;
-  min-height: 168px;
-  padding: 1rem;
-}
-
-.game-card .badge,
-.app-card .badge {
-  align-self: flex-start;
-  margin-top: auto;
-}
-
-.game-card .badge.bg-primary {
-  background: var(--site-blue-soft) !important;
-  border: 1px solid var(--site-accent) !important;
-  color: var(--site-accent-dark) !important;
-}
-
-.game-card .card-text,
-.app-card .card-text {
-  line-height: 1.5;
-  margin-bottom: 1rem;
-}
-
-.game-thumbnail {
-  border: 1px solid var(--site-line);
-  border-radius: 0;
-  display: none;
-  height: 44px;
-  margin-right: 0.75rem;
-  object-fit: cover;
-  width: 44px;
-}
-
-.game-thumbnail.loaded {
-  display: block;
-}
-
-.game-title-container {
-  align-items: center;
-  display: flex;
-}
-
-.game-iframe-container {
-  border: 1px solid var(--site-line-strong);
-  border-radius: 0 !important;
-  box-shadow: var(--site-shadow) !important;
-}
-
 .markdown-body {
-  background: transparent !important;
-  color: var(--site-ink) !important;
-  font-family: var(--site-display) !important;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
 }
 
 .markdown-body h1,
 .markdown-body h2,
 .markdown-body h3 {
-  border-bottom-color: var(--site-line) !important;
-  letter-spacing: -0.04em;
+  border-bottom-color: var(--hairline);
+  letter-spacing: -0.02em;
 }
 
 .markdown-body a {
-  color: var(--site-accent) !important;
+  color: var(--accent);
 }
 
 .site-footer {
-  background: var(--site-ink);
-  color: #fff;
+  background: var(--surface);
+  border-top: 1px solid var(--hairline);
+  color: var(--text-secondary);
 }
 
 .site-footer__inner {
@@ -646,7 +652,7 @@ a.card:focus-visible,
 }
 
 .site-footer__label {
-  color: #949188;
+  color: var(--text-tertiary);
   font-family: var(--site-mono);
   font-size: 0.62rem;
   letter-spacing: 0.09em;
@@ -655,15 +661,15 @@ a.card:focus-visible,
 }
 
 .site-footer__email {
-  color: #fff;
-  font-size: clamp(1.15rem, 3vw, 1.7rem);
-  font-weight: 700;
-  letter-spacing: -0.04em;
+  color: var(--text-primary);
+  font-size: var(--fs-h3);
+  font-weight: 650;
+  letter-spacing: -0.02em;
   text-decoration: none;
 }
 
 .site-footer__email:hover {
-  color: #b9c9df;
+  color: var(--accent);
 }
 
 .site-footer__stack,
@@ -671,6 +677,66 @@ a.card:focus-visible,
   align-self: end;
   font-family: var(--site-mono);
   font-size: 0.7rem;
+}
+
+/* ------------------------------------------------------------- error page */
+/* Left rule, same as .home-profile-error — the system marks a failed state by
+   ruling it off, not by boxing it in a card. */
+
+.error-page {
+  border-left: 3px solid var(--danger);
+  margin: var(--sp-10) 0 var(--sp-16);
+  max-width: 44rem;
+  padding-left: clamp(1rem, 3vw, 2rem);
+}
+
+/* The code is the headline. Mono and tabular so 404 and 500 sit identically. */
+.error-page__code {
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: clamp(2.75rem, 8vw, 4.5rem);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  margin: 0 0 var(--sp-3);
+}
+
+.error-page__title {
+  font-size: var(--fs-h2);
+  font-weight: 650;
+  line-height: var(--lh-tight);
+  margin: 0 0 var(--sp-3);
+  word-break: keep-all;
+}
+
+.error-page__lead {
+  color: var(--text-secondary);
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  margin: 0 0 var(--sp-5);
+  word-break: keep-all;
+}
+
+.error-page__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-5);
+}
+
+.error-page__links a {
+  border-bottom: 1px solid var(--hairline);
+  color: var(--text-primary);
+  font-size: var(--fs-body-sm);
+  font-weight: 560;
+  padding-bottom: 0.15rem;
+  text-decoration: none;
+}
+
+.error-page__links a:hover,
+.error-page__links a:focus-visible {
+  border-bottom-color: var(--accent-line);
+  color: var(--accent);
 }
 
 @media (max-width: 991.98px) {
@@ -728,10 +794,6 @@ a.card:focus-visible,
     align-self: start;
   }
 
-  .markdown-body {
-    font-size: 0.95rem;
-  }
-
   .markdown-body pre {
     font-size: 0.82rem;
     overflow-x: auto;
@@ -739,8 +801,9 @@ a.card:focus-visible,
 
   .markdown-body table {
     display: block;
+    max-width: 100%;
     overflow-x: auto;
-    white-space: nowrap;
+    white-space: normal;
   }
 
   .search-container form {
@@ -761,11 +824,6 @@ a.card:focus-visible,
 
   .card-body {
     padding: 1rem;
-  }
-
-  .game-card .card-body,
-  .app-card .card-body {
-    min-height: 0;
   }
 }
 
