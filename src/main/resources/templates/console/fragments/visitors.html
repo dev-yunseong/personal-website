@@ -52,6 +52,36 @@
             </div>`;
         }
 
+        // Entry/exit page rows drill into the request list filtered to that
+        // page's uri — the frozen contract in #199.
+        function requestsListHref(overrides) {
+            const params = Object.assign({days: lastDays}, overrides);
+            const parts = [];
+            if (params.days !== undefined && params.days !== null && params.days !== '') {
+                parts.push('days=' + encodeURIComponent(params.days));
+            }
+            if (params.statusFilter) parts.push('statusFilter=' + encodeURIComponent(params.statusFilter));
+            if (params.filter && params.value !== undefined && params.value !== null && params.value !== '') {
+                parts.push(encodeURIComponent(params.filter) + '=' + encodeURIComponent(params.value));
+            }
+            parts.push('from=' + encodeURIComponent(location.pathname + location.search));
+            return '/admin/console/requests?' + parts.join('&');
+        }
+
+        // A row with exactly one destination gets a delegated click-to-navigate
+        // so the whole row is clickable; a click that already landed on the
+        // row's own <a> is left alone so it isn't handled twice.
+        function wireRowLinkDelegate(container) {
+            if (!container) return;
+            container.addEventListener('click', (e) => {
+                if (e.target.closest('a')) return;
+                const row = e.target.closest('tr.console-row-clickable');
+                if (!row) return;
+                const link = row.querySelector('.console-row-link');
+                if (link) location.href = link.href;
+            });
+        }
+
         function pageTable(title, countLabel, pages) {
             if (!pages || pages.length === 0) {
                 return `<div class="col-md-6"><h6>${esc(title)}</h6><p class="panel-note mb-0">데이터 없음</p></div>`;
@@ -59,7 +89,9 @@
             let html = `<div class="col-md-6"><h6>${esc(title)}</h6>`;
             html += `<table class="table table-sm table-hover"><thead><tr><th>Page</th><th class="num">${esc(countLabel)}</th></tr></thead><tbody>`;
             pages.forEach(page => {
-                html += `<tr><td>${esc(page.uri)}</td><td class="num">${esc(String(page.sessionCount))}</td></tr>`;
+                const href = esc(requestsListHref({filter: 'uri', value: page.uri}));
+                const ariaLabel = esc(`${page.uri} 요청 목록 보기`);
+                html += `<tr class="console-row-clickable"><td><a class="console-row-link" href="${href}" aria-label="${ariaLabel}">${esc(page.uri)}</a></td><td class="num">${esc(String(page.sessionCount))}</td></tr>`;
             });
             return html + '</tbody></table></div>';
         }
@@ -95,6 +127,7 @@
                 el.innerHTML = data.sessions === 0
                     ? '<div class="alert alert-info">이 기간에 방문 데이터가 없습니다.</div>'
                     : render(data);
+                el.querySelectorAll('tbody').forEach(wireRowLinkDelegate);
             }).catch(() => {
                 el.innerHTML = '<div class="alert alert-danger">Failed to load data.</div>';
             });

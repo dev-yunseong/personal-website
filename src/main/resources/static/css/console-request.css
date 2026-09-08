@@ -1,0 +1,174 @@
+/*
+ * Request list and request detail. Loaded only by those two pages, so every
+ * rule is scoped to `.console` and reads the semantic tokens from tokens.css.
+ *
+ * The dashboard's rules already carry the tables, the status chips and the
+ * pagination. What is left is what only these two pages have:
+ *   1. the active-filter line, which states why this list is narrower than the
+ *      whole history and offers the link that widens it again;
+ *   2. the detail page's label/value grid, where the point is that a long URI,
+ *      Referer or User-Agent is shown whole rather than clipped.
+ *
+ * Separation is hairlines, never boxes or shadows; the teal accent stays a
+ * signal on the filter values and the links.
+ */
+
+/* ------------------------------------------------------- active filter line */
+
+.console .req-filters {
+  align-items: baseline;
+  border-bottom: 1px solid var(--hairline);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-4);
+  margin-bottom: var(--sp-4);
+  padding-bottom: var(--sp-3);
+}
+
+.console .req-filters__title {
+  color: var(--text-tertiary);
+  font-size: var(--fs-meta);
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  line-height: var(--lh-tight);
+  text-transform: uppercase;
+}
+
+/* One filter reads as a sentence — "URI = /public/memos 지우기" — rather than
+   as a pill, so the value keeps its full width and stays selectable. */
+.console .req-filter {
+  align-items: baseline;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1);
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-tight);
+}
+
+.console .req-filter__label {
+  color: var(--text-tertiary);
+  font-size: var(--fs-meta);
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.console .req-filter__equals {
+  color: var(--text-tertiary);
+}
+
+.console .req-filter__value {
+  color: var(--accent-soft-text);
+  background: var(--accent-soft);
+  border-radius: var(--r-control);
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+  overflow-wrap: anywhere;
+  padding: 0 var(--sp-2);
+}
+
+.console .req-filter__clear {
+  color: var(--text-tertiary);
+  font-size: var(--fs-meta);
+  margin-left: var(--sp-1);
+}
+
+.console .req-filter__clear:hover,
+.console .req-filter__clear:focus-visible {
+  color: var(--accent);
+}
+
+/* ------------------------------------------------------------ detail groups */
+
+/* Four groups side by side while there is room; each is its own hairline
+   column, so the page reads as one table of fields rather than four cards. */
+.console .req-detail {
+  display: grid;
+  gap: var(--sp-5) var(--sp-6);
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+}
+
+.console .req-detail__group {
+  min-width: 0;
+}
+
+.console .req-detail__heading {
+  border-bottom: 1px solid var(--border-strong);
+  color: var(--text-tertiary);
+  font-size: var(--fs-meta);
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  margin: 0 0 var(--sp-3);
+  padding-bottom: var(--sp-2);
+  text-transform: uppercase;
+}
+
+/* Label column fixed, value column takes the rest; a field that needs the
+   whole width (URI, Referer, User-Agent) spans both with .req-detail__full. */
+.console .req-detail__grid {
+  column-gap: var(--sp-4);
+  display: grid;
+  grid-template-columns: minmax(5rem, auto) 1fr;
+  margin: 0;
+  row-gap: var(--sp-2);
+}
+
+.console .req-detail__grid dt {
+  color: var(--text-tertiary);
+  font-size: var(--fs-meta);
+  font-weight: 650;
+  line-height: var(--lh-tight);
+}
+
+.console .req-detail__grid dd {
+  color: var(--text-primary);
+  font-size: var(--fs-body-sm);
+  line-height: var(--lh-tight);
+  margin: 0;
+  min-width: 0;
+}
+
+.console .req-detail__full {
+  grid-column: 1 / -1;
+}
+
+/* The reason this page exists: no clipping. A 900-character User-Agent wraps
+   inside its own column instead of ending in an ellipsis. */
+.console .req-detail__wrap {
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+  line-height: var(--lh-tight);
+  overflow-wrap: anywhere;
+}
+
+/* --------------------------------------------------------- related requests */
+
+.console .req-related {
+  align-items: baseline;
+  border-top: 1px solid var(--hairline);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2) var(--sp-4);
+  margin-top: var(--sp-5);
+  padding-top: var(--sp-3);
+}
+
+.console .req-related__title {
+  color: var(--text-tertiary);
+  font-size: var(--fs-meta);
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.console .req-related__link {
+  color: var(--text-primary);
+  font-size: var(--fs-body-sm);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.console .req-related__link:hover,
+.console .req-related__link:focus-visible {
+  color: var(--accent);
+}

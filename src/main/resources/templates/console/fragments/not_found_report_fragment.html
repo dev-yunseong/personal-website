@@ -43,6 +43,36 @@
             return value ? String(value).replace('T', ' ').substring(0, 19) : '-';
         }
 
+        // Every 404 row's URI leads to the request list pre-filtered to that
+        // URI and to 4xx responses — the frozen contract in #199.
+        function requestsListHref(overrides) {
+            const params = Object.assign({days: state.days}, overrides);
+            const parts = [];
+            if (params.days !== undefined && params.days !== null && params.days !== '') {
+                parts.push('days=' + encodeURIComponent(params.days));
+            }
+            if (params.statusFilter) parts.push('statusFilter=' + encodeURIComponent(params.statusFilter));
+            if (params.filter && params.value !== undefined && params.value !== null && params.value !== '') {
+                parts.push(encodeURIComponent(params.filter) + '=' + encodeURIComponent(params.value));
+            }
+            parts.push('from=' + encodeURIComponent(location.pathname + location.search));
+            return '/admin/console/requests?' + parts.join('&');
+        }
+
+        // A row with exactly one destination gets a delegated click-to-navigate
+        // so the whole row is clickable; a click that already landed on the
+        // row's own <a> is left alone so it isn't handled twice.
+        function wireRowLinkDelegate(container) {
+            if (!container) return;
+            container.addEventListener('click', (e) => {
+                if (e.target.closest('a')) return;
+                const row = e.target.closest('tr.console-row-clickable');
+                if (!row) return;
+                const link = row.querySelector('.console-row-link');
+                if (link) location.href = link.href;
+            });
+        }
+
         // Each source keeps its own word, so the row tint is reinforcement only.
         function refererCounts(row) {
             const parts = [];
@@ -56,8 +86,10 @@
             let html = '<div class="table-responsive"><table class="table table-hover">'
                 + '<thead><tr><th>URI</th><th class="num">404s</th><th>Source</th><th>First seen</th><th>Last seen</th><th>Representative referer</th></tr></thead><tbody>';
             data.content.forEach(row => {
-                html += `<tr class="${row.internalRefererCount ? 'row-flag' : ''}">
-                    <td><code>${esc(row.uri)}</code></td>
+                const href = esc(requestsListHref({filter: 'uri', value: row.uri, statusFilter: '4xx'}));
+                const ariaLabel = esc(`${row.uri} 요청 목록 보기 (4xx)`);
+                html += `<tr class="console-row-clickable ${row.internalRefererCount ? 'row-flag' : ''}">
+                    <td><a class="console-row-link" href="${href}" aria-label="${ariaLabel}"><code>${esc(row.uri)}</code></a></td>
                     <td class="num">${row.occurrences}</td>
                     <td>${refererCounts(row)}</td>
                     <td class="mono cell-dim">${esc(timestamp(row.firstSeen))}</td>
@@ -95,6 +127,7 @@
                     return;
                 }
                 el.innerHTML = tableHtml(data);
+                wireRowLinkDelegate(el.querySelector('tbody'));
                 el.querySelectorAll('[data-nf-page]').forEach(btn => {
                     btn.addEventListener('click', () => {
                         state.page = parseInt(btn.dataset.nfPage);

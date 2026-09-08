@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<head>
+    <title>Request Detail</title>
+    <th:block layout:fragment="css">
+        <link rel="stylesheet" th:href="@{/css/console.css}">
+        <link rel="stylesheet" th:href="@{/css/console-request.css}">
+    </th:block>
+</head>
+
+<body>
+<th:block layout:fragment="content">
+    <div class="container console mt-4" id="request-detail-page">
+        <div class="console-head">
+            <h1>Request Detail</h1>
+            <a th:href="${returnHref}" class="btn btn-sm btn-outline-secondary">← 돌아가기</a>
+        </div>
+
+        <div class="console-toolbar">
+            <span class="console-toolbar__label" th:text="'#' + ${detail.id}">#1</span>
+            <span class="console-toolbar__label"
+                  th:text="${detail.createdAt != null ? #temporals.format(detail.createdAt, 'yyyy-MM-dd HH:mm:ss') : '—'}">—</span>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">저장된 모든 필드</h5>
+            </div>
+            <div class="card-body">
+                <div class="req-detail">
+                    <section class="req-detail__group">
+                        <h6 class="req-detail__heading">요청</h6>
+                        <dl class="req-detail__grid">
+                            <dt>시각</dt>
+                            <dd th:text="${detail.createdAt != null ? #temporals.format(detail.createdAt, 'yyyy-MM-dd HH:mm:ss') : '—'}">—</dd>
+                            <dt>Method</dt>
+                            <dd th:text="${detail.method} ?: '—'">—</dd>
+                            <dt class="req-detail__full">URI</dt>
+                            <dd class="req-detail__full req-detail__wrap" th:text="${detail.uri} ?: '—'">—</dd>
+                            <dt>Status</dt>
+                            <dd th:text="${detail.statusCode} ?: '—'">—</dd>
+                            <dt>응답 시간</dt>
+                            <dd th:text="${detail.durationMs != null ? detail.durationMs + 'ms' : '—'}">—</dd>
+                        </dl>
+                    </section>
+
+                    <section class="req-detail__group">
+                        <h6 class="req-detail__heading">출처</h6>
+                        <dl class="req-detail__grid">
+                            <dt>IP</dt>
+                            <dd class="mono" th:text="${detail.ip} ?: '—'">—</dd>
+                            <dt>국가</dt>
+                            <dd th:text="${detail.countryCode} ?: '—'">—</dd>
+                            <dt>도시</dt>
+                            <dd th:text="${detail.cityName} ?: '—'">—</dd>
+                            <!-- MaxMind's IP geolocation is an approximation, the same
+                                 wording the Countries tab uses, plus the radius MaxMind
+                                 itself reports for the point. -->
+                            <dt>좌표</dt>
+                            <dd th:if="${detail.latitude == null or detail.longitude == null}">—</dd>
+                            <dd th:unless="${detail.latitude == null or detail.longitude == null}"
+                                th:text="${detail.latitude + ', ' + detail.longitude
+                                          + (detail.accuracyRadiusKm != null ? ' · 오차 반경 최대 ' + detail.accuracyRadiusKm + 'km' : '')
+                                          + ' (MaxMind 근사 위치)'}">—</dd>
+                            <dt>네트워크</dt>
+                            <dd th:if="${detail.asnNumber == null}">—</dd>
+                            <dd th:unless="${detail.asnNumber == null}"
+                                th:text="${'AS' + detail.asnNumber
+                                          + (detail.asnOrganisation != null ? ' ' + detail.asnOrganisation : '')}">—</dd>
+                            <dt class="req-detail__full">Referer</dt>
+                            <dd class="req-detail__full req-detail__wrap" th:text="${detail.referer} ?: '—'">—</dd>
+                        </dl>
+                    </section>
+
+                    <section class="req-detail__group">
+                        <h6 class="req-detail__heading">클라이언트</h6>
+                        <dl class="req-detail__grid">
+                            <dt class="req-detail__full">User-Agent</dt>
+                            <dd class="req-detail__full req-detail__wrap" th:text="${detail.userAgent} ?: '—'">—</dd>
+                        </dl>
+                    </section>
+
+                    <section class="req-detail__group">
+                        <h6 class="req-detail__heading">Bot 판정</h6>
+                        <dl class="req-detail__grid">
+                            <dt>Bot 여부</dt>
+                            <dd th:text="${detail.bot} ? '예' : '아니오'">아니오</dd>
+                            <dt>Bot Score</dt>
+                            <dd th:text="${detail.botScore} ?: '—'">—</dd>
+                            <dt class="req-detail__full">Bot Signals</dt>
+                            <dd class="req-detail__full req-detail__wrap" th:text="${detail.botSignals} ?: '—'">—</dd>
+                        </dl>
+                    </section>
+                </div>
+            </div>
+        </div>
+
+        <!-- The obvious next question from a detail page: what else did this
+             source do? Each link opens the request list filtered by that value. -->
+        <div class="req-related" th:if="${detail.ip != null or detail.uri != null or detail.userAgent != null}">
+            <span class="req-related__title">같은 값의 요청 보기</span>
+            <a class="req-related__link" th:if="${detail.uri != null}"
+               th:href="@{/admin/console/requests(days=30, uri=${detail.uri}, from=${returnHref})}">이 URI</a>
+            <a class="req-related__link" th:if="${detail.ip != null}"
+               th:href="@{/admin/console/requests(days=30, ip=${detail.ip}, from=${returnHref})}">이 IP</a>
+            <a class="req-related__link" th:if="${detail.userAgent != null}"
+               th:href="@{/admin/console/requests(days=30, userAgent=${detail.userAgent}, from=${returnHref})}">이 User-Agent</a>
+        </div>
+    </div>
+</th:block>
+</body>
+</html>

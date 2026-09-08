@@ -139,8 +139,11 @@
                     <button class="btn btn-outline-danger btn-sm js-hist-status" data-status="5xx" type="button">5xx</button>
                 </div>
             </div>
-            <div class="card-body" id="history-content">
-                <div class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>
+            <div class="card-body">
+                <p class="panel-note mb-3">행을 클릭하면 그 요청의 상세 페이지가 열립니다.</p>
+                <div id="history-content">
+                    <div class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>
+                </div>
             </div>
         </div>
         </div>
@@ -247,6 +250,45 @@
             });
         }
 
+        // ── drill-down links ──────────────────────────────────────────
+        // Every aggregate/history row that leads somewhere else builds its
+        // href through here so the frozen URL contract (days, statusFilter,
+        // one column filter, from) is assembled in exactly one place.
+        const TOP_FILTER_PARAM = {uri: 'uri', ip: 'ip', ua: 'userAgent'};
+
+        function requestsListHref(overrides) {
+            const params = Object.assign({days: STATE.days}, overrides);
+            const parts = [];
+            if (params.days !== undefined && params.days !== null && params.days !== '') {
+                parts.push('days=' + encodeURIComponent(params.days));
+            }
+            if (params.statusFilter) parts.push('statusFilter=' + encodeURIComponent(params.statusFilter));
+            if (params.filter && params.value !== undefined && params.value !== null && params.value !== '') {
+                parts.push(encodeURIComponent(params.filter) + '=' + encodeURIComponent(params.value));
+            }
+            parts.push('from=' + encodeURIComponent(location.pathname + location.search));
+            return '/admin/console/requests?' + parts.join('&');
+        }
+
+        function requestDetailHref(id) {
+            return '/admin/console/requests/' + encodeURIComponent(id)
+                + '?from=' + encodeURIComponent(location.pathname + location.search);
+        }
+
+        // A row with exactly one destination gets a delegated click-to-navigate
+        // so the whole row is clickable; a click that already landed on the
+        // row's own <a> is left alone so it isn't handled twice.
+        function wireRowLinkDelegate(container) {
+            if (!container) return;
+            container.addEventListener('click', (e) => {
+                if (e.target.closest('a')) return;
+                const row = e.target.closest('tr.console-row-clickable');
+                if (!row) return;
+                const link = row.querySelector('.console-row-link');
+                if (link) location.href = link.href;
+            });
+        }
+
         // Reads a semantic token so the chart below stays inside the design system.
         function token(name) {
             return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -322,11 +364,16 @@
                 let html = `<div class="table-responsive"><table class="table table-hover">`
                     + `<thead><tr><th>${escHtml(d.groupByLabel)}</th><th class="num">Requests</th></tr></thead><tbody>`;
                 d.content.forEach(row => {
-                html += `<tr><td>${escHtml(row.uri)}</td><td class="num">${escHtml(String(row.requestCount))}</td></tr>`;
+                const filterParam = TOP_FILTER_PARAM[STATE.topGroupBy] || 'uri';
+                const href = escHtml(requestsListHref({filter: filterParam, value: row.uri, statusFilter: STATE.topStatusFilter}));
+                const ariaLabel = escHtml(`${d.groupByLabel}: ${row.uri} 요청 목록 보기`);
+                html += `<tr class="console-row-clickable"><td><a class="console-row-link" href="${href}" aria-label="${ariaLabel}">${escHtml(row.uri)}</a></td><td class="num">${escHtml(String(row.requestCount))}</td></tr>`;
                 });
                 html += '</tbody></table></div>';
                 html += paginationHtml(d.number, d.totalPages, 'data-top-page');
                 el.innerHTML = html;
+
+                wireRowLinkDelegate(el.querySelector('tbody'));
 
                 el.querySelectorAll('[data-top-page]').forEach(btn => {
                     btn.addEventListener('click', () => {
@@ -352,11 +399,15 @@
                     return;
                 }
                 let html = '<div class="table-responsive"><table class="table table-hover">'
-                    + '<thead><tr><th>Timestamp</th><th>Method</th><th>Status</th><th>URI</th><th>Referer</th><th>User Agent</th><th>Bot</th></tr></thead><tbody>';
+                    + '<thead><tr>'
+                    + '<th>Timestamp</th><th>Method</th><th>Status</th><th>URI</th><th>Referer</th><th>User Agent</th><th>Bot</th>'
+                    + '</tr></thead><tbody>';
                 d.content.forEach(row => {
                     const ts = row.createdAt ? row.createdAt.replace('T', ' ').substring(0, 19) : '-';
-                    html += `<tr>
-                        <td class="mono">${escHtml(ts)}</td>
+                    const href = escHtml(requestDetailHref(row.id));
+                    const ariaLabel = escHtml(`${ts} 요청 상세 보기`);
+                    html += `<tr class="hist-row console-row-clickable">
+                        <td class="mono"><a class="console-row-link" href="${href}" aria-label="${ariaLabel}">${escHtml(ts)}</a></td>
                         <td><span class="method">${escHtml(row.method || '')}</span></td>
                         <td>${statusBadge(row.statusCode)}</td>
                         <td>${escHtml(row.uri || '')}</td>
@@ -368,6 +419,8 @@
                 html += '</tbody></table></div>';
                 html += paginationHtml(d.number, d.totalPages, 'data-hist-page');
                 el.innerHTML = html;
+
+                wireRowLinkDelegate(el.querySelector('tbody'));
 
                 el.querySelectorAll('[data-hist-page]').forEach(btn => {
                     btn.addEventListener('click', () => {

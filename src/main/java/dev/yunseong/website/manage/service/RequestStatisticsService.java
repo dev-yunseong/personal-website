@@ -4,8 +4,11 @@ import dev.yunseong.website.manage.domain.AutonomousSystem;
 import dev.yunseong.website.manage.domain.BotDetector;
 import dev.yunseong.website.manage.domain.BotVerdict;
 import dev.yunseong.website.manage.domain.GeoLocation;
+import dev.yunseong.website.manage.domain.RequestDetail;
 import dev.yunseong.website.manage.domain.RequestFingerprint;
+import dev.yunseong.website.manage.domain.RequestQuery;
 import dev.yunseong.website.manage.domain.RequestStatistics;
+import dev.yunseong.website.manage.domain.RequestSummary;
 import dev.yunseong.website.manage.domain.TimelineStat;
 import dev.yunseong.website.manage.domain.UriStat;
 import dev.yunseong.website.manage.repository.RequestStatisticsRepository;
@@ -28,6 +31,7 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
@@ -117,6 +121,51 @@ public class RequestStatisticsService {
         }
         int[] range = statusCodeRange(statusFilter);
         return requestStatisticsRepository.findByCreatedAtAfterAndStatusCodeBetween(startDate, range[0], range[1], pageable);
+    }
+
+    /**
+     * The history table's read model. No ASN: that is one mmdb lookup per row
+     * and nothing in the list renders it, so it is resolved once on the detail
+     * page instead — see {@link #findRequestDetail(long)}.
+     */
+    @Transactional(readOnly = true)
+    public Page<RequestSummary> getRequestSummariesForLastDays(int days, String statusFilter, Pageable pageable) {
+        return getStatisticsForLastDays(days, statusFilter, pageable).map(RequestSummary::of);
+    }
+
+    /**
+     * The request list behind {@code /admin/console/requests}. Blank filters
+     * were already normalised to null by {@link RequestQuery#of}; a null status
+     * range drops the status clause entirely rather than widening it, so rows
+     * with no recorded status code stay in the unfiltered result.
+     */
+    @Transactional(readOnly = true)
+    public Page<RequestSummary> findRequests(RequestQuery query, int page) {
+        LocalDateTime startDate = LocalDateTime.now().minusDays(query.days());
+        int[] range = query.statusFilter() == null ? null : statusCodeRange(query.statusFilter());
+        return requestStatisticsRepository.findMatchingRequests(
+                        startDate,
+                        range == null ? null : range[0],
+                        range == null ? null : range[1],
+                        query.uri(),
+                        query.ip(),
+                        query.userAgent(),
+                        query.referer(),
+                        query.countryCode(),
+                        PageRequest.of(page, PAGE_SIZE))
+                .map(RequestSummary::of);
+    }
+
+    /**
+     * One request with every stored field plus its autonomous system, resolved
+     * from the stored IP at read time because it is not a stored column. A
+     * missing database or a private range yields a null ASN rather than an
+     * error, so the page always renders.
+     */
+    @Transactional(readOnly = true)
+    public Optional<RequestDetail> findRequestDetail(long id) {
+        return requestStatisticsRepository.findById(id)
+                .map(row -> RequestDetail.of(row, asnResolver.resolve(row.getIp())));
     }
 
     @Transactional(readOnly = true)

@@ -1,7 +1,11 @@
 package dev.yunseong.website.manage.service;
 
+import dev.yunseong.website.manage.domain.AutonomousSystem;
+import dev.yunseong.website.manage.domain.RequestDetail;
 import dev.yunseong.website.manage.domain.RequestFingerprint;
+import dev.yunseong.website.manage.domain.RequestQuery;
 import dev.yunseong.website.manage.domain.RequestStatistics;
+import dev.yunseong.website.manage.domain.RequestSummary;
 import dev.yunseong.website.manage.domain.GeoLocation;
 import dev.yunseong.website.manage.domain.TimelineStat;
 import dev.yunseong.website.manage.domain.UriStat;
@@ -26,6 +30,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
@@ -36,7 +41,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -304,6 +311,155 @@ class RequestStatisticsServiceTest {
         verify(requestStatisticsRepository, times(1)).findByCreatedAtAfterAndStatusCodeBetween(
                 any(LocalDateTime.class), eq(200), eq(299), eq(pageable));
         verify(requestStatisticsRepository, never()).findByCreatedAtAfter(any(LocalDateTime.class), any(Pageable.class));
+    }
+
+    @Test
+    void getRequestSummariesForLastDays_MapsEveryListFieldAndCarriesNoAsn() {
+        // Given
+        LocalDateTime createdAt = LocalDateTime.of(2026, 7, 30, 12, 0);
+        RequestStatistics row = new RequestStatistics(42L, "/public/memos/1", "GET", "https://referer.com",
+                "Mozilla/5.0", "1.1.1.1", 200, createdAt, true, 12,
+                "AU", 2158177L, "Melbourne", -37.814, 144.9633, 20, 87, "datacenter,ua_mismatch");
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<RequestStatistics> mockPage = new PageImpl<>(List.of(row), pageable, 1);
+
+        when(requestStatisticsRepository.findByCreatedAtAfter(any(LocalDateTime.class), eq(pageable)))
+                .thenReturn(mockPage);
+
+        // When
+        Page<RequestSummary> result = requestStatisticsService.getRequestSummariesForLastDays(7, "", pageable);
+
+        // Then
+        assertEquals(1, result.getTotalElements());
+        RequestSummary summary = result.getContent().get(0);
+        assertEquals(42L, summary.id());
+        assertEquals(createdAt, summary.createdAt());
+        assertEquals("GET", summary.method());
+        assertEquals("/public/memos/1", summary.uri());
+        assertEquals(200, summary.statusCode());
+        assertEquals(12, summary.durationMs());
+        assertEquals("1.1.1.1", summary.ip());
+        assertEquals("https://referer.com", summary.referer());
+        assertEquals("Mozilla/5.0", summary.userAgent());
+        assertTrue(summary.bot());
+        assertEquals(87, summary.botScore());
+        assertEquals("datacenter,ua_mismatch", summary.botSignals());
+        assertEquals("AU", summary.countryCode());
+
+        // The list resolves no ASN: it is one mmdb lookup per row and no column shows it.
+        verify(asnResolver, never()).resolve(anyString());
+    }
+
+    @Test
+    void findRequests_PassesNormalisedFiltersAndStatusRangeToTheSingleQuery() {
+        // Given
+        RequestQuery query = RequestQuery.of(7, "4xx", "/public/memos", "1.1.1.1", "curl/8.0", "", "KR");
+        RequestStatistics row = new RequestStatistics("/public/memos", "GET", null, "curl/8.0", "1.1.1.1",
+                404, false, 7, "KR");
+        when(requestStatisticsRepository.findMatchingRequests(
+                any(LocalDateTime.class), eq(400), eq(499), eq("/public/memos"), eq("1.1.1.1"),
+                eq("curl/8.0"), isNull(), eq("KR"), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(row), PageRequest.of(0, 10), 1));
+
+        // When
+        Page<RequestSummary> result = requestStatisticsService.findRequests(query, 0);
+
+        // Then - the blank referer became null, so the repository never filters on ""
+        assertEquals(1, result.getTotalElements());
+        assertEquals("/public/memos", result.getContent().get(0).uri());
+    }
+
+    @Test
+    void findRequests_WithoutStatusFilter_PassesANullRange() {
+        // Given - a null range drops the status clause instead of widening it,
+        // so rows with no recorded status code stay in the result.
+        ArgumentCaptor<Integer> minStatus = ArgumentCaptor.forClass(Integer.class);
+        when(requestStatisticsRepository.findMatchingRequests(
+                any(LocalDateTime.class), minStatus.capture(), isNull(), isNull(), isNull(),
+                isNull(), isNull(), isNull(), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(), PageRequest.of(0, 10), 0));
+
+        // When
+        requestStatisticsService.findRequests(RequestQuery.of(7, "", "", "", "", "", ""), 0);
+
+        // Then
+        assertNull(minStatus.getValue());
+    }
+
+    @Test
+    void findRequests_RequestsThePageAtTheConsolePageSize() {
+        // Given
+        ArgumentCaptor<Pageable> pageable = ArgumentCaptor.forClass(Pageable.class);
+        when(requestStatisticsRepository.findMatchingRequests(
+                any(LocalDateTime.class), any(), any(), any(), any(), any(), any(), any(), pageable.capture()))
+                .thenReturn(new PageImpl<>(List.of(), PageRequest.of(2, 10), 0));
+
+        // When
+        requestStatisticsService.findRequests(RequestQuery.of(7, "", "", "", "", "", ""), 2);
+
+        // Then
+        assertEquals(2, pageable.getValue().getPageNumber());
+        assertEquals(10, pageable.getValue().getPageSize());
+    }
+
+    @Test
+    void findRequestDetail_MapsEveryStoredFieldAndAttachesAsn() {
+        // Given
+        LocalDateTime createdAt = LocalDateTime.of(2026, 7, 30, 12, 0);
+        RequestStatistics row = new RequestStatistics(42L, "/public/memos/1", "GET", "https://referer.com",
+                "Mozilla/5.0", "1.1.1.1", 200, createdAt, true, 12,
+                "AU", 2158177L, "Melbourne", -37.814, 144.9633, 20, 87, "datacenter,ua_mismatch");
+        when(requestStatisticsRepository.findById(42L)).thenReturn(Optional.of(row));
+        when(asnResolver.resolve("1.1.1.1")).thenReturn(new AutonomousSystem(13335L, "Cloudflare, Inc."));
+
+        // When
+        RequestDetail detail = requestStatisticsService.findRequestDetail(42L).orElseThrow();
+
+        // Then
+        assertEquals(42L, detail.id());
+        assertEquals(createdAt, detail.createdAt());
+        assertEquals("GET", detail.method());
+        assertEquals("/public/memos/1", detail.uri());
+        assertEquals(200, detail.statusCode());
+        assertEquals(12, detail.durationMs());
+        assertEquals("1.1.1.1", detail.ip());
+        assertEquals("https://referer.com", detail.referer());
+        assertEquals("Mozilla/5.0", detail.userAgent());
+        assertTrue(detail.bot());
+        assertEquals(87, detail.botScore());
+        assertEquals("datacenter,ua_mismatch", detail.botSignals());
+        assertEquals("AU", detail.countryCode());
+        assertEquals("Melbourne", detail.cityName());
+        assertEquals(-37.814, detail.latitude());
+        assertEquals(144.9633, detail.longitude());
+        assertEquals(20, detail.accuracyRadiusKm());
+        assertEquals(13335L, detail.asnNumber());
+        assertEquals("Cloudflare, Inc.", detail.asnOrganisation());
+    }
+
+    @Test
+    void findRequestDetail_WithoutAsnMatch_LeavesAsnFieldsNull() {
+        // Given - AsnResolver returns null for a missing database, a private
+        // range, or a non-literal string; that must not surface as a failure.
+        RequestStatistics row = new RequestStatistics("/public/memos/1", "GET", null, "Mozilla/5.0", "10.0.0.1");
+        when(requestStatisticsRepository.findById(1L)).thenReturn(Optional.of(row));
+        when(asnResolver.resolve("10.0.0.1")).thenReturn(null);
+
+        // When
+        RequestDetail detail = requestStatisticsService.findRequestDetail(1L).orElseThrow();
+
+        // Then
+        assertNull(detail.asnNumber());
+        assertNull(detail.asnOrganisation());
+    }
+
+    @Test
+    void findRequestDetail_WithUnknownId_ReturnsEmpty() {
+        // Given
+        when(requestStatisticsRepository.findById(999L)).thenReturn(Optional.empty());
+
+        // When / Then
+        assertTrue(requestStatisticsService.findRequestDetail(999L).isEmpty());
     }
 
     @Test

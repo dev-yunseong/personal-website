@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout}">
+
+<head>
+    <title>Requests</title>
+    <th:block layout:fragment="css">
+        <link rel="stylesheet" th:href="@{/css/console.css}">
+        <link rel="stylesheet" th:href="@{/css/console-request.css}">
+    </th:block>
+</head>
+
+<body>
+<th:block layout:fragment="content">
+    <div class="container-fluid console mt-4" id="requests-page">
+        <div class="console-head">
+            <h1>Requests</h1>
+            <a th:href="${returnHref}" class="btn btn-sm btn-outline-secondary">← 돌아가기</a>
+        </div>
+
+        <div class="console-toolbar">
+            <div class="btn-group" role="group" aria-label="Time period">
+                <a th:each="d : ${ {1, 7, 30, 90} }"
+                   class="btn btn-outline-primary btn-sm"
+                   th:classappend="${days == d} ? 'active'"
+                   th:text="${d} + '일'"
+                   th:href="@{/admin/console/requests(days=${d}, statusFilter=${statusFilter}, uri=${uri},
+                                                      ip=${ip}, userAgent=${userAgent}, referer=${referer},
+                                                      countryCode=${countryCode}, from=${returnHref})}">7일</a>
+            </div>
+            <span class="console-toolbar__label" th:text="'최근 ' + ${days} + '일'">최근 7일</span>
+            <span class="console-toolbar__label" th:text="${requests.totalElements} + '건'">0건</span>
+        </div>
+
+        <!-- Which filters this list is narrowed by, each with the link that drops it. -->
+        <div class="req-filters" th:if="${!activeFilters.isEmpty()}">
+            <span class="req-filters__title">활성 필터</span>
+            <span class="req-filter" th:each="filter : ${activeFilters}">
+                <span class="req-filter__label" th:text="${filter.label}">URI</span>
+                <span class="req-filter__equals" aria-hidden="true">=</span>
+                <span class="req-filter__value" th:text="${filter.value}">/public/memos</span>
+                <a class="req-filter__clear" th:href="${filter.clearHref}"
+                   th:title="${filter.label} + ' 필터 지우기'"><span class="visually-hidden"
+                   th:text="${filter.label} + ' 필터'"></span>지우기</a>
+            </span>
+        </div>
+        <p class="panel-note" th:if="${activeFilters.isEmpty()}">
+            필터 없이 최근 <span th:text="${days}">7</span>일의 모든 요청을 보고 있습니다.
+            콘솔의 집계 행을 클릭하면 그 값으로 좁힌 목록으로 들어옵니다.
+        </p>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">요청 목록</h5>
+            </div>
+            <div class="card-body">
+                <p class="panel-note mb-3">행을 클릭하면 그 요청의 상세 페이지로 이동합니다.</p>
+
+                <div class="console-empty" th:if="${requests.isEmpty()}">
+                    조건에 맞는 요청이 없습니다.
+                </div>
+
+                <div class="table-responsive" th:unless="${requests.isEmpty()}">
+                    <table class="table table-hover">
+                        <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Method</th>
+                            <th>Status</th>
+                            <th>URI</th>
+                            <th>IP</th>
+                            <th>국가</th>
+                            <th>Referer</th>
+                            <th>User Agent</th>
+                            <th class="num">응답</th>
+                            <th>Bot</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="row : ${requests.content}" class="console-row-clickable">
+                            <td class="mono"
+                                th:text="${row.createdAt != null ? #temporals.format(row.createdAt, 'yyyy-MM-dd HH:mm:ss') : '—'}">—</td>
+                            <td><span class="method" th:text="${row.method} ?: '—'">GET</span></td>
+                            <td th:with="code=${row.statusCode}">
+                                <span class="status status--muted" th:if="${code == null}">—</span>
+                                <span th:unless="${code == null}"
+                                      class="status"
+                                      th:classappend="${code >= 500 ? 'status--danger'
+                                                     : (code >= 400 ? 'status--warn'
+                                                     : (code >= 300 ? 'status--muted' : 'status--ok'))}"
+                                      th:text="${code}">200</span>
+                            </td>
+                            <td>
+                                <a class="console-row-link"
+                                   th:href="@{/admin/console/requests/{id}(id=${row.id}, from=${selfHref})}"
+                                   th:text="${row.uri} ?: '—'">/public/memos</a>
+                            </td>
+                            <td class="mono" th:text="${row.ip} ?: '—'">—</td>
+                            <td class="mono" th:text="${row.countryCode} ?: '—'">—</td>
+                            <td class="cell-dim"><span class="cell-clip" th:text="${row.referer} ?: '—'">—</span></td>
+                            <td class="cell-dim"><span class="cell-clip" th:text="${row.userAgent} ?: '—'">—</span></td>
+                            <td class="num" th:text="${row.durationMs != null ? row.durationMs + 'ms' : '—'}">—</td>
+                            <td class="cell-dim">
+                                <span class="cell-clip"
+                                      th:text="${row.botScore == null
+                                                ? (row.bot ? 'bot' : '—')
+                                                : (row.botSignals != null ? row.botScore + ' ' + row.botSignals : row.botScore)}">—</span>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Current ±2, the same window as the console's other pagers. -->
+            <div class="card-footer p-2" th:if="${requests.totalPages > 1}"
+                 th:with="windowStart=${page - 2 < 0 ? 0 : page - 2},
+                          windowEnd=${page + 2 > requests.totalPages - 1 ? requests.totalPages - 1 : page + 2}">
+                <nav aria-label="요청 목록 페이지">
+                    <ul class="pagination pagination-sm flex-wrap mb-0 justify-content-center">
+                        <li class="page-item" th:classappend="${requests.first} ? 'disabled'">
+                            <a class="page-link"
+                               th:href="@{/admin/console/requests(days=${days}, page=${page - 1}, statusFilter=${statusFilter},
+                                                                  uri=${uri}, ip=${ip}, userAgent=${userAgent},
+                                                                  referer=${referer}, countryCode=${countryCode},
+                                                                  from=${returnHref})}">&laquo;</a>
+                        </li>
+                        <li class="page-item disabled" th:if="${windowStart > 0}">
+                            <span class="page-link" aria-hidden="true">&hellip;</span>
+                        </li>
+                        <li class="page-item"
+                            th:each="i : ${#numbers.sequence(windowStart, windowEnd)}"
+                            th:classappend="${i == page} ? 'active'">
+                            <a class="page-link" th:text="${i + 1}"
+                               th:href="@{/admin/console/requests(days=${days}, page=${i}, statusFilter=${statusFilter},
+                                                                  uri=${uri}, ip=${ip}, userAgent=${userAgent},
+                                                                  referer=${referer}, countryCode=${countryCode},
+                                                                  from=${returnHref})}">1</a>
+                        </li>
+                        <li class="page-item disabled" th:if="${windowEnd < requests.totalPages - 1}">
+                            <span class="page-link" aria-hidden="true">&hellip;</span>
+                        </li>
+                        <li class="page-item" th:classappend="${requests.last} ? 'disabled'">
+                            <a class="page-link"
+                               th:href="@{/admin/console/requests(days=${days}, page=${page + 1}, statusFilter=${statusFilter},
+                                                                  uri=${uri}, ip=${ip}, userAgent=${userAgent},
+                                                                  referer=${referer}, countryCode=${countryCode},
+                                                                  from=${returnHref})}">&raquo;</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // The URI cell's <a> is the real, keyboard-reachable control; this only
+        // widens its hit area to the whole row. A click that already landed on
+        // an <a> is left alone so it is never handled twice.
+        (function wireRequestRowLinks() {
+            const tbody = document.querySelector('#requests-page tbody');
+            if (!tbody) return;
+            tbody.addEventListener('click', (e) => {
+                if (e.target.closest('a')) return;
+                const row = e.target.closest('tr.console-row-clickable');
+                if (!row) return;
+                const link = row.querySelector('.console-row-link');
+                if (link) location.href = link.href;
+            });
+        })();
+    </script>
+</th:block>
+</body>
+</html>

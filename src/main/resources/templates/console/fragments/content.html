@@ -47,14 +47,33 @@
         return `<a href="${esc(row.uri)}" target="_blank" rel="noopener">${esc(row.title)}</a>`;
     }
 
+    // The Title cell already links out to the memo itself, so the drill into
+    // the request list lives on the Requests figure instead of doubling up
+    // the row's destination.
+    function requestsListHref(overrides) {
+        const params = Object.assign({days}, overrides);
+        const parts = [];
+        if (params.days !== undefined && params.days !== null && params.days !== '') {
+            parts.push('days=' + encodeURIComponent(params.days));
+        }
+        if (params.statusFilter) parts.push('statusFilter=' + encodeURIComponent(params.statusFilter));
+        if (params.filter && params.value !== undefined && params.value !== null && params.value !== '') {
+            parts.push(encodeURIComponent(params.filter) + '=' + encodeURIComponent(params.value));
+        }
+        parts.push('from=' + encodeURIComponent(location.pathname + location.search));
+        return '/admin/console/requests?' + parts.join('&');
+    }
+
     function tableHtml(rows) {
         let html = '<div class="table-responsive"><table class="table table-hover">'
             + '<thead><tr><th>Title</th><th>Category</th><th class="num">Requests</th><th>Published</th><th>State</th></tr></thead><tbody>';
         rows.forEach(row => {
+            const href = esc(requestsListHref({filter: 'uri', value: row.uri}));
+            const ariaLabel = esc(`${row.uri} 요청 목록 보기`);
             html += `<tr>
                 <td>${titleCell(row)}</td>
                 <td class="cell-dim">${esc(row.category || '-')}</td>
-                <td class="num">${esc(String(row.requestCount))}</td>
+                <td class="num"><a class="console-row-link" href="${href}" aria-label="${ariaLabel}">${esc(String(row.requestCount))}</a></td>
                 <td class="mono cell-dim">${esc(publishedLabel(row))}</td>
                 <td>${lifecycleBadge(row)}</td>
             </tr>`;

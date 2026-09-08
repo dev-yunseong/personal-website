@@ -1,6 +1,7 @@
 package dev.yunseong.website.manage.controller;
 
 import dev.yunseong.website.manage.domain.RequestStatistics;
+import dev.yunseong.website.manage.domain.RequestSummary;
 import dev.yunseong.website.manage.domain.TimelineStat;
 import dev.yunseong.website.manage.domain.UriStat;
 import dev.yunseong.website.manage.service.RequestStatisticsService;
@@ -74,7 +75,7 @@ public class ConsoleApiController {
             @RequestParam(defaultValue = "7") int days,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "") String statusFilter) {
-        Page<RequestStatistics> result = requestStatisticsService.getStatisticsForLastDays(
+        Page<RequestSummary> result = requestStatisticsService.getRequestSummariesForLastDays(
                 days, statusFilter,
                 PageRequest.of(page, PAGE_SIZE, Sort.by(Sort.Direction.DESC, "createdAt")));
         return ResponseEntity.ok(Map.of(
