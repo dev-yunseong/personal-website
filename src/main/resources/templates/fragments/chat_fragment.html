@@ -25,9 +25,9 @@
                 <div class="chat-empty">
                     <p class="chat-empty__label">예시 질문</p>
                     <ul class="chat-empty__hints">
-                        <li>어떤 기술 스택으로 일해 왔나요?</li>
-                        <li>최근에 쓴 글 중 인프라 관련 내용을 요약해 주세요.</li>
-                        <li>이 사이트는 어떤 구조로 만들어졌나요?</li>
+                        <li th:each="question : ${suggestedQuestions}" th:text="${question}">
+                            어떤 기술 스택으로 일해 왔나요?
+                        </li>
                     </ul>
                 </div>
             </div>
