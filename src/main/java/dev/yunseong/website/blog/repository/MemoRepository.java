@@ -1,6 +1,7 @@
 package dev.yunseong.website.blog.repository;
 
 import dev.yunseong.website.blog.domain.Memo;
+import dev.yunseong.website.blog.domain.SitemapMemoDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -119,4 +120,8 @@ public interface MemoRepository extends JpaRepository<Memo, Long> {
     Page<Memo> findAllByNamePrefixExcludingPrefix(String prefix, String excludedPrefix, Pageable pageable);
 
     List<Memo> findAllByUpdatedAtGreaterThan(LocalDateTime time);
+
+    @Query("SELECT new dev.yunseong.website.blog.domain.SitemapMemoDto(m.id, m.updatedAt) "
+            + "FROM Memo m WHERE m.name NOT LIKE '/private%' ORDER BY m.id ASC")
+    List<SitemapMemoDto> findPublicSitemapData();
 }

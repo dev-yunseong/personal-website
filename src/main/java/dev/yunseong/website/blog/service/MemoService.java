@@ -2,6 +2,7 @@ package dev.yunseong.website.blog.service;
 
 import dev.yunseong.website.blog.annotation.FilterVisibleContent;
 import dev.yunseong.website.blog.domain.Memo;
+import dev.yunseong.website.blog.domain.SitemapMemoDto;
 import dev.yunseong.website.blog.repository.MemoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -111,6 +112,11 @@ public class MemoService {
     @Transactional(readOnly = true)
     public Page<Memo> getPublicMemos(Pageable pageable) {
         return memoRepository.findPublic(pageOnly(pageable));
+    }
+
+    @Transactional(readOnly = true)
+    public List<SitemapMemoDto> getPublicSitemapData() {
+        return memoRepository.findPublicSitemapData();
     }
 
     @Transactional(readOnly = true)
