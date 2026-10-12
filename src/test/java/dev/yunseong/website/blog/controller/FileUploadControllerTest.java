@@ -160,4 +160,24 @@ class FileUploadControllerTest {
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.error").value("Failed to upload file: Storage error"));
     }
+
+    @Test
+    @WithMockUser
+    void uploadFile_InvalidFile_ReturnsInternalServerError() throws Exception {
+        // Given
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "malicious.html",
+                "text/html",
+                "<script>alert('xss')</script>".getBytes()
+        );
+        when(s3StorageService.uploadFile(any())).thenThrow(new IllegalArgumentException("File extension or content type is not allowed"));
+
+        // When & Then
+        mockMvc.perform(multipart("/admin/upload/file")
+                        .file(file)
+                        .with(csrf()))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.error").value("Failed to upload file: File extension or content type is not allowed"));
+    }
 }
