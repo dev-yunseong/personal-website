@@ -10,12 +10,27 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class S3StorageService {
+
+    private static final Map<String, Set<String>> ALLOWED_EXTENSIONS_MIME = Map.of(
+            ".jpg", Set.of("image/jpeg"),
+            ".jpeg", Set.of("image/jpeg"),
+            ".png", Set.of("image/png"),
+            ".gif", Set.of("image/gif"),
+            ".webp", Set.of("image/webp"),
+            ".mp4", Set.of("video/mp4"),
+            ".webm", Set.of("video/webm"),
+            ".mov", Set.of("video/quicktime"),
+            ".pdf", Set.of("application/pdf"),
+            ".txt", Set.of("text/plain")
+    );
 
     private final S3Client s3Client;
     private final ImageResizer imageResizer;
@@ -37,14 +52,16 @@ public class S3StorageService {
         String originalFilename = file.getOriginalFilename();
         String extension = "";
         if (originalFilename != null && originalFilename.contains(".")) {
-            extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            extension = originalFilename.substring(originalFilename.lastIndexOf(".")).toLowerCase();
         }
+
+        String contentType = file.getContentType();
+        validateFile(extension, contentType);
 
         String key = UUID.randomUUID().toString() + extension;
 
         byte[] fileBytes = file.getBytes();
         long fileSize = fileBytes.length;
-        String contentType = file.getContentType();
 
         // Resize images to appropriate size (dimension and file size limits)
         if (imageResizer.isImage(contentType)) {
@@ -64,6 +81,17 @@ public class S3StorageService {
         log.info("File uploaded successfully: {}", key);
 
         return generateFileUrl(key);
+    }
+
+    private void validateFile(String extension, String contentType) {
+        if (extension.isEmpty() || contentType == null) {
+            throw new IllegalArgumentException("File extension and content type must not be null or empty");
+        }
+
+        Set<String> allowedMimes = ALLOWED_EXTENSIONS_MIME.get(extension);
+        if (allowedMimes == null || !allowedMimes.contains(contentType.toLowerCase())) {
+            throw new IllegalArgumentException("File extension or content type is not allowed");
+        }
     }
 
     private String generateFileUrl(String key) {

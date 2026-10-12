@@ -62,7 +62,37 @@ class S3StorageServiceTest {
     }
 
     @Test
-    void uploadFile_WithoutExtension() throws IOException {
+    void uploadFile_DisallowedExtension_ThrowsException() {
+        // Given
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "malicious.html",
+                "text/html",
+                "<script>alert('xss')</script>".getBytes()
+        );
+
+        // When & Then
+        assertThrows(IllegalArgumentException.class, () -> s3StorageService.uploadFile(file));
+        verify(s3Client, never()).putObject(any(PutObjectRequest.class), any(RequestBody.class));
+    }
+
+    @Test
+    void uploadFile_MismatchedMimeType_ThrowsException() {
+        // Given
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "test-image.jpg",
+                "text/html",
+                "test content".getBytes()
+        );
+
+        // When & Then
+        assertThrows(IllegalArgumentException.class, () -> s3StorageService.uploadFile(file));
+        verify(s3Client, never()).putObject(any(PutObjectRequest.class), any(RequestBody.class));
+    }
+
+    @Test
+    void uploadFile_WithoutExtension_ThrowsException() throws IOException {
         // Given
         byte[] smallImageBytes = createTestImage(100, 100, "jpeg");
         MockMultipartFile file = new MockMultipartFile(
@@ -72,13 +102,9 @@ class S3StorageServiceTest {
                 smallImageBytes
         );
 
-        // When
-        String result = s3StorageService.uploadFile(file);
-
-        // Then
-        verify(s3Client, times(1)).putObject(any(PutObjectRequest.class), any(RequestBody.class));
-        assertNotNull(result);
-        assertTrue(result.startsWith("http://localhost:9000/test-bucket/"));
+        // When & Then
+        assertThrows(IllegalArgumentException.class, () -> s3StorageService.uploadFile(file));
+        verify(s3Client, never()).putObject(any(PutObjectRequest.class), any(RequestBody.class));
     }
 
     @Test
