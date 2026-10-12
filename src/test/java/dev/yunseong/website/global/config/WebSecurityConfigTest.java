@@ -71,6 +71,7 @@ class WebSecurityConfigTest {
             "/error",
             "/login",
             "/favicon.ico",
+            "/apple-touch-icon.png",
             "/css/site.css",
             "/js/chat.js",
             "/images/profile-placeholder.svg",

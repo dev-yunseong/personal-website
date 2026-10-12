@@ -27,6 +27,7 @@ public class WebSecurityConfig {
             "/robots.txt",
             // static resources under src/main/resources/static
             "/favicon.ico",
+            "/apple-touch-icon.png",
             "/css/**",
             "/js/**",
             "/images/**",
