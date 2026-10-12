@@ -1,6 +1,7 @@
 package dev.yunseong.website.global.controller;
 
 import dev.yunseong.website.ai.service.ChatService;
+import dev.yunseong.website.global.util.ClientIpResolver;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -55,13 +56,13 @@ class ChatRestControllerTest {
     }
 
     @Test
-    void chat_ResolvesClientIpFromXForwardedFor() throws Exception {
+    void chat_ResolvesClientIpFromCloudflareHeader() throws Exception {
         when(chatService.getChatResponse(eq("hello"), eq("203.0.113.195")))
                 .thenReturn(Flux.just("data:test\n\n"));
 
         MvcResult mvcResult = mockMvc.perform(get("/api/public/chat")
                         .param("message", "hello")
-                        .header("X-Forwarded-For", "203.0.113.195, 10.0.0.1"))
+                        .header(ClientIpResolver.CLOUDFLARE_HEADER, "203.0.113.195"))
                 .andExpect(request().asyncStarted())
                 .andReturn();
 
