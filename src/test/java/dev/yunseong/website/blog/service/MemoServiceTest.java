@@ -2,6 +2,7 @@ package dev.yunseong.website.blog.service;
 
 import dev.yunseong.website.blog.aspect.ContentVisibilityAspect;
 import dev.yunseong.website.blog.domain.Memo;
+import dev.yunseong.website.blog.domain.SitemapMemoDto;
 import dev.yunseong.website.blog.repository.MemoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -138,6 +139,21 @@ class MemoServiceTest {
 
         // Then: Should not add another trailing slash
         verify(memoRepository).findAllByPath(eq("/java/"), any(PageRequest.class));
+    }
+
+    @Test
+    void getPublicSitemapData_ShouldReturnSitemapDtos() {
+        // Given
+        SitemapMemoDto dto1 = new SitemapMemoDto(1L, LocalDateTime.now());
+        SitemapMemoDto dto2 = new SitemapMemoDto(2L, LocalDateTime.now());
+        when(memoRepository.findPublicSitemapData()).thenReturn(List.of(dto1, dto2));
+
+        // When
+        List<SitemapMemoDto> result = memoService.getPublicSitemapData();
+
+        // Then
+        assertThat(result).containsExactly(dto1, dto2);
+        verify(memoRepository).findPublicSitemapData();
     }
 
     @Test

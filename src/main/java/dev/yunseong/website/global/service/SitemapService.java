@@ -3,16 +3,12 @@ package dev.yunseong.website.global.service;
 import dev.yunseong.website.blog.service.GameProjectService;
 import dev.yunseong.website.blog.service.MemoService;
 import dev.yunseong.website.blog.domain.GameProject;
-import dev.yunseong.website.blog.domain.Memo;
+import dev.yunseong.website.blog.domain.SitemapMemoDto;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -41,11 +37,11 @@ public class SitemapService {
         addUrl(sitemap, baseUrl + "/briefing", null);
         
         // Add all memo URLs
-        List<Memo> allMemos = getAllMemos();
-        for (Memo memo : allMemos) {
-            String url = baseUrl + "/public/memos/" + memo.getId();
-            addUrl(sitemap, url, memo.getUpdatedAt() != null ? 
-                memo.getUpdatedAt().format(DATE_FORMATTER) : null);
+        List<SitemapMemoDto> memos = memoService.getPublicSitemapData();
+        for (SitemapMemoDto memo : memos) {
+            String url = baseUrl + "/public/memos/" + memo.id();
+            addUrl(sitemap, url, memo.updatedAt() != null ?
+                memo.updatedAt().format(DATE_FORMATTER) : null);
         }
         
         // Add public projects list page
@@ -79,19 +75,4 @@ public class SitemapService {
                    .replace("'", "&apos;");
     }
     
-    private List<Memo> getAllMemos() {
-        List<Memo> allMemos = new ArrayList<>();
-        int page = 0;
-        int pageSize = 100;
-        Page<Memo> memoPage;
-        
-        do {
-            Pageable pageable = PageRequest.of(page, pageSize);
-            memoPage = memoService.getPublicMemos(pageable);
-            allMemos.addAll(memoPage.getContent());
-            page++;
-        } while (memoPage.hasNext());
-        
-        return allMemos;
-    }
 }
