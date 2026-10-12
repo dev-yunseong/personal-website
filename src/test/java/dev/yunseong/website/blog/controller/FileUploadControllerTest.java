@@ -163,7 +163,7 @@ class FileUploadControllerTest {
 
     @Test
     @WithMockUser
-    void uploadFile_InvalidFile_ReturnsInternalServerError() throws Exception {
+    void uploadFile_InvalidFile_ReturnsBadRequest() throws Exception {
         // Given
         MockMultipartFile file = new MockMultipartFile(
                 "file",
@@ -177,7 +177,7 @@ class FileUploadControllerTest {
         mockMvc.perform(multipart("/admin/upload/file")
                         .file(file)
                         .with(csrf()))
-                .andExpect(status().isInternalServerError())
+                .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").value("Failed to upload file: File extension or content type is not allowed"));
     }
 }

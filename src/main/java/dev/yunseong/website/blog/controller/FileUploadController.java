@@ -41,6 +41,8 @@ public class FileUploadController {
             response.put("markdown", markdown);
 
             return ResponseEntity.ok(response);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Failed to upload file: " + e.getMessage()));
         } catch (IOException e) {
             return ResponseEntity.internalServerError().body(Map.of("error", "Failed to upload file: " + e.getMessage()));
         }
