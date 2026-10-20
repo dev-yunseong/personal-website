@@ -29,9 +29,9 @@ class MemoRepositorySitemapTest {
 
     @Test
     void findPublicSitemapDataReturnsOrderedMetadataWithoutLoadingEntities() {
-        Memo first = memoRepository.saveAndFlush(new Memo("/blog/first", "a".repeat(100_000)));
+        Memo first = memoRepository.saveAndFlush(new Memo("/blog/first", "first memo content"));
         memoRepository.saveAndFlush(new Memo("/private/secret", "private content"));
-        Memo second = memoRepository.saveAndFlush(new Memo("/blog/second", "b".repeat(100_000)));
+        Memo second = memoRepository.saveAndFlush(new Memo("/blog/second", "second memo content"));
         entityManager.refresh(first);
         entityManager.refresh(second);
         List<SitemapMemoDto> expected = List.of(

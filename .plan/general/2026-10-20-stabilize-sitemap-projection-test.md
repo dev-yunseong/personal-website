@@ -15,7 +15,7 @@ PR #209 failed at a JVM heap comparison. Concurrent bot commit ab29ad4 replaced 
 
 ## Approach (Checklist)
 - [x] **Step 0: Recon** Inspect CI failure, current PR, repository and existing test conventions.
-- [ ] **Step 1: Implementation** Replace SitemapBenchmarkTest with MemoRepositorySitemapTest.
+- [x] **Step 1: Implementation** Replace SitemapBenchmarkTest with MemoRepositorySitemapTest; restore unrelated main features deleted by ab29ad4, as requested by the user.
 - [ ] **Step 2: Tests** Verify projection values, public filtering, empty results, one query and no entity loading; run full suite.
 - [ ] **Step 3: Rollout / Rollback** Push a normal commit to the existing PR branch; revert that commit if needed.
 
@@ -24,8 +24,8 @@ PR #209 failed at a JVM heap comparison. Concurrent bot commit ab29ad4 replaced 
 - **Expected output:** Passing tests; no whitespace errors.
 
 ## Risks & Rollback
-- **Risks:** Hibernate statistics must be cleared after fixture persistence; unrelated concurrent bot deletions need user direction.
+- **Risks:** Hibernate statistics must be cleared after fixture persistence. H2 generated columns use the entity's default varchar length, so fixtures use short content.
 - **Rollback steps:** Revert the test correction commit.
 
 ## Open Questions
-- Restore the unrelated feature deletions introduced by the concurrent bot commit? User asked asynchronously.
+- None. User approved restoring the unrelated feature deletions.
