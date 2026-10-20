@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head><title>메모 초안</title></head>
+<body><div layout:fragment="content" class="container mt-4">
+    <a th:href="@{/admin/console}">← Admin Console</a>
+    <h1 class="mt-3">메모 초안</h1>
+    <p>CLI로 제출한 글입니다. 변경 내용을 검토하고 승인하면 대상 경로에 반영됩니다.</p>
+    <p th:if="${drafts.empty}" class="alert alert-info">검토할 초안이 없습니다.</p>
+    <div th:unless="${drafts.empty}" class="table-responsive">
+        <table class="table"><thead><tr><th>초안 경로</th><th>수정 시각</th><th>검토</th></tr></thead>
+            <tbody><tr th:each="draft : ${drafts.content}">
+                <td th:text="${draft.name}"></td><td th:text="${draft.updatedAt}"></td>
+                <td><a th:href="@{/admin/console/drafts/{id}(id=${draft.id})}">변경 내용 보기</a></td>
+            </tr></tbody>
+        </table>
+    </div>
+    <nav aria-label="초안 페이지">
+        <a th:if="${drafts.hasPrevious()}" th:href="@{/admin/console/drafts(page=${drafts.number - 1})}">이전</a>
+        <a th:if="${drafts.hasNext()}" th:href="@{/admin/console/drafts(page=${drafts.number + 1})}">다음</a>
+    </nav>
+</div></body></html>
