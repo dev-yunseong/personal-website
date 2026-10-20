@@ -17,6 +17,9 @@ import java.util.Optional;
 public interface MemoRepository extends JpaRepository<Memo, Long> {
     Optional<Memo> findByName(String name);
 
+    @Query("SELECT m FROM Memo m WHERE m.name = :name AND m.name NOT LIKE '/private%'")
+    Optional<Memo> findPublicByName(@Param("name") String name);
+
     @Query("SELECT new dev.yunseong.website.blog.domain.MemoNavigationEntry(m.id, m.name, m.updatedAt, false) "
             + "FROM Memo m WHERE m.name NOT LIKE '/private%' "
             + "AND (m.name = :root OR LOCATE(:prefix, m.name) = 1)")
