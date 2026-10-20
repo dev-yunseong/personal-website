@@ -35,7 +35,7 @@ public class DraftApiSecurityConfig {
                 .authorizeHttpRequests(requests -> requests.anyRequest().permitAll()).build();
     }
 
-    // Deliberately does not establish an admin principal or permit access to private memos.
+    // Never establishes an admin principal; handlers restrict private reads to the draft namespace.
     private static class DraftTokenFilter extends OncePerRequestFilter {
         private final String token;
 

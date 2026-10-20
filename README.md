@@ -106,9 +106,53 @@ The list endpoint returns metadata only. The content endpoint returns
 
 ## CLI memo drafts
 
+### Navigation and draft reads
+
+```sh
+bin/website memo tree                 # full public tree
+bin/website memo tree notes           # recursive subtree
+bin/website memo list --category notes --limit 20  # direct children only
+
+export DRAFT_TOKEN=...
+bin/website memo tree notes           # includes attached drafts
+bin/website memo read 42 --draft      # draft for published memo 42
+bin/website memo read notes/new-post --draft  # draft-only target
+```
+
+With `DRAFT_TOKEN`, `tree` and `list` use authenticated draft-aware navigation.
+Without it they show only public memos. A token never grants access to other
+private memos or permission to publish. Drafts appear at their **target paths**,
+not under a `private/draft` directory:
+
+```text
+/notes/
+├── spring-guide [id=42] [draft]
+└── new-post [draft only]
+```
+
+Tree order is alphabetical; memo IDs can be passed to `memo read`. A memo can
+also contain children, in which case its category line retains its ID/marker.
+Unknown or private scopes produce an empty tree. Paths accept an optional leading
+and trailing slash. Category lists contain direct children, not descendants or
+the category's own memo. Existing `--page`, `--limit`, and `--updated-after`
+options work with `--category`.
+
+Draft-aware list JSON adds `hasDraft`; draft-only entries have `id: null` and a
+public target `name`. Their `updatedAt` is the latest of draft/published updates.
+`memo read <id>` always reads the published body; `--draft` requires a token and
+returns 404 if there is no draft. Bad tokens fail rather than silently hiding drafts.
+
+Public tree API: `GET /api/public/memos/tree?path=/notes` (UTF-8 text).
+Authenticated routes, all with `X-Draft-Token`:
+`GET /api/agent/drafts/tree?path=/notes`,
+`GET /api/agent/drafts/memos?category=/notes`, and
+`GET /api/agent/drafts/content?memoId=42` (or `?target=/notes/new-post`).
+
+### Submission and approval
+
 Configure a separate `DRAFT_TOKEN` on the server and export the same value on
-the CLI host. An unset token disables draft intake. This token can only submit
-drafts; publication requires logging into the admin console.
+the CLI host. An unset token disables draft access. This token can submit and
+read drafts; publication requires logging into the admin console.
 
 ```sh
 export DRAFT_TOKEN=...
@@ -117,6 +161,8 @@ cat article.md | bin/website memo draft notes/my-post -
 ```
 
 The response contains the private draft ID, name, and console review URL.
+That draft ID is for console review; use the target path or published memo ID
+with `memo read ... --draft`.
 The target accepts an optional leading slash; omit it when invoking Git Bash
 from PowerShell to avoid its native argument path conversion.
 Content is stored verbatim at `/private/draft/notes/my-post`; submitting that

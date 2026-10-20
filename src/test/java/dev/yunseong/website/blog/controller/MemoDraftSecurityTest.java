@@ -2,6 +2,7 @@ package dev.yunseong.website.blog.controller;
 
 import dev.yunseong.website.blog.domain.Memo;
 import dev.yunseong.website.blog.service.MemoDraftService;
+import dev.yunseong.website.blog.service.MemoNavigationService;
 import dev.yunseong.website.global.config.AgentApiSecurityConfig;
 import dev.yunseong.website.global.config.DraftApiSecurityConfig;
 import dev.yunseong.website.global.config.WebSecurityConfig;
@@ -88,5 +89,6 @@ class MemoDraftSecurityTest {
             AgentMemoDraftController.class, ConsoleDraftController.class})
     static class Config {
         @Bean MemoDraftService drafts() { return mock(MemoDraftService.class); }
+        @Bean MemoNavigationService navigation() { return mock(MemoNavigationService.class); }
     }
 }

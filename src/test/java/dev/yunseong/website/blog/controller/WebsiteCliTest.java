@@ -162,6 +162,11 @@ class WebsiteCliTest {
     }
 
     private CliResult runCliWithInput(String baseUrl, byte[] input, String... arguments) throws Exception {
+        boolean withToken = Arrays.asList(arguments).contains("draft") || Arrays.asList(arguments).contains("--draft");
+        return runCliConfigured(baseUrl, input, withToken, arguments);
+    }
+
+    private CliResult runCliConfigured(String baseUrl, byte[] input, boolean withToken, String... arguments) throws Exception {
         String[] command = new String[arguments.length + 2];
         command[0] = "sh";
         command[1] = "bin/website";
@@ -169,7 +174,10 @@ class WebsiteCliTest {
 
         ProcessBuilder processBuilder = new ProcessBuilder(command);
         processBuilder.environment().put("WEBSITE_URL", baseUrl);
-        processBuilder.environment().put("DRAFT_TOKEN", "test-draft-token");
+        processBuilder.environment().remove("DRAFT_TOKEN");
+        if (withToken) {
+            processBuilder.environment().put("DRAFT_TOKEN", "test-draft-token");
+        }
         Process process = processBuilder.start();
         if (input != null) process.getOutputStream().write(input);
         process.getOutputStream().close();
@@ -177,6 +185,63 @@ class WebsiteCliTest {
         byte[] stderr = process.getErrorStream().readAllBytes();
         int exitCode = process.waitFor();
         return new CliResult(exitCode, stdout, stderr);
+    }
+
+    @Test
+    void treeForwardsScopeAndPreservesTreeOutput() throws Exception {
+        String tree = "/노트/\n└── 글 [id=42]\n";
+        AtomicReference<Map<String, String>> query = new AtomicReference<>();
+        server.createContext("/api/public/memos/tree", exchange -> {
+            query.set(parseQuery(exchange));
+            respond(exchange, 200, "text/plain", tree.getBytes(StandardCharsets.UTF_8));
+        });
+        CliResult result = runCli("memo", "tree", "/노트");
+        assertThat(result.exitCode()).isZero();
+        assertThat(result.stdout()).isEqualTo(tree.getBytes(StandardCharsets.UTF_8));
+        assertThat(query.get()).containsEntry("path", "/노트");
+        assertThat(runCli("memo", "tree").exitCode()).isZero();
+        assertThat(query.get()).containsEntry("path", "/");
+    }
+
+    @Test
+    void categoryOptionIsEncodedAsLiteralPath() throws Exception {
+        AtomicReference<Map<String, String>> query = new AtomicReference<>();
+        server.createContext("/api/public/memos", exchange -> {
+            query.set(parseQuery(exchange));
+            respond(exchange, 200, "application/json", "{}".getBytes(StandardCharsets.UTF_8));
+        });
+        assertThat(runCli("memo", "list", "--category", "/한글/a_% &", "--limit", "5").exitCode()).isZero();
+        assertThat(query.get()).containsEntry("category", "/한글/a_% &").containsEntry("limit", "5");
+    }
+
+    @Test
+    void tokenEnablesDraftAwareTreeAndList() throws Exception {
+        AtomicReference<String> token = new AtomicReference<>();
+        server.createContext("/api/agent/drafts/", exchange -> {
+            token.set(exchange.getRequestHeaders().getFirst("X-Draft-Token"));
+            respond(exchange, 200, "text/plain", "draft result\n".getBytes(StandardCharsets.UTF_8));
+        });
+        for (String command : new String[]{"tree", "list"}) {
+            CliResult result = runCliConfigured(websiteUrl, null, true, "memo", command);
+            assertThat(result.exitCode()).isZero();
+            assertThat(token.get()).isEqualTo("test-draft-token");
+            assertThat(new String(result.stdout(), StandardCharsets.UTF_8)).isEqualTo("draft result\n");
+        }
+    }
+
+    @Test
+    void draftReadSelectsPublishedIdOrTargetWithoutExposingStoragePath() throws Exception {
+        AtomicReference<Map<String, String>> query = new AtomicReference<>();
+        String body = "# 초안\n\n";
+        server.createContext("/api/agent/drafts/content", exchange -> {
+            query.set(parseQuery(exchange));
+            respond(exchange, 200, "text/markdown", body.getBytes(StandardCharsets.UTF_8));
+        });
+        assertThat(runCli("memo", "read", "42", "--draft").stdout()).isEqualTo(body.getBytes(StandardCharsets.UTF_8));
+        assertThat(query.get()).containsExactly(Map.entry("memoId", "42"));
+        assertThat(runCli("memo", "read", "notes/new", "--draft").exitCode()).isZero();
+        assertThat(query.get()).containsExactly(Map.entry("target", "notes/new"));
+        assertThat(runCliConfigured(websiteUrl, null, false, "memo", "read", "42", "--draft").exitCode()).isEqualTo(2);
     }
 
     private static Map<String, String> parseQuery(HttpExchange exchange) {
