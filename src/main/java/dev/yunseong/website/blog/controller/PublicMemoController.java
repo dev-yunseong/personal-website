@@ -15,14 +15,14 @@ import org.springframework.web.bind.annotation.*;
 
 
 @Controller
-@RequestMapping("/public/memos")
+@RequestMapping("/public")
 @RequiredArgsConstructor
 public class PublicMemoController {
 
     private final MemoService memoService;
     private final CategoryService categoryService;
 
-    @GetMapping
+    @GetMapping("/memos")
     public String blog(
             Model model,
             @RequestParam(required = false) String category,
@@ -43,7 +43,7 @@ public class PublicMemoController {
         return "blog";
     }
 
-    @GetMapping("/{memoId}")
+    @GetMapping("/memos/{memoId}")
     public String showMemo(
             @PathVariable Long memoId,
             Model model,
@@ -51,6 +51,21 @@ public class PublicMemoController {
             Authentication authentication) {
         boolean authenticated = AuthenticationUtil.isAuthenticated(authentication);
         Memo memo = authenticated ? memoService.getMemo(memoId) : memoService.getPublicMemo(memoId);
+        return renderMemo(memo, model, pageable, authenticated);
+    }
+
+    @GetMapping("/blog/{*memoName}")
+    public String showMemoByName(
+            @PathVariable String memoName,
+            Model model,
+            Pageable pageable,
+            Authentication authentication) {
+        boolean authenticated = AuthenticationUtil.isAuthenticated(authentication);
+        Memo memo = authenticated ? memoService.getMemo(memoName) : memoService.getPublicMemo(memoName);
+        return renderMemo(memo, model, pageable, authenticated);
+    }
+
+    private String renderMemo(Memo memo, Model model, Pageable pageable, boolean authenticated) {
         model.addAttribute("memo", memo);
         Page<Memo> memos = authenticated ? memoService.getMemos(memo.getName(), pageable) : memoService.getPublicMemos(memo.getName(), pageable);
         model.addAttribute("memos", memos);

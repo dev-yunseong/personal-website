@@ -160,6 +160,13 @@ public class MemoService {
                 .orElseThrow(MemoNotFoundException::new);
     }
 
+    @FilterVisibleContent
+    @Transactional(readOnly = true)
+    public Memo getPublicMemo(String name) {
+        return memoRepository.findPublicByName(name)
+                .orElseThrow(MemoNotFoundException::new);
+    }
+
     public void updateMemo(long memoId, String title, String content) {
         Memo memo = getMemoWithoutVisibilityFilter(memoId);
         memo.setName(title);
