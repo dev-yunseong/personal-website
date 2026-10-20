@@ -104,6 +104,37 @@ GET /api/public/memos/<id>/content
 The list endpoint returns metadata only. The content endpoint returns
 `text/markdown; charset=UTF-8`.
 
+## CLI memo drafts
+
+Configure a separate `DRAFT_TOKEN` on the server and export the same value on
+the CLI host. An unset token disables draft intake. This token can only submit
+drafts; publication requires logging into the admin console.
+
+```sh
+export DRAFT_TOKEN=...
+bin/website memo draft notes/my-post article.md
+cat article.md | bin/website memo draft notes/my-post -
+```
+
+The response contains the private draft ID, name, and console review URL.
+The target accepts an optional leading slash; omit it when invoking Git Bash
+from PowerShell to avoid its native argument path conversion.
+Content is stored verbatim at `/private/draft/notes/my-post`; submitting that
+target again replaces its pending draft. Targets must be public memo paths.
+The limit is 100,000 characters, including whitespace.
+
+Open **Admin Console → 메모 초안**, inspect the line diff, then click
+**승인하고 반영**. Approval sends `PUT /admin/console/drafts/{id}/approval`
+and creates or replaces `/notes/my-post`. Existing memo IDs and links survive.
+Publication and removal of the pending draft happen in one database transaction.
+If the target or draft changed since review, approval returns 409; reload the
+review before approving again. Approved drafts disappear from the pending list.
+For very large documents the diff shows full removal/addition to bound memory.
+
+The form-encoded intake endpoint is `POST /api/agent/drafts` with `target` and
+`content` fields and an `X-Draft-Token` header. `WEBSITE_URL` selects the server
+and defaults to `https://yunseong.dev`, as with the read commands.
+
 ## Agent briefings
 
 An external agent publishes daily briefings; the site stores them and shows a

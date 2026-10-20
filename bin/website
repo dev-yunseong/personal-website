@@ -1,5 +1,5 @@
 #!/bin/sh
-# Read public website memos through the stable public API.
+# Read public memos and submit private drafts for console approval.
 
 set -eu
 
@@ -11,9 +11,11 @@ usage() {
 usage:
   website memo list [--updated-after <yyyy-MM-ddTHH:mm:ss>] [--page <n>] [--limit <1-100>]
   website memo read <id>
+  website memo draft <target-path> <markdown-file|->
 
 env:
   WEBSITE_URL  defaults to https://yunseong.dev
+  DRAFT_TOKEN  required for draft submission; never grants publication rights
 EOF
     exit 2
 }
@@ -68,6 +70,19 @@ shift 2
 [ "$resource" = "memo" ] || usage
 
 case "$command" in
+    draft)
+        [ $# -eq 2 ] || usage
+        [ -n "$1" ] || usage
+        [ -n "${DRAFT_TOKEN:-}" ] || { printf 'DRAFT_TOKEN is required\n' >&2; exit 2; }
+        [ "$2" = "-" ] || [ -r "$2" ] || { printf 'Cannot read markdown file\n' >&2; exit 2; }
+        # Git Bash must not translate the memo path into a Windows filesystem path.
+        MSYS2_ARG_CONV_EXCL="${MSYS2_ARG_CONV_EXCL:+$MSYS2_ARG_CONV_EXCL;}target="
+        export MSYS2_ARG_CONV_EXCL
+        request --url "${WEBSITE_URL}/api/agent/drafts" \
+            --header "X-Draft-Token: $DRAFT_TOKEN" \
+            --header 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8' \
+            --data-urlencode "target=$1" --data-urlencode "content@$2"
+        ;;
     list)
         updated_after=""
         page=""

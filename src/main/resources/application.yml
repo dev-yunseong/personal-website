@@ -19,6 +19,8 @@ spring:
       password: ${APPLICATION_PW}
 
 app:
+  draft:
+    token: ${DRAFT_TOKEN:}
   # Local MaxMind GeoLite2 databases. Absent file => geo fields stay null and the
   # datacenter bot signal never fires.
   geoip:

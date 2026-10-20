@@ -1,9 +1,11 @@
 package dev.yunseong.website.blog.repository;
 
 import dev.yunseong.website.blog.domain.Memo;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -13,6 +15,14 @@ import java.util.Optional;
 
 public interface MemoRepository extends JpaRepository<Memo, Long> {
     Optional<Memo> findByName(String name);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT m FROM Memo m WHERE m.id = :id")
+    Optional<Memo> findByIdForUpdate(@Param("id") long id);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT m FROM Memo m WHERE m.name = :name")
+    Optional<Memo> findByNameForUpdate(@Param("name") String name);
 
     @Query(
             value = """
