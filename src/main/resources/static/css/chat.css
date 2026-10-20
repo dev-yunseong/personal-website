@@ -528,14 +528,6 @@
   opacity: 0.5;
 }
 
-.chat-form__note {
-  color: var(--text-tertiary);
-  font-size: var(--fs-meta);
-  line-height: var(--lh-tight);
-  margin: var(--sp-2) 0 0;
-  word-break: keep-all;
-}
-
 /* ------------------------------------------ admin chat-history entry (log) */
 
 .chat-entry {
