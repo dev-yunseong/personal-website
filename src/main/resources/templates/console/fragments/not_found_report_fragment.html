@@ -5,7 +5,7 @@
 <div th:fragment="notFoundReport">
     <div class="card mb-4">
         <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <h5 class="mb-0">404 Report</h5>
+            <h5 class="mb-0">404 Report <button type="button" class="info-help" aria-label="404 Report 도움말" data-help="Request collection covers the public route surface only (/, /public/**, /api/public/**), so scanner-style probes of unrelated paths are largely not recorded. This report therefore reflects 404s on real user paths. Rows marked internal were reached from a link on this site and are ours to fix."><i class="bi bi-info-circle" aria-hidden="true"></i></button></h5>
             <div class="d-flex gap-2 align-items-center flex-wrap">
                 <div class="form-check form-switch mb-0">
                     <input class="form-check-input" type="checkbox" role="switch" id="nf-include-bots">
@@ -18,13 +18,6 @@
             </div>
         </div>
         <div class="card-body">
-            <p class="panel-note mb-4">
-                Request collection covers the public route surface only
-                (<code>/</code>, <code>/public/**</code>, <code>/api/public/**</code>), so scanner-style probes of
-                unrelated paths are largely not recorded. This report therefore reflects 404s on real user paths.
-                Rows marked <span class="tag tag--warn">internal</span> were reached from a link on this
-                site and are ours to fix.
-            </p>
             <div id="nf-content">
                 <div class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>
             </div>

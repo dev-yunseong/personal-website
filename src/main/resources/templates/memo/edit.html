@@ -48,9 +48,8 @@
                             <div id="previewPane" class="border rounded p-3 markdown-body" style="display: none; min-height: 400px;"></div>
                         </div>
                         <div class="mb-3" th:if="${!isProfileMemo}">
-                            <label for="fileUpload" class="form-label">Upload File</label>
+                            <label for="fileUpload" class="form-label">Upload File</label> <button type="button" class="info-help" aria-label="Upload File 도움말" data-help="Upload an image, video, or other file to insert into your memo"><i class="bi bi-info-circle" aria-hidden="true"></i></button>
                             <input type="file" class="form-control" id="fileUpload">
-                            <div class="form-text">Upload an image, video, or other file to insert into your memo</div>
                             <div id="uploadStatus" class="mt-2"></div>
                         </div>
                         <div class="mb-3" th:if="${!isProfileMemo}">
@@ -65,10 +64,9 @@
                         <div class="mb-3" id="gameProjectForm"
                              th:if="${!isProfileMemo}"
                              th:style="${gameProject != null ? 'display: block;' : 'display: none;'}">
-                            <label for="gameUrl" class="form-label">Project URL</label>
+                            <label for="gameUrl" class="form-label">Project URL</label> <button type="button" class="info-help" aria-label="Project URL 도움말" data-help="Enter the URL where the project can be accessed"><i class="bi bi-info-circle" aria-hidden="true"></i></button>
                             <input type="url" class="form-control" id="gameUrl" name="gameUrl" placeholder="https://example.com"
                                    th:value="${gameProject != null ? gameProject.gameUrl : ''}">
-                            <div class="form-text">Enter the URL where the project can be accessed</div>
                         </div>
                         <div class="d-flex justify-content-between align-items-center gap-2">
                             <button type="submit"

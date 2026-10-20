@@ -37,19 +37,16 @@
         <!-- Summary Cards -->
         <div class="stat-grid stat-grid--lead" id="summary-cards">
             <div class="stat">
-                <div class="stat__label">Total Requests</div>
+                <div class="stat__label">Total Requests <button type="button" class="info-help" aria-label="Total Requests 도움말" data-help="수집 대상 요청 수"><i class="bi bi-info-circle" aria-hidden="true"></i></button></div>
                 <div class="stat__value" id="stat-total-requests"><span class="stat__pending">—</span></div>
-                <p class="stat__hint">수집 대상 요청 수</p>
             </div>
             <div class="stat">
-                <div class="stat__label">Unique Pages</div>
+                <div class="stat__label">Unique Pages <button type="button" class="info-help" aria-label="Unique Pages 도움말" data-help="서로 다른 URI"><i class="bi bi-info-circle" aria-hidden="true"></i></button></div>
                 <div class="stat__value" id="stat-unique-uris"><span class="stat__pending">—</span></div>
-                <p class="stat__hint">서로 다른 URI</p>
             </div>
             <div class="stat">
-                <div class="stat__label">Data Points</div>
+                <div class="stat__label">Data Points <button type="button" class="info-help" aria-label="Data Points 도움말" data-help="저장된 집계 행"><i class="bi bi-info-circle" aria-hidden="true"></i></button></div>
                 <div class="stat__value" id="stat-data-points"><span class="stat__pending">—</span></div>
-                <p class="stat__hint">저장된 집계 행</p>
             </div>
         </div>
 
@@ -141,7 +138,7 @@
                 </div>
             </div>
             <div class="card-body">
-                <p class="panel-note mb-3">행을 클릭하면 그 요청의 상세 페이지가 열립니다.</p>
+                <button type="button" class="info-help" aria-label="요청 목록 도움말" data-help="행을 클릭하면 그 요청의 상세 페이지가 열립니다."><i class="bi bi-info-circle" aria-hidden="true"></i></button>
                 <div id="history-content">
                     <div class="text-center py-4"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div></div>
                 </div>
