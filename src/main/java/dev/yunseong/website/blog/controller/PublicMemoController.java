@@ -3,6 +3,7 @@ package dev.yunseong.website.blog.controller;
 import dev.yunseong.website.blog.domain.Memo;
 import dev.yunseong.website.blog.service.CategoryService;
 import dev.yunseong.website.blog.service.MemoService;
+import dev.yunseong.website.blog.service.MemoNotFoundException;
 import dev.yunseong.website.global.util.AuthenticationUtil;
 import dev.yunseong.website.global.util.MetadataUtil;
 import lombok.RequiredArgsConstructor;
@@ -54,15 +55,23 @@ public class PublicMemoController {
         return renderMemo(memo, model, pageable, authenticated);
     }
 
-    @GetMapping("/blog/{*memoName}")
-    public String showMemoByName(
-            @PathVariable String memoName,
+    @GetMapping("/blog/{*path}")
+    public String showMemoByPath(
+            @PathVariable String path,
             Model model,
             Pageable pageable,
             Authentication authentication) {
         boolean authenticated = AuthenticationUtil.isAuthenticated(authentication);
-        Memo memo = authenticated ? memoService.getMemo(memoName) : memoService.getPublicMemo(memoName);
-        return renderMemo(memo, model, pageable, authenticated);
+        if (!authenticated && path.startsWith(Memo.PRIVATE_PREFIX)) {
+            throw new MemoNotFoundException();
+        }
+        if (path.isEmpty() || path.equals("/")) {
+            return blog(model, null, pageable, authentication);
+        }
+        String category = path.endsWith("/") ? path.substring(0, path.length() - 1) : path;
+        return (authenticated ? memoService.findMemo(category) : memoService.findPublicMemo(category))
+                .map(memo -> renderMemo(memo, model, pageable, authenticated))
+                .orElseGet(() -> blog(model, category, pageable, authentication));
     }
 
     private String renderMemo(Memo memo, Model model, Pageable pageable, boolean authenticated) {

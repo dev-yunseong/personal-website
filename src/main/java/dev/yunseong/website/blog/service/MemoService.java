@@ -162,9 +162,8 @@ public class MemoService {
 
     @FilterVisibleContent
     @Transactional(readOnly = true)
-    public Memo getPublicMemo(String name) {
-        return memoRepository.findPublicByName(name)
-                .orElseThrow(MemoNotFoundException::new);
+    public Optional<Memo> findPublicMemo(String name) {
+        return memoRepository.findPublicByName(name);
     }
 
     public void updateMemo(long memoId, String title, String content) {

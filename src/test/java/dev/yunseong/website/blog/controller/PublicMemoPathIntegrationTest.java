@@ -59,7 +59,7 @@ class PublicMemoPathIntegrationTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"/notes/nested/example", "/notes/한글 메모", "/notes/100% complete", "/notes/a+b"})
+    @ValueSource(strings = {"/notes/nested/example", "/notes/한글 메모", "/notes/a+b"})
     void anonymousUserCanReadPublicMemoByExactPath(String name) throws Exception {
         Memo memo = memoRepository.saveAndFlush(new Memo(name, "public memo body"));
 
@@ -93,16 +93,96 @@ class PublicMemoPathIntegrationTest {
     }
 
     @Test
-    void missingMemoReturnsNotFound() throws Exception {
+    void missingMemoFallsBackToEmptyCategory() throws Exception {
         mockMvc.perform(get("/public/blog/notes/missing"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk())
+                .andExpect(view().name("blog"))
+                .andExpect(model().attribute("selectedCategory", "/notes/missing"))
+                .andExpect(model().attribute("memos", hasProperty("totalElements", is(0L))));
     }
 
     @Test
     @WithMockUser
-    void authenticatedMissingMemoReturnsNotFound() throws Exception {
+    void authenticatedMissingMemoFallsBackToEmptyCategory() throws Exception {
         mockMvc.perform(get("/public/blog/private/missing"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk())
+                .andExpect(view().name("blog"))
+                .andExpect(model().attribute("selectedCategory", "/private/missing"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/notes/java", "/notes/java/"})
+    void pathWithoutExactMemoShowsCategory(String path) throws Exception {
+        memoRepository.saveAndFlush(new Memo("/notes/java/first", "category child body"));
+        memoRepository.saveAndFlush(new Memo("/notes/javascript/other", "unrelated body"));
+
+        mockMvc.perform(get("/public/blog{path}", path))
+                .andExpect(status().isOk())
+                .andExpect(view().name("blog"))
+                .andExpect(model().attribute("selectedCategory", "/notes/java"))
+                .andExpect(model().attribute("memos", hasProperty("totalElements", is(1L))));
+    }
+
+    @Test
+    void exactMemoTakesPrecedenceOverCategory() throws Exception {
+        Memo parent = memoRepository.saveAndFlush(new Memo("/notes/java", "parent memo body"));
+        memoRepository.saveAndFlush(new Memo("/notes/java/child", "child memo body"));
+
+        mockMvc.perform(get("/public/blog/notes/java"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("memo/view"))
+                .andExpect(model().attribute("memo", hasProperty("id", is(parent.getId()))));
+    }
+
+    @Test
+    @WithMockUser
+    void authenticatedUserCanBrowsePrivateCategory() throws Exception {
+        memoRepository.saveAndFlush(new Memo("/private/drafts/first", "private category body"));
+
+        mockMvc.perform(get("/public/blog/private/drafts"))
+                .andExpect(status().isOk())
+                .andExpect(view().name("blog"))
+                .andExpect(model().attribute("selectedCategory", "/private/drafts"))
+                .andExpect(model().attribute("memos", hasProperty("totalElements", is(1L))));
+    }
+
+    @Test
+    void anonymousUserCannotBrowsePrivateCategory() throws Exception {
+        memoRepository.saveAndFlush(new Memo("/private/drafts/first", "private category body"));
+
+        mockMvc.perform(get("/public/blog/private/drafts"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string(not(containsString("private category body"))));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/public/blog", "/public/blog/"})
+    void rootPathShowsAllPublicMemos(String path) throws Exception {
+        memoRepository.saveAndFlush(new Memo("/notes/public", "public body"));
+        memoRepository.saveAndFlush(new Memo("/private/secret", "private body"));
+
+        mockMvc.perform(get(path))
+                .andExpect(status().isOk())
+                .andExpect(view().name("blog"))
+                .andExpect(model().attribute("memos", hasProperty("totalElements", is(1L))));
+    }
+
+    @Test
+    void categoryPaginationKeepsTheSelectedPath() throws Exception {
+        memoRepository.saveAndFlush(new Memo("/notes/java/first", "first body"));
+        memoRepository.saveAndFlush(new Memo("/notes/java/second", "second body"));
+
+        mockMvc.perform(get("/public/blog/notes/java").param("page", "1").param("size", "1"))
+                .andExpect(status().isOk())
+                .andExpect(model().attribute("selectedCategory", "/notes/java"))
+                .andExpect(model().attribute("memos", hasProperty("number", is(1))))
+                .andExpect(model().attribute("memos", hasProperty("totalElements", is(2L))));
+    }
+
+    @Test
+    void encodedPercentRemainsRejectedByTheSecurityFirewall() throws Exception {
+        mockMvc.perform(get("/public/blog{name}", "/notes/100% complete"))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
