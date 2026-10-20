@@ -2,12 +2,9 @@ package dev.yunseong.website.blog.repository;
 
 import dev.yunseong.website.blog.domain.Memo;
 import dev.yunseong.website.blog.domain.SitemapMemoDto;
-import dev.yunseong.website.blog.domain.MemoNavigationEntry;
-import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -17,24 +14,6 @@ import java.util.Optional;
 
 public interface MemoRepository extends JpaRepository<Memo, Long> {
     Optional<Memo> findByName(String name);
-
-    @Query("SELECT new dev.yunseong.website.blog.domain.MemoNavigationEntry(m.id, m.name, m.updatedAt, false) "
-            + "FROM Memo m WHERE m.name NOT LIKE '/private%' "
-            + "AND (m.name = :root OR LOCATE(:prefix, m.name) = 1)")
-    List<MemoNavigationEntry> findPublicNavigation(@Param("root") String root, @Param("prefix") String prefix);
-
-    @Query("SELECT new dev.yunseong.website.blog.domain.MemoNavigationEntry(m.id, m.name, m.updatedAt, true) "
-            + "FROM Memo m WHERE LOCATE('/private/draft/', m.name) = 1 "
-            + "AND (m.name = :root OR LOCATE(:prefix, m.name) = 1)")
-    List<MemoNavigationEntry> findDraftNavigation(@Param("root") String root, @Param("prefix") String prefix);
-
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT m FROM Memo m WHERE m.id = :id")
-    Optional<Memo> findByIdForUpdate(@Param("id") long id);
-
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT m FROM Memo m WHERE m.name = :name")
-    Optional<Memo> findByNameForUpdate(@Param("name") String name);
 
     @Query(
             value = """

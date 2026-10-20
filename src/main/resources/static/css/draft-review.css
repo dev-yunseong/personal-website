@@ -1,8 +1,0 @@
-.draft-diff { overflow: auto; border: 1px solid #c8c8c8; border-radius: 4px; }
-.draft-diff table { width: 100%; border-collapse: collapse; font-family: monospace; font-size: .875rem; }
-.draft-diff th { padding: .5rem; text-align: left; }
-.draft-diff td { padding: 0 .5rem; vertical-align: top; }
-.draft-diff td:nth-child(-n+3) { width: 3rem; text-align: right; color: #555; user-select: none; }
-.draft-diff pre { margin: 0; min-height: 1.5em; line-height: 1.5; white-space: pre; color: inherit; }
-.draft-diff .added { background: #e6ffec; color: #164c2a; }
-.draft-diff .removed { background: #ffebe9; color: #78231d; }

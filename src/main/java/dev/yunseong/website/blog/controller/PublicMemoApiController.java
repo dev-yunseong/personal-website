@@ -2,7 +2,6 @@ package dev.yunseong.website.blog.controller;
 
 import dev.yunseong.website.blog.domain.Memo;
 import dev.yunseong.website.blog.service.MemoService;
-import dev.yunseong.website.blog.service.MemoNavigationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -32,25 +31,12 @@ public class PublicMemoApiController {
             new MediaType("text", "markdown", StandardCharsets.UTF_8);
 
     private final MemoService memoService;
-    private final MemoNavigationService navigation;
-
-    @GetMapping(value = "/tree", produces = "text/plain;charset=UTF-8")
-    public String tree(@RequestParam(defaultValue = "/") String path) {
-        return navigation.tree(path, false);
-    }
 
     @GetMapping
     public PublicMemoListResponse list(
-            @RequestParam(required = false) String category,
             @RequestParam(required = false) String updatedAfter,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "100") int limit) {
-        if (category != null) {
-            var result = navigation.list(category, updatedAfter, page, limit, false);
-            return new PublicMemoListResponse(result.items().stream()
-                    .map(entry -> new PublicMemoSummary(entry.id(), entry.name(), entry.updatedAt())).toList(),
-                    page, limit, result.hasNext());
-        }
         LocalDateTime updatedAfterTime = parseUpdatedAfter(updatedAfter);
         if (page < 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "page must be at least 0");
