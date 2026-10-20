@@ -1,19 +1,28 @@
 #!/bin/sh
-# Read public website memos through the stable public API.
+# Read public memos and submit private drafts for console approval.
 
 set -eu
 
 WEBSITE_URL="${WEBSITE_URL:-https://yunseong.dev}"
 MEMO_API="${WEBSITE_URL}/api/public/memos"
+NAV_API="$MEMO_API"
+if [ -n "${DRAFT_TOKEN:-}" ]; then NAV_API="${WEBSITE_URL}/api/agent/drafts/memos"; fi
+# Preserve logical memo paths when Git Bash launches native curl.
+MSYS2_ARG_CONV_EXCL="${MSYS2_ARG_CONV_EXCL:+$MSYS2_ARG_CONV_EXCL;}target=;path=;category="
+export MSYS2_ARG_CONV_EXCL
 
 usage() {
     cat >&2 <<'EOF'
 usage:
-  website memo list [--updated-after <yyyy-MM-ddTHH:mm:ss>] [--page <n>] [--limit <1-100>]
+  website memo tree [path]
+  website memo list [--category <path>] [--updated-after <yyyy-MM-ddTHH:mm:ss>] [--page <n>] [--limit <1-100>]
   website memo read <id>
+  website memo read <id|target-path> --draft
+  website memo draft <target-path> <markdown-file|->
 
 env:
   WEBSITE_URL  defaults to https://yunseong.dev
+  DRAFT_TOKEN  enables draft-aware navigation, draft reads and submission; cannot publish
 EOF
     exit 2
 }
@@ -60,6 +69,14 @@ request() {
     trap - 0 1 2 3 15
 }
 
+navigation_request() {
+    if [ -n "${DRAFT_TOKEN:-}" ]; then
+        request --header "X-Draft-Token: $DRAFT_TOKEN" "$@"
+    else
+        request "$@"
+    fi
+}
+
 [ $# -ge 2 ] || usage
 resource="$1"
 command="$2"
@@ -68,7 +85,26 @@ shift 2
 [ "$resource" = "memo" ] || usage
 
 case "$command" in
+    tree)
+        [ $# -le 1 ] || usage
+        tree_path="${1:-/}"
+        [ $# -eq 0 ] || [ -n "$1" ] || usage
+        tree_api="${MEMO_API}/tree"
+        if [ -n "${DRAFT_TOKEN:-}" ]; then tree_api="${WEBSITE_URL}/api/agent/drafts/tree"; fi
+        navigation_request --url "$tree_api" --get --data-urlencode "path=$tree_path"
+        ;;
+    draft)
+        [ $# -eq 2 ] || usage
+        [ -n "$1" ] || usage
+        [ -n "${DRAFT_TOKEN:-}" ] || { printf 'DRAFT_TOKEN is required\n' >&2; exit 2; }
+        [ "$2" = "-" ] || [ -r "$2" ] || { printf 'Cannot read markdown file\n' >&2; exit 2; }
+        request --url "${WEBSITE_URL}/api/agent/drafts" \
+            --header "X-Draft-Token: $DRAFT_TOKEN" \
+            --header 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8' \
+            --data-urlencode "target=$1" --data-urlencode "content@$2"
+        ;;
     list)
+        category=""
         updated_after=""
         page=""
         limit=""
@@ -78,6 +114,10 @@ case "$command" in
             [ $# -ge 2 ] || usage
             value="$2"
             case "$option" in
+                --category)
+                    [ -z "$category" ] && [ -n "$value" ] || usage
+                    category="$value"
+                    ;;
                 --updated-after)
                     [ -z "$updated_after" ] || usage
                     [ -n "$value" ] || usage
@@ -99,7 +139,10 @@ case "$command" in
             shift 2
         done
 
-        set -- --url "$MEMO_API" --get
+        set -- --url "$NAV_API" --get
+        if [ -n "$category" ]; then
+            set -- "$@" --data-urlencode "category=$category"
+        fi
         if [ -n "$updated_after" ]; then
             set -- "$@" --data-urlencode "updatedAfter=$updated_after"
         fi
@@ -109,9 +152,21 @@ case "$command" in
         if [ -n "$limit" ]; then
             set -- "$@" --data-urlencode "limit=$limit"
         fi
-        request "$@"
+        navigation_request "$@"
         ;;
     read)
+        if [ $# -eq 2 ]; then
+            [ "$2" = "--draft" ] && [ -n "$1" ] || usage
+            [ -n "${DRAFT_TOKEN:-}" ] || { printf 'DRAFT_TOKEN is required\n' >&2; exit 2; }
+            if is_unsigned_integer "$1"; then
+                [ "$1" -gt 0 ] || usage
+                selector="memoId=$1"
+            else
+                selector="target=$1"
+            fi
+            navigation_request --url "${WEBSITE_URL}/api/agent/drafts/content" --get --data-urlencode "$selector"
+            exit
+        fi
         [ $# -eq 1 ] || usage
         is_unsigned_integer "$1" || usage
         [ "$1" -gt 0 ] || usage
