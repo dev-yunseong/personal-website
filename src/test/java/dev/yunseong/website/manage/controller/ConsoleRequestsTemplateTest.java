@@ -98,10 +98,12 @@ class ConsoleRequestsTemplateTest {
     }
 
     @Test
-    void requestsPage_WithNoFilters_SaysSoInsteadOfShowingAnEmptyFilterLine() {
+    void requestsPage_WithNoFilters_ShowsFilterHelpInsteadOfAnEmptyFilterLine() {
         String html = templateEngine.process("console/requests", context(List.of()));
 
-        assertTrue(html.contains("필터 없이"));
+        assertTrue(html.contains("<button type=\"button\" class=\"info-help\""));
+        assertTrue(html.contains("aria-label=\"요청 필터 도움말\""));
+        assertTrue(html.contains("data-help=\"콘솔의 집계 행을 클릭하면 해당 값으로 필터링한 요청 목록을 볼 수 있습니다.\""));
         assertFalse(html.contains("활성 필터"));
     }
 
@@ -115,7 +117,7 @@ class ConsoleRequestsTemplateTest {
         assertTrue(html.contains(">URI<"));
         assertTrue(html.contains(">/public/memos<"));
         assertTrue(html.contains("href=\"/admin/console/requests?days=7\""));
-        assertFalse(html.contains("필터 없이"));
+        assertFalse(html.contains("aria-label=\"요청 필터 도움말\""));
     }
 
     @Test

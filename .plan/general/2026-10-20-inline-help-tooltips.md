@@ -22,6 +22,7 @@
 - [x] **Step 3: Rollout / Rollback** Ship static assets/templates together; revert these changes to roll back. Not deployed.
 
 ## Validation
+- CI follow-up: update two legacy template assertions to verify tooltip guidance and conditional filter help; rerun the full suite in GitHub Actions.
 - **Commands to run:** Gradle Wrapper test; node --check.
 - **Expected output:** Tests pass; scripts parse; supplementary text appears on hover/focus.
 
