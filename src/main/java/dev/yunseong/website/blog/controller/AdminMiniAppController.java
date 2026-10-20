@@ -1,6 +1,5 @@
 package dev.yunseong.website.blog.controller;
 
-import dev.yunseong.website.blog.domain.MiniApp;
 import dev.yunseong.website.blog.service.MiniAppService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
