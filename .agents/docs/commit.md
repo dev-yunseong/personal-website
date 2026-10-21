@@ -31,3 +31,10 @@ consistent with nearby history.
 - Explain non-obvious motivation or tradeoffs in the body.
 - Do not mix unrelated behavior, formatting, and refactoring.
 - Do not commit secrets, generated noise, or local-only configuration.
+
+## Writing Style
+
+Follow [writing-style.md](writing-style.md) when adding or editing text covered
+by this document. Its wording and title rules supersede older tone examples;
+preserve project-specific workflows, templates, terminology, and localization.
+For UI copy, retain the sentence forms defined in this document.

@@ -45,7 +45,7 @@ user's session credentials before asking them to re-authenticate.
 
 ## Communication
 
-Use the caveman skill. For technical responses, explain why first, then code.
+Use natural, complete sentences. For technical responses, lead with the result and explain why it matters.
 Include relevant tradeoffs and preserve existing architecture. Avoid large code
 dumps, unrelated refactors, unnecessary renaming, and pattern-first design.
 
@@ -116,3 +116,18 @@ depends on `GITHUB_USERNAME` and `GITHUB_TOKEN`.
 Optimize for long-term maintainability, developer clarity, scalable
 architecture, and real-world operation—not temporary hacks or visually
 impressive complexity.
+
+## Code Review Rules
+
+- Write all code review titles, descriptions, comments, and summaries in Korean.
+- Preserve code identifiers, file paths, commands, error messages, and technical terms in their original form.
+- For each finding, concisely explain the cause, impact, and suggested fix.
+
+## Writing Style
+
+Follow [`.agents/docs/writing-style.md`](.agents/docs/writing-style.md) for chat
+replies, reviews, plans, handoffs, issues, commit titles and bodies, pull
+requests, release notes, source comments, and all frontend copy (including
+localization, errors, labels, and accessibility text).
+Its wording and title rules take precedence over older style examples;
+preserve project-specific technical constraints and workflows.
