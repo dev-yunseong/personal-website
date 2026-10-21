@@ -45,3 +45,10 @@ section. Fill known context; leave unresolved items in Open Questions.
 ## Return
 
 Report clickable file path, 3–5 goal bullets, and open questions.
+
+## Project Writing Style
+
+Before writing the result, follow [writing-style.md](../../docs/writing-style.md).
+Use its natural Korean prose and concrete-title rules while preserving required
+templates, paths, metadata, and machine-readable verdicts. Pass the same rules
+to any reviewer subagents invoked by this skill.
