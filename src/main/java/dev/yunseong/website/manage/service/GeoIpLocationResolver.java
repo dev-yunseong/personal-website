@@ -21,8 +21,8 @@ import java.util.regex.Pattern;
  * so a spoofed {@code X-Forwarded-For} hostname can not trigger a DNS lookup on
  * the request path.
  *
- * <p>When the database is absent — test runtime, developer machines, an image
- * built without a MaxMind licence key — every lookup returns {@code null} and
+ * <p>When the database is absent — test runtime, developer machines, a
+ * container started without the GeoLite2 volume — every lookup returns {@code null} and
  * the rest of the application behaves unchanged.
  */
 @Slf4j

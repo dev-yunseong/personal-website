@@ -20,8 +20,8 @@ import java.net.InetAddress;
  * that is not an IP literal rejected before {@code InetAddress} so a spoofed
  * header cannot trigger a DNS lookup.
  *
- * <p>When the database is absent — test runtime, developer machines, an image
- * built without a MaxMind licence key — every lookup returns {@code null} and
+ * <p>When the database is absent — test runtime, developer machines, a
+ * container started without the GeoLite2 volume — every lookup returns {@code null} and
  * the datacenter signal simply never fires. Bot classification keeps working on
  * headers alone.
  */
