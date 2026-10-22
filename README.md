@@ -56,6 +56,27 @@ Flyway applies the migrations in `src/main/resources/db/migration` on first
 start. The app listens on `http://localhost:8080`; sign in with
 `APPLICATION_USER` / `APPLICATION_PW`.
 
+## GeoLite2 databases
+
+Request statistics read two local MaxMind databases: GeoLite2 City for country
+and city, and GeoLite2 ASN for the datacenter bot signal. The image does not
+contain them. It is published publicly to `ghcr.io`, and the GeoLite2 EULA
+forbids redistributing the databases and requires deleting a copy within 30
+days of an update, which an immutable image tag cannot do.
+
+Download both files with your own MaxMind account (or keep them current with
+MaxMind's `geoipupdate`) and mount the directory into the container:
+
+```sh
+docker run -v /maxmind:/app/geoip:ro ... ghcr.io/dev-yunseong/personal-website
+```
+
+The default paths are `/app/geoip/GeoLite2-City.mmdb` and
+`/app/geoip/GeoLite2-ASN.mmdb`. Set `GEOIP_DATABASE_PATH` and
+`GEOIP_ASN_DATABASE_PATH` to read them from elsewhere. A missing file is not an
+error: geo fields stay null, the datacenter signal stays off, and the startup
+log says which path it looked at.
+
 ## Public memo automation
 
 `bin/website` exposes public memos to scheduled tools without scraping rendered

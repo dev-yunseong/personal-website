@@ -80,4 +80,3 @@ jobs:
           secrets: |
             GITHUB_USERNAME=${{ github.actor }}
             GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
-            MAXMIND_LICENCE_KEY=${{ secrets.MAXMIND_LICENCE_KEY }}
