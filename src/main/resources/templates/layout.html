@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
 <head>
     <meta charset="UTF-8">
@@ -40,17 +40,24 @@
     <link rel="stylesheet" th:href="@{/css/tokens.css}">
     <link rel="stylesheet" th:href="@{/css/site.css}">
     <link rel="stylesheet" th:href="@{/css/info-help.css}">
+    <link th:if="${adminSection != null}" rel="stylesheet" th:href="@{/css/admin.css}">
+    <meta th:if="${adminSection != null}" name="robots" content="noindex, nofollow">
     <th:block layout:fragment="css"></th:block>
     <th:block layout:fragment="script"></th:block>
 </head>
-<body>
-    <div th:replace="~{fragments/header :: header}"></div>
+<body th:class="${adminSection != null ? 'admin-page' : null}">
+    <th:block th:if="${adminSection == null}"><div th:replace="~{fragments/header :: header}"></div></th:block>
+    <th:block th:if="${adminSection != null}"><div th:replace="~{fragments/admin_navigation :: header}"></div></th:block>
+    <a class="visually-hidden-focusable" href="#main-content">본문으로 건너뛰기</a>
+    <div th:class="${adminSection != null ? 'admin-shell' : null}">
+    <th:block th:if="${adminSection != null}"><div th:replace="~{fragments/admin_navigation :: sidebar}"></div></th:block>
 
-    <main class="site-main container">
+    <main id="main-content" th:class="${adminSection != null ? 'admin-main' : 'site-main container'}">
         <th:block layout:fragment="content"></th:block>
     </main>
 
-    <div th:replace="~{fragments/footer :: footer}"></div>
+    </div>
+    <th:block th:if="${adminSection == null}"><div th:replace="~{fragments/footer :: footer}"></div></th:block>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script th:src="@{/js/info-help.js}"></script>

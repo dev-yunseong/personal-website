@@ -272,3 +272,79 @@ curl "$BRIEFING_URL/api/agent/briefings/news/2026-08-12" \
 Tests run against in-memory H2 and need no infrastructure, but they still
 need the GitHub Packages credentials from step 1 to resolve the build
 classpath.
+
+### 관리자 로그인 유지와 프로젝트 console
+
+`/admin`과 직접 로그인한 사용자는 `/admin/console`로 이동합니다. 비공개
+페이지에서 로그인 요청을 받았다면 원래 페이지로 돌아갑니다. `/login`에서
+로그인 유지를 선택하면 기존 browser session과 Spring Security의 database
+기반 remember-me token으로 30일 동안 로그인할 수 있습니다. 별도의 JWT
+access/refresh protocol은 추가하지 않았습니다.
+
+로그아웃하면 다른 기기의 remember-me token을 포함해 해당 사용자의 저장된
+로그인 token을 폐기합니다. 다른 기기의 기존 session까지 종료하지는 않습니다.
+Cookie에는 HttpOnly와 SameSite=Lax를 적용하고 HTTPS 요청에는 Secure도
+적용합니다. 운영 환경에서는 HTTPS forwarding 설정을 유지하세요.
+`APPLICATION_PW`를 변경할 때에는 `DELETE FROM persistent_logins`도 실행해
+기존 로그인 유지 token을 폐기해야 합니다. 비밀번호 변경만으로는 폐기되지 않습니다.
+새 application을 실행하기 전에 Flyway migration V6를 적용하세요.
+
+관리자 메뉴에서 프로젝트, 사이트 운영, 대화 기록, 콘텐츠 관리로 이동할 수
+있습니다. 기존 통계는 `/admin/console/traffic`으로 이동했으며 `tab` parameter가
+있는 이전 console 주소도 통계를 표시합니다. 프로젝트 보고서는 관리자만
+볼 수 있습니다. 등록된 프로젝트만 표시하며 repository를 자동 탐색하지 않습니다.
+
+Agent는 기존 command-line interface로 최신 보고서와 위젯 구성을 전송합니다.
+
+```sh
+# BRIEFING_TOKEN은 서버 설정과 같아야 합니다. 개인 환경변수로 관리하세요.
+WEBSITE_URL=https://yunseong.dev bin/website project report personal-website docs/examples/project-report.json
+# 표준 입력도 지원합니다.
+cat docs/examples/project-report.json | bin/website project report personal-website -
+```
+
+HTTP endpoint는 `PUT /api/agent/projects/{project-id}`이며 `Content-Type:
+application/json`과 `X-Briefing-Token` header가 필요합니다. 저장하면 204와
+`Location` header로 비공개 프로젝트 주소를 반환합니다. 기존 `BRIEFING_TOKEN`은
+briefing과 프로젝트 보고서 작성 권한을 모두 가집니다. 관리자 페이지 로그인
+권한은 없습니다. Agent host가 침해되면 해당 token을 교체하세요.
+
+[보고서 예시](docs/examples/project-report.json)의 형식을 사용하세요.
+
+- 프로젝트 식별자: 소문자, 숫자, 하이픈으로 1~64자. 첫 글자는 소문자 또는 숫자.
+- 필수 필드: `name` 100자, `agent` 100자, `summary` 2000자, `status`,
+  `staleAfterMinutes` 5~10080, `widgets` 0~12개. 배열 순서대로 위젯을 표시합니다.
+- `status`: `RUNNING`, `BLOCKED`, `COMPLETED`, `IDLE`.
+- `METRIC`: `title`, `value`. `TABLE`: `title`, `columns`, `rows`.
+  `LINE`: `title`, `points`. 각 point에는 `label`과 숫자 `value`가 필요합니다.
+- 제목, metric 값, 열 이름, point label은 각각 100자 이하입니다. 표는 1~8열,
+  최대 100행이며 각 셀은 비어 있지 않은 500자 이하 문자열입니다. 그래프는
+  1~100개 point이며 유한한 숫자와 최대 절댓값 1e12를 허용합니다.
+- 보고서 전체 크기는 64 KiB 이하입니다.
+
+같은 식별자로 전송하면 이전 보고서를 교체하므로 프로젝트별 보고 담당 agent를
+하나로 정하세요. 서버 수신 시각을 한국 표준시로 표시하며 `staleAfterMinutes`가
+지나면 agent가 보고한 상태와 별도로 갱신 지연을 표시합니다. 그래프 이력은
+agent가 보고서에 포함합니다. 보고서 archive, 임의 HTML/JavaScript 실행,
+agent polling, 지시 전달 기능은 이번 범위에 포함하지 않습니다.
+
+`bin/website skills install`은 `website-project-report` skill을 현재 작업
+디렉터리의 `.agents/skills`에 설치합니다. 다른 위치를 지정하려면 경로를
+인자로 전달하세요. 예를 들어 `bin/website skills install .claude/skills`는
+`.claude/skills/website-project-report`에 설치합니다. 설치한 뒤에는 해당
+skill의 `SKILL.md` 지침에 따라 `scripts/website`를 호출할 수 있습니다.
+다른 프로젝트에서는 설치된 `scripts/website`의 절대 경로로 실행하세요.
+기존 설치 경로가 있으면 다시 설치하지 않으며, 기존 파일을 덮어쓰지 않습니다.
+설치 명령은 network 요청을 하지 않고 global 설정도 변경하지 않습니다.
+설치 단계에는 인증 token이 필요하지 않으며 `.env`나 인증 정보도 복사하지 않습니다.
+
+다른 프로젝트에 처음 설치할 때에는 그 프로젝트에서 원본 명령의 절대 경로로
+실행하세요.
+
+```sh
+cd /path/to/your-project
+/path/to/personal-website/bin/website skills install
+```
+
+설치한 뒤 agent에게 `website-project-report` skill을 사용해 프로젝트 상태를
+보고하도록 요청할 수 있습니다. 전송할 때에는 `BRIEFING_TOKEN`이 필요합니다.

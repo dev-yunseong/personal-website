@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head><title th:text="${project.content.name} + ' · Console'">프로젝트 · Console</title></head>
+<body><div layout:fragment="content">
+    <a href="/admin/console" class="admin-text-link">← 프로젝트 개요</a>
+    <header class="workspace-heading project-detail-heading">
+        <div><h1 th:text="${project.content.name}"></h1><p class="project-summary" th:text="${project.content.summary}"></p></div>
+        <span class="project-status" th:attr="data-status=${project.content.status}" th:text="${project.content.status.label}"></span>
+    </header>
+    <div class="project-detail-meta"><span th:text="${project.content.agent}"></span><span>마지막 보고 <time th:datetime="${project.updatedAt}" th:text="${#temporals.format(project.updatedAt.atZone(T(java.time.ZoneId).of('Asia/Seoul')), 'yyyy-MM-dd HH:mm')} + ' KST'"></time></span></div>
+    <p th:if="${project.stale}" class="project-stale-notice" role="status">갱신이 지연되고 있습니다. 위 상태는 마지막 보고 당시의 상태입니다.</p>
+    <div class="widget-grid" th:unless="${project.content.widgets.empty}">
+        <section class="project-widget" th:each="widget, loop : ${project.content.widgets}" th:classappend="${widget.type.name() != 'METRIC' ? 'project-widget-wide' : ''}" th:attr="aria-labelledby='widget-title-' + ${loop.index}">
+            <h2 th:id="'widget-title-' + ${loop.index}" th:text="${widget.title}"></h2>
+            <p class="widget-metric" th:if="${widget.type.name() == 'METRIC'}" th:text="${widget.value}"></p>
+            <div class="table-responsive" th:if="${widget.type.name() == 'TABLE'}">
+                <table class="table widget-table"><caption class="visually-hidden" th:text="${widget.title}"></caption><thead><tr><th scope="col" th:each="column : ${widget.columns}" th:text="${column}"></th></tr></thead><tbody><tr th:each="row : ${widget.rows}"><td th:each="cell : ${row}" th:text="${cell}"></td></tr></tbody></table>
+                <p class="admin-muted" th:if="${widget.rows.empty}">등록된 항목이 없습니다.</p>
+            </div>
+            <div th:if="${widget.type.name() == 'LINE'}" data-project-chart>
+                <svg class="project-chart" viewBox="0 0 600 200" role="img" th:attr="aria-label=${widget.title}" hidden></svg>
+                <details open><summary>그래프 데이터</summary><div class="table-responsive"><table class="table widget-table"><thead><tr><th scope="col">시점</th><th scope="col">값</th></tr></thead><tbody><tr th:each="point : ${widget.points}"><th scope="row" th:text="${point.label}"></th><td th:text="${point.value}"></td></tr></tbody></table></div></details>
+            </div>
+        </section>
+    </div>
+    <p class="workspace-empty" th:if="${project.content.widgets.empty}">이 보고서에는 위젯이 없습니다.</p>
+    <script defer th:src="@{/js/project-console.js}"></script>
+</div></body>
+</html>

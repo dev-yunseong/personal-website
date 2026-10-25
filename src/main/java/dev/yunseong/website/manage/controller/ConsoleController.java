@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 @RequiredArgsConstructor
 public class ConsoleController {
 
-    @GetMapping
+    @GetMapping("/traffic")
     public String console(Model model,
                           @RequestParam(defaultValue = "7") int days,
                           @RequestParam(defaultValue = "0") int page,
@@ -24,6 +24,8 @@ public class ConsoleController {
                           @RequestParam(defaultValue = "uri") String topGroupBy,
                           @RequestParam(defaultValue = "") String timelineStatusFilter,
                           @RequestParam(defaultValue = "day") String timelineResolution) {
+        model.addAttribute("adminSection", "traffic");
+        model.addAttribute("pageTitle", "사이트 운영 · Console");
         model.addAttribute("days", days);
         model.addAttribute("page", page);
         model.addAttribute("topPage", topPage);

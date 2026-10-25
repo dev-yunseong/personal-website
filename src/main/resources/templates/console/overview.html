@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head><title>프로젝트 개요 · Console</title></head>
+<body><div layout:fragment="content">
+    <header class="workspace-heading">
+        <div><h1>프로젝트 개요</h1></div>
+        <a class="admin-text-link" href="/admin/console">새로고침 ↻</a>
+    </header>
+    <div class="workspace-stats" role="group" aria-label="프로젝트 요약">
+        <div><span>등록된 프로젝트</span><strong th:text="${projects.size()}">0</strong></div>
+        <div><span>확인 필요</span><strong th:text="${blockedCount}">0</strong></div>
+        <div><span>갱신 지연</span><strong th:text="${staleCount}">0</strong></div>
+    </div>
+    <section id="projects" aria-labelledby="projects-title">
+        <div class="workspace-section-heading"><h2 id="projects-title">프로젝트</h2><span class="admin-muted">최근 보고순</span></div>
+        <div class="workspace-empty" th:if="${projects.empty}">
+            <p>등록된 프로젝트가 없습니다.</p>
+        </div>
+        <div class="project-list" th:unless="${projects.empty}">
+            <a class="project-row" th:each="project : ${projects}" th:href="@{/admin/console/projects/{slug}(slug=${project.slug})}">
+                <div class="project-row-heading"><h3 th:text="${project.content.name}"></h3><span class="project-status" th:attr="data-status=${project.content.status}" th:text="${project.content.status.label}"></span><span th:if="${project.stale}" class="project-stale">갱신 지연</span></div>
+                <p class="project-summary" th:text="${project.content.summary}"></p>
+                <div class="project-meta"><span th:text="${project.content.agent}"></span><span>마지막 보고 <time th:datetime="${project.updatedAt}" th:text="${#temporals.format(project.updatedAt.atZone(T(java.time.ZoneId).of('Asia/Seoul')), 'yyyy-MM-dd HH:mm')} + ' KST'"></time></span><span class="project-open" aria-hidden="true">상세 보기 ↗</span></div>
+            </a>
+        </div>
+    </section>
+</div></body>
+</html>
