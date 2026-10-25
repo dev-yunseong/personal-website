@@ -4,7 +4,7 @@
 <body><div layout:fragment="content">
     <a href="/admin/console" class="admin-text-link">← 프로젝트 개요</a>
     <header class="workspace-heading project-detail-heading">
-        <div><p class="admin-eyebrow" th:text="'PROJECT / ' + ${project.slug}"></p><h1 th:text="${project.content.name}"></h1><p class="project-summary" th:text="${project.content.summary}"></p></div>
+        <div><h1 th:text="${project.content.name}"></h1><p class="project-summary" th:text="${project.content.summary}"></p></div>
         <span class="project-status" th:attr="data-status=${project.content.status}" th:text="${project.content.status.label}"></span>
     </header>
     <div class="project-detail-meta"><span th:text="${project.content.agent}"></span><span>마지막 보고 <time th:datetime="${project.updatedAt}" th:text="${#temporals.format(project.updatedAt.atZone(T(java.time.ZoneId).of('Asia/Seoul')), 'yyyy-MM-dd HH:mm')} + ' KST'"></time></span></div>

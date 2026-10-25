@@ -61,7 +61,7 @@ class ConsoleIntegrationTest {
     void loginPageIsCustomAndIncludesCsrfAndOptIn() throws Exception {
         mvc.perform(get("/login"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("Console로 계속하기")))
+                .andExpect(content().string(containsString("로그인")))
                 .andExpect(content().string(containsString("name=\"_csrf\"")))
                 .andExpect(content().string(containsString("name=\"remember-me\"")))
                 .andExpect(content().string(not(containsString("Please sign in"))));
@@ -139,7 +139,7 @@ class ConsoleIntegrationTest {
     @Test
     void consoleUsesAdminNavigationAndKeepsTrafficAndOldBookmarks() throws Exception {
         mvc.perform(get("/admin/console").with(user("admin")))
-                .andExpect(status().isOk()).andExpect(content().string(containsString("첫 프로젝트를 연결하세요.")))
+                .andExpect(status().isOk()).andExpect(content().string(containsString("등록된 프로젝트가 없습니다.")))
                 .andExpect(content().string(containsString("aria-label=\"관리자 메뉴\"")));
         mvc.perform(get("/admin/console/traffic").with(user("admin")))
                 .andExpect(status().isOk()).andExpect(content().string(containsString("id=\"consoleTabs\"")));
