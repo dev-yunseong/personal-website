@@ -4,7 +4,7 @@
       layout:decorate="~{layout}">
 
 <head>
-    <title>Admin Console</title>
+    <title>사이트 운영 · Console</title>
     <th:block layout:fragment="css">
         <link rel="stylesheet"
               href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -19,7 +19,7 @@
 <th:block layout:fragment="content">
     <div class="container console mt-4">
         <div class="console-head">
-            <h1>Admin Console</h1>
+            <h1>사이트 운영</h1>
             <a th:href="@{/admin/console/drafts}" class="btn btn-sm btn-outline-secondary">메모 초안</a>
             <a th:href="@{/admin/chat}" class="btn btn-sm btn-outline-secondary">Chat History</a>
         </div>
@@ -239,7 +239,7 @@
             p.set('topGroupBy',          STATE.topGroupBy);
             p.set('timelineStatusFilter', STATE.timelineStatusFilter);
             p.set('timelineResolution',  STATE.timelineResolution);
-            history.replaceState(null, '', '/admin/console?' + p.toString());
+            history.replaceState(null, '', '/admin/console/traffic?' + p.toString());
         }
 
         function setActive(selector, dataAttr, value) {

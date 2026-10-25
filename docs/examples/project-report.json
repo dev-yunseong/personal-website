@@ -1,0 +1,20 @@
+{
+  "name": "Personal website",
+  "agent": "codex",
+  "status": "RUNNING",
+  "summary": "관리자 console 개편 중. 인증 검증 후 화면 확인 예정.",
+  "staleAfterMinutes": 120,
+  "widgets": [
+    {"type": "METRIC", "title": "완료한 작업", "value": "3 / 5"},
+    {"type": "METRIC", "title": "테스트", "value": "통과"},
+    {"type": "LINE", "title": "완료한 작업 추이", "points": [
+      {"label": "10/23", "value": 1},
+      {"label": "10/24", "value": 2},
+      {"label": "10/25", "value": 3}
+    ]},
+    {"type": "TABLE", "title": "진행상황", "columns": ["작업", "상태"], "rows": [
+      ["로그인 유지", "검증 중"],
+      ["Console 레이아웃", "진행 중"]
+    ]}
+  ]
+}

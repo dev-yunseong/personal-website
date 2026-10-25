@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<header th:fragment="header" class="admin-topbar">
+    <a class="admin-brand" href="/admin/console">Yunseong <span>/ CONSOLE</span></a>
+    <div class="admin-topbar-actions">
+        <a href="/">공개 사이트 ↗</a>
+        <form th:action="@{/logout}" method="post"><button type="submit">로그아웃</button></form>
+    </div>
+</header>
+<aside th:fragment="sidebar" class="admin-sidebar">
+    <nav aria-label="관리자 메뉴">
+        <p class="admin-nav-label">WORKSPACE</p>
+        <a href="/admin/console" th:attr="aria-current=${adminSection == 'overview' ? 'page' : null}"><span aria-hidden="true">01</span> 프로젝트 개요</a>
+        <a href="/admin/console/traffic" th:attr="aria-current=${adminSection == 'traffic' ? 'page' : null}"><span aria-hidden="true">02</span> 사이트 운영</a>
+        <a href="/admin/chat" th:attr="aria-current=${adminSection == 'chat' ? 'page' : null}"><span aria-hidden="true">03</span> 대화 기록</a>
+        <p class="admin-nav-label">PUBLISHING</p>
+        <a href="/admin/memos/new" th:attr="aria-current=${adminSection == 'memo' ? 'page' : null}">글 작성</a>
+        <a href="/admin/console/drafts" th:attr="aria-current=${adminSection == 'drafts' ? 'page' : null}">초안 검토</a>
+        <a href="/admin/miniapps" th:attr="aria-current=${adminSection == 'apps' ? 'page' : null}">미니앱 관리</a>
+    </nav>
+    <p class="admin-sidebar-note">내 작업의 현재 상태.<br>보고 시각을 함께 확인하세요.</p>
+</aside>
+</html>

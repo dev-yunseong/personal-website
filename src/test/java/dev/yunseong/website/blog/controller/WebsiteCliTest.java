@@ -175,7 +175,9 @@ class WebsiteCliTest {
         ProcessBuilder processBuilder = new ProcessBuilder(command);
         processBuilder.environment().put("WEBSITE_URL", baseUrl);
         processBuilder.environment().remove("DRAFT_TOKEN");
+        processBuilder.environment().remove("BRIEFING_TOKEN");
         if (withToken) {
+            processBuilder.environment().put("BRIEFING_TOKEN", "test-briefing-token");
             processBuilder.environment().put("DRAFT_TOKEN", "test-draft-token");
         }
         Process process = processBuilder.start();
@@ -242,6 +244,37 @@ class WebsiteCliTest {
         assertThat(runCli("memo", "read", "notes/new", "--draft").exitCode()).isZero();
         assertThat(query.get()).containsExactly(Map.entry("target", "notes/new"));
         assertThat(runCliConfigured(websiteUrl, null, false, "memo", "read", "42", "--draft").exitCode()).isEqualTo(2);
+    }
+
+    @Test
+    void projectReportPreservesJsonAndUsesMachineToken() throws Exception {
+        byte[] body = "{\"name\":\"한글 프로젝트\"}\n".getBytes(StandardCharsets.UTF_8);
+        AtomicReference<byte[]> received = new AtomicReference<>();
+        AtomicReference<String> token = new AtomicReference<>();
+        AtomicReference<String> method = new AtomicReference<>();
+        server.createContext("/api/agent/projects/website", exchange -> {
+            received.set(exchange.getRequestBody().readAllBytes());
+            token.set(exchange.getRequestHeaders().getFirst("X-Briefing-Token"));
+            method.set(exchange.getRequestMethod());
+            exchange.sendResponseHeaders(204, -1);
+            exchange.close();
+        });
+        Path file = Files.createTempFile("report", ".json");
+        try {
+            Files.write(file, body);
+            for (String source : new String[]{file.toString(), "-"}) {
+                CliResult result = runCliConfigured(websiteUrl, body, true, "project", "report", "website", source);
+                assertThat(result.exitCode()).isZero();
+                assertThat(result.stderr()).isEmpty();
+                assertThat(received.get()).isEqualTo(body);
+                assertThat(token.get()).isEqualTo("test-briefing-token");
+                assertThat(method.get()).isEqualTo("PUT");
+            }
+            assertThat(runCliConfigured(websiteUrl, null, false, "project", "report", "website", file.toString()).exitCode()).isEqualTo(2);
+            assertThat(runCliConfigured(websiteUrl, null, true, "project", "report", "../other", file.toString()).exitCode()).isEqualTo(2);
+        } finally {
+            Files.deleteIfExists(file);
+        }
     }
 
     private static Map<String, String> parseQuery(HttpExchange exchange) {

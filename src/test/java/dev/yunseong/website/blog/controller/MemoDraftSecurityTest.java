@@ -88,6 +88,18 @@ class MemoDraftSecurityTest {
     @Import({WebSecurityConfig.class, AgentApiSecurityConfig.class, DraftApiSecurityConfig.class,
             AgentMemoDraftController.class, ConsoleDraftController.class})
     static class Config {
+        @org.springframework.context.annotation.Bean
+        org.springframework.security.core.userdetails.UserDetailsService users() {
+            return new org.springframework.security.provisioning.InMemoryUserDetailsManager(
+                    org.springframework.security.core.userdetails.User.withUsername("admin")
+                            .password("{noop}admin").roles("USER").build());
+        }
+
+        @org.springframework.context.annotation.Bean
+        org.springframework.security.web.authentication.rememberme.PersistentTokenRepository loginTokens() {
+            return org.mockito.Mockito.mock(org.springframework.security.web.authentication.rememberme.PersistentTokenRepository.class);
+        }
+
         @Bean MemoDraftService drafts() { return mock(MemoDraftService.class); }
         @Bean MemoNavigationService navigation() { return mock(MemoNavigationService.class); }
     }

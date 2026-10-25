@@ -1,11 +1,15 @@
 package dev.yunseong.website.global.config;
 
+import dev.yunseong.website.global.service.PersistentLoginService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
-import static org.springframework.security.config.Customizer.withDefaults;
+import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
+import org.springframework.security.core.userdetails.UserDetailsService;
+
+import java.util.UUID;
 
 @Configuration
 @EnableWebSecurity
@@ -37,13 +41,21 @@ public class WebSecurityConfig {
     };
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, PersistentTokenRepository loginTokens,
+                                                   UserDetailsService users) throws Exception {
+        PersistentLoginService persistentLogin = new PersistentLoginService(UUID.randomUUID().toString(), users, loginTokens);
         http
                 .authorizeHttpRequests((requests) -> requests
                         .requestMatchers(PUBLIC_PATHS).permitAll()
                         .anyRequest().authenticated()
                 )
-                .formLogin(withDefaults())
+                .formLogin(form -> form
+                        .loginPage("/login")
+                        .defaultSuccessUrl("/admin/console")
+                        .permitAll())
+                .rememberMe(remember -> remember
+                        .rememberMeServices(persistentLogin)
+                        .key(persistentLogin.getKey()))
                 .logout(logout -> logout
                         .logoutSuccessUrl("/")
                         .permitAll());

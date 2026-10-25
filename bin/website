@@ -19,9 +19,11 @@ usage:
   website memo read <id>
   website memo read <id|target-path> --draft
   website memo draft <target-path> <markdown-file|->
+  website project report <project-id> <json-file|->
 
 env:
   WEBSITE_URL  defaults to https://yunseong.dev
+  BRIEFING_TOKEN  authorizes private project reports (same token as briefing intake)
   DRAFT_TOKEN  enables draft-aware navigation, draft reads and submission; cannot publish
 EOF
     exit 2
@@ -81,6 +83,21 @@ navigation_request() {
 resource="$1"
 command="$2"
 shift 2
+
+if [ "$resource" = "project" ]; then
+    [ "$command" = "report" ] && [ $# -eq 2 ] || usage
+    project_id="$1"
+    case "$project_id" in
+        ''|*[!a-z0-9-]*|-*) printf 'Invalid project ID\n' >&2; exit 2 ;;
+    esac
+    [ "${#project_id}" -le 64 ] || usage
+    [ -n "${BRIEFING_TOKEN:-}" ] || { printf 'BRIEFING_TOKEN is required\n' >&2; exit 2; }
+    [ "$2" = "-" ] || [ -r "$2" ] || { printf 'Cannot read report file\n' >&2; exit 2; }
+    request --url "${WEBSITE_URL}/api/agent/projects/$project_id" \
+        --request PUT --header "X-Briefing-Token: $BRIEFING_TOKEN" \
+        --header 'Content-Type: application/json' --data-binary "@$2"
+    exit 0
+fi
 
 [ "$resource" = "memo" ] || usage
 

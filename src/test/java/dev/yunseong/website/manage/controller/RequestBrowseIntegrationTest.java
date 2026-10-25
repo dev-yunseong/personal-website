@@ -68,7 +68,7 @@ class RequestBrowseIntegrationTest {
 
     @Test
     @WithMockUser
-    void requestList_RendersThroughTheSiteLayout() throws Exception {
+    void requestList_RendersThroughTheAdminLayout() throws Exception {
         mockMvc.perform(get("/admin/console/requests").param("uri", "/public/memos"))
                 .andExpect(status().isOk())
                 .andExpect(view().name("console/requests"))
@@ -76,7 +76,7 @@ class RequestBrowseIntegrationTest {
                 .andExpect(content().string(containsString("/public/memos")))
                 // Decorated by layout.html, so the site chrome is present.
                 .andExpect(content().string(containsString("<!DOCTYPE html>")))
-                .andExpect(content().string(containsString("site-main")));
+                .andExpect(content().string(containsString("admin-main")));
     }
 
     @Test
@@ -89,7 +89,7 @@ class RequestBrowseIntegrationTest {
 
     @Test
     @WithMockUser
-    void requestDetail_RendersEveryStoredFieldThroughTheSiteLayout() throws Exception {
+    void requestDetail_RendersEveryStoredFieldThroughTheAdminLayout() throws Exception {
         mockMvc.perform(get("/admin/console/requests/" + storedId))
                 .andExpect(status().isOk())
                 .andExpect(view().name("console/request_detail"))
@@ -97,7 +97,7 @@ class RequestBrowseIntegrationTest {
                 .andExpect(content().string(containsString("https://news.example")))
                 .andExpect(content().string(containsString("curl/8.0")))
                 .andExpect(content().string(containsString("1.1.1.1")))
-                .andExpect(content().string(containsString("site-main")));
+                .andExpect(content().string(containsString("admin-main")));
     }
 
     @Test
