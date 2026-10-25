@@ -20,6 +20,7 @@ usage:
   website memo read <id|target-path> --draft
   website memo draft <target-path> <markdown-file|->
   website project report <project-id> <json-file|->
+  website skills install [skills-directory]
 
 env:
   WEBSITE_URL  defaults to https://yunseong.dev
@@ -79,10 +80,49 @@ navigation_request() {
     fi
 }
 
+install_project_skill() {
+    script_directory=$(CDPATH= cd -P -- "$(dirname -- "$0")" && pwd)
+    skill_source="$script_directory/../skills/website-project-report/SKILL.md"
+    example_source="$script_directory/../docs/examples/project-report.json"
+    if [ -f "$script_directory/../SKILL.md" ]; then
+        skill_source="$script_directory/../SKILL.md"
+        example_source="$script_directory/../assets/project-report.json"
+    fi
+    [ -r "$skill_source" ] && [ -r "$example_source" ] || {
+        printf 'Skill source files are missing\n' >&2
+        exit 1
+    }
+
+    mkdir -p -- "$1"
+    skills_directory=$(CDPATH= cd -P -- "$1" && pwd)
+    skill_target="$skills_directory/website-project-report"
+    if ! mkdir -- "$skill_target"; then
+        printf 'Cannot create skill destination; existing files will not be overwritten: %s\n' "$skill_target" >&2
+        exit 1
+    fi
+    # 이번 명령에서 만든 디렉터리만 실패 시 정리한다.
+    trap 'rm -rf -- "$skill_target"' 0
+    trap 'exit 1' 1 2 3 15
+    mkdir -- "$skill_target/scripts" "$skill_target/assets"
+    cp -- "$skill_source" "$skill_target/SKILL.md"
+    cp -- "$0" "$skill_target/scripts/website"
+    chmod +x "$skill_target/scripts/website"
+    cp -- "$example_source" "$skill_target/assets/project-report.json"
+    trap - 0 1 2 3 15
+    printf 'Installed skill: %s\n' "$skill_target"
+}
+
 [ $# -ge 2 ] || usage
 resource="$1"
 command="$2"
 shift 2
+
+if [ "$resource" = "skills" ]; then
+    [ "$command" = "install" ] && [ $# -le 1 ] || usage
+    [ $# -eq 0 ] || [ -n "$1" ] || usage
+    install_project_skill "${1-.agents/skills}"
+    exit 0
+fi
 
 if [ "$resource" = "project" ]; then
     [ "$command" = "report" ] && [ $# -eq 2 ] || usage

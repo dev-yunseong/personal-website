@@ -327,3 +327,24 @@ briefing과 프로젝트 보고서 작성 권한을 모두 가집니다. 관리�
 지나면 agent가 보고한 상태와 별도로 갱신 지연을 표시합니다. 그래프 이력은
 agent가 보고서에 포함합니다. 보고서 archive, 임의 HTML/JavaScript 실행,
 agent polling, 지시 전달 기능은 이번 범위에 포함하지 않습니다.
+
+`bin/website skills install`은 `website-project-report` skill을 현재 작업
+디렉터리의 `.agents/skills`에 설치합니다. 다른 위치를 지정하려면 경로를
+인자로 전달하세요. 예를 들어 `bin/website skills install .claude/skills`는
+`.claude/skills/website-project-report`에 설치합니다. 설치한 뒤에는 해당
+skill의 `SKILL.md` 지침에 따라 `scripts/website`를 호출할 수 있습니다.
+다른 프로젝트에서는 설치된 `scripts/website`의 절대 경로로 실행하세요.
+기존 설치 경로가 있으면 다시 설치하지 않으며, 기존 파일을 덮어쓰지 않습니다.
+설치 명령은 network 요청을 하지 않고 global 설정도 변경하지 않습니다.
+설치 단계에는 인증 token이 필요하지 않으며 `.env`나 인증 정보도 복사하지 않습니다.
+
+다른 프로젝트에 처음 설치할 때에는 그 프로젝트에서 원본 명령의 절대 경로로
+실행하세요.
+
+```sh
+cd /path/to/your-project
+/path/to/personal-website/bin/website skills install
+```
+
+설치한 뒤 agent에게 `website-project-report` skill을 사용해 프로젝트 상태를
+보고하도록 요청할 수 있습니다. 전송할 때에는 `BRIEFING_TOKEN`이 필요합니다.
