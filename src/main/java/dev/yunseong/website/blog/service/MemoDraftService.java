@@ -70,6 +70,15 @@ public class MemoDraftService {
         return current.getId();
     }
 
+    public void reject(long id, String reviewedRevision) {
+        Memo draft = requireDraft(repository.findByIdForUpdate(id).orElseThrow(MemoNotFoundException::new));
+        Memo current = repository.findByNameForUpdate(targetOf(draft)).orElse(null);
+        if (!Objects.equals(reviewedRevision, revision(draft, current))) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "초안 또는 원문이 변경되었습니다. 다시 검토하세요.");
+        }
+        repository.delete(draft);
+    }
+
     private Memo requireDraft(Memo memo) {
         if (memo.getName() == null || !memo.getName().startsWith(PREFIX + "/")) {
             throw new MemoNotFoundException();

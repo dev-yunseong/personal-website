@@ -22,7 +22,7 @@
         <input type="hidden" name="csrfToken" th:value="${_csrf.token}">
         <input type="hidden" name="csrfHeader" th:value="${_csrf.headerName}">
         <button class="btn btn-primary" type="submit">승인하고 반영</button>
-        <a class="btn btn-outline-secondary" th:href="@{/admin/console/drafts/{id}(id=${review.draft.id})}">다시 검토</a>
+        <button class="btn btn-outline-danger" type="submit" name="action" value="reject" th:data-url="@{/admin/console/drafts/{id}(id=${review.draft.id})}">초안 삭제</button>
         <p id="approval-status" class="mt-2" role="status" aria-live="polite"></p>
     </form>
     <script th:src="@{/js/draft-review.js}" defer></script>

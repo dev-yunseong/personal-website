@@ -36,6 +36,7 @@ class ConsoleDraftTemplateTest {
         String html = engine.process("console/draft_review", context);
         assertThat(html).contains("class=\"removed\"", "class=\"added\"", "review-hash", "test-csrf",
                 "/admin/console/drafts/2/approval", "&lt;script&gt;alert(1)&lt;/script&gt;");
+        assertThat(html).contains("초안 삭제", "value=\"reject\"", "data-url=\"/admin/console/drafts/2\"");
         assertThat(html).doesNotContain("<script>alert(1)</script>");
     }
 }
