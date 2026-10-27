@@ -78,6 +78,43 @@ class MemoDraftServiceTest {
         assertThatThrownBy(() -> drafts.submit("notes/b", "x".repeat(100_001))).isInstanceOf(ResponseStatusException.class);
     }
 
+    @Test
+    void rejectionDeletesOnlyDraftAndPreservesOriginal() {
+        Memo original = repository.saveAndFlush(new Memo("/notes/a", "original"));
+        Memo draft = drafts.submit("notes/a", "proposal");
+        drafts.reject(draft.getId(), drafts.review(draft.getId()).revision());
+        repository.flush();
+        assertThat(repository.findById(draft.getId())).isEmpty();
+        assertThat(repository.findById(original.getId()).orElseThrow().getContent()).isEqualTo("original");
+    }
+
+    @Test
+    void rejectionOfNewDraftDoesNotPublishMemo() {
+        Memo draft = drafts.submit("notes/new", "proposal");
+        drafts.reject(draft.getId(), drafts.review(draft.getId()).revision());
+        repository.flush();
+        assertThat(repository.findById(draft.getId())).isEmpty();
+        assertThat(repository.findByName("/notes/new")).isEmpty();
+    }
+
+    @Test
+    void rejectionRefusesChangedDraft() {
+        Memo draft = drafts.submit("notes/a", "first");
+        String revision = drafts.review(draft.getId()).revision();
+        drafts.submit("notes/a", "second");
+        assertThatThrownBy(() -> drafts.reject(draft.getId(), revision)).isInstanceOfSatisfying(
+                ResponseStatusException.class, e -> assertThat(e.getStatusCode().value()).isEqualTo(409));
+        assertThat(repository.findById(draft.getId()).orElseThrow().getContent()).isEqualTo("second");
+    }
+
+    @Test
+    void rejectionRefusesOrdinaryMemoAndMissingDraft() {
+        Memo memo = repository.saveAndFlush(new Memo("/notes/a", "original"));
+        assertThatThrownBy(() -> drafts.reject(memo.getId(), "r")).isInstanceOf(MemoNotFoundException.class);
+        assertThatThrownBy(() -> drafts.reject(-1, "r")).isInstanceOf(MemoNotFoundException.class);
+        assertThat(repository.findById(memo.getId())).isPresent();
+    }
+
     private void assertConflict(long id, String revision) {
         assertThatThrownBy(() -> drafts.approve(id, revision)).isInstanceOfSatisfying(
                 ResponseStatusException.class, e -> assertThat(e.getStatusCode().value()).isEqualTo(409));
