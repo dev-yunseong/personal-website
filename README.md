@@ -172,8 +172,9 @@ Authenticated routes, all with `X-Draft-Token`:
 ### Submission and approval
 
 Configure a separate `DRAFT_TOKEN` on the server and export the same value on
-the CLI host. An unset token disables draft access. This token can submit and
-read drafts; publication requires logging into the admin console.
+the CLI host. An unset token disables draft access. This token can submit,
+read and rename drafts and upload images; publication requires logging into
+the admin console.
 
 ```sh
 export DRAFT_TOKEN=...
@@ -201,6 +202,34 @@ For very large documents the diff shows full removal/addition to bound memory.
 The form-encoded intake endpoint is `POST /api/agent/drafts` with `target` and
 `content` fields and an `X-Draft-Token` header. `WEBSITE_URL` selects the server
 and defaults to `https://yunseong.dev`, as with the read commands.
+
+### CLI 초안 제목 변경과 이미지 업로드
+
+```sh
+bin/website memo draft-rename notes/old framework/spring/new
+bin/website memo draft-upload ./image.png
+```
+
+두 명령 모두 `DRAFT_TOKEN`이 필요합니다. `draft-rename`은 초안의 제목 경로만
+변경하고 ID와 본문(본문의 `#` 제목 포함)을 유지합니다. 경로는 공개 대상 경로로
+지정하며 `/private/draft`를 붙이지 않습니다. 공개 글은 변경하지 않습니다.
+대상 경로에 공개 글 또는 다른 초안이 있으면 HTTP 409, 원본 초안이 없으면
+404를 반환합니다. 같은 경로로 변경하면 기존 초안을 그대로 반환합니다.
+변경 전 검토 화면의 승인은 충돌로 거부되므로 다시 검토해야 합니다.
+
+`draft-upload`는 PNG, JPEG, GIF, WebP 확장자의 파일을 multipart로 전송하고
+`url`과 `markdown`이 담긴 JSON을 출력합니다. 서버에서 실제 이미지 읽기 가능 여부를
+검증하며, 지원 여부는 서버의 이미지 디코더에도 따릅니다. 기존 관리자 업로드와
+동일한 S3 저장소와 리사이즈 정책(최대 변 길이 512px)을 사용합니다.
+이미지 URL은 공개 URL이며 초안 승인 여부와 별개입니다. 이 명령은 초안 본문을
+자동으로 수정하지 않습니다. 반환된 URL을 본문에 넣고 `memo draft`로 제출하세요.
+같은 파일을 다시 업로드하면 새 객체가 생성됩니다.
+
+API는 `POST /api/agent/drafts/rename` (`source`, `target` 폼 필드)과
+`POST /api/agent/drafts/images` (`file` multipart 필드)이며 `X-Draft-Token`을
+요구합니다. 이미지 외 파일과 빈 파일은 거부합니다. 토큰에는 공개 승인이나
+일반 비공개 문서 수정 권한이 없습니다. 새 CLI 명령은 대응하는 서버 버전 배포 후
+사용할 수 있습니다.
 
 ## Agent briefings
 

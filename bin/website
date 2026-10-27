@@ -1,5 +1,5 @@
 #!/bin/sh
-# Read public memos and submit private drafts for console approval.
+# 공개 메모 조회와 관리자 승인 전 초안 관리를 제공한다.
 
 set -eu
 
@@ -8,7 +8,7 @@ MEMO_API="${WEBSITE_URL}/api/public/memos"
 NAV_API="$MEMO_API"
 if [ -n "${DRAFT_TOKEN:-}" ]; then NAV_API="${WEBSITE_URL}/api/agent/drafts/memos"; fi
 # Preserve logical memo paths when Git Bash launches native curl.
-MSYS2_ARG_CONV_EXCL="${MSYS2_ARG_CONV_EXCL:+$MSYS2_ARG_CONV_EXCL;}target=;path=;category="
+MSYS2_ARG_CONV_EXCL="${MSYS2_ARG_CONV_EXCL:+$MSYS2_ARG_CONV_EXCL;}source=;target=;path=;category="
 export MSYS2_ARG_CONV_EXCL
 
 usage() {
@@ -19,13 +19,15 @@ usage:
   website memo read <id>
   website memo read <id|target-path> --draft
   website memo draft <target-path> <markdown-file|->
+  website memo draft-rename <source-path> <target-path>
+  website memo draft-upload <image-file>
   website project report <project-id> <json-file|->
   website skills install [skills-directory]
 
 env:
   WEBSITE_URL  defaults to https://yunseong.dev
   BRIEFING_TOKEN  authorizes private project reports (same token as briefing intake)
-  DRAFT_TOKEN  enables draft-aware navigation, draft reads and submission; cannot publish
+  DRAFT_TOKEN  enables draft navigation, reads, submission, rename and image upload; cannot publish
 EOF
     exit 2
 }
@@ -35,6 +37,11 @@ is_unsigned_integer() {
         ''|*[!0-9]*) return 1 ;;
         *) return 0 ;;
     esac
+}
+
+encode_form_value() {
+    # Windows curl의 인자 문자셋 변환 전에 UTF-8 바이트를 ASCII 폼 값으로 인코딩한다.
+    printf '%s' "$1" | od -An -v -tx1 | tr -d ' \n' | sed 's/../%&/g'
 }
 
 request() {
@@ -142,6 +149,30 @@ fi
 [ "$resource" = "memo" ] || usage
 
 case "$command" in
+    draft-rename)
+        [ $# -eq 2 ] && [ -n "$1" ] && [ -n "$2" ] || usage
+        [ -n "${DRAFT_TOKEN:-}" ] || { printf 'DRAFT_TOKEN is required\n' >&2; exit 2; }
+        request --url "${WEBSITE_URL}/api/agent/drafts/rename" \
+            --header "X-Draft-Token: $DRAFT_TOKEN" \
+            --header 'Content-Type: application/x-www-form-urlencoded; charset=UTF-8' \
+            --data "source=$(encode_form_value "$1")&target=$(encode_form_value "$2")"
+        ;;
+    draft-upload)
+        [ $# -eq 1 ] || usage
+        [ -n "${DRAFT_TOKEN:-}" ] || { printf 'DRAFT_TOKEN is required\n' >&2; exit 2; }
+        [ -f "$1" ] && [ -r "$1" ] && [ -s "$1" ] || { printf 'Cannot read image file\n' >&2; exit 2; }
+        extension=$(printf '%s' "${1##*.}" | tr '[:upper:]' '[:lower:]')
+        case "$extension" in
+            png) mime=image/png ;;
+            jpg|jpeg) mime=image/jpeg ;;
+            gif) mime=image/gif ;;
+            webp) mime=image/webp ;;
+            *) printf 'Supported images: PNG, JPEG, GIF, WebP\n' >&2; exit 2 ;;
+        esac
+        request --url "${WEBSITE_URL}/api/agent/drafts/images" \
+            --header "X-Draft-Token: $DRAFT_TOKEN" \
+            --form "file=@-;filename=image.$extension;type=$mime" < "$1"
+        ;;
     tree)
         [ $# -le 1 ] || usage
         tree_path="${1:-/}"

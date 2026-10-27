@@ -162,7 +162,8 @@ class WebsiteCliTest {
     }
 
     private CliResult runCliWithInput(String baseUrl, byte[] input, String... arguments) throws Exception {
-        boolean withToken = Arrays.asList(arguments).contains("draft") || Arrays.asList(arguments).contains("--draft");
+        boolean withToken = Arrays.asList(arguments).contains("draft") || Arrays.asList(arguments).contains("--draft")
+                || Arrays.asList(arguments).contains("draft-rename") || Arrays.asList(arguments).contains("draft-upload");
         return runCliConfigured(baseUrl, input, withToken, arguments);
     }
 
@@ -275,6 +276,81 @@ class WebsiteCliTest {
         } finally {
             Files.deleteIfExists(file);
         }
+    }
+
+    @Test
+    void renameSendsOnlyUtf8PathsAndPreservesResponse() throws Exception {
+        AtomicReference<String> body = new AtomicReference<>();
+        AtomicReference<String> token = new AtomicReference<>();
+        byte[] response = "{\"id\":7,\"name\":\"/private/draft/new\"}\n".getBytes(StandardCharsets.UTF_8);
+        server.createContext("/api/agent/drafts/rename", exchange -> {
+            token.set(exchange.getRequestHeaders().getFirst("X-Draft-Token"));
+            body.set(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8));
+            respond(exchange, 200, "application/json", response);
+        });
+        CliResult result = runCli("memo", "draft-rename", "/이전/a & b", "/다음/c+%d");
+        assertThat(result.exitCode()).isZero();
+        assertThat(result.stdout()).isEqualTo(response);
+        assertThat(token.get()).isEqualTo("test-draft-token");
+        assertThat(decode(body.get())).isEqualTo("source=/이전/a & b&target=/다음/c+%d");
+        assertThat(runCliConfigured(websiteUrl, null, false, "memo", "draft-rename", "a", "b").exitCode()).isEqualTo(2);
+        assertThat(runCli("memo", "draft-rename", "a").exitCode()).isEqualTo(2);
+        assertThat(runCli("memo", "draft-rename", "a", "").exitCode()).isEqualTo(2);
+    }
+
+    @Test
+    void uploadStreamsFileBytesWithExplicitMimeType() throws Exception {
+        AtomicReference<String> body = new AtomicReference<>();
+        AtomicReference<String> type = new AtomicReference<>();
+        AtomicReference<String> token = new AtomicReference<>();
+        byte[] response = "{\"url\":\"https://storage.example/image.png\"}\n".getBytes(StandardCharsets.UTF_8);
+        server.createContext("/api/agent/drafts/images", exchange -> {
+            type.set(exchange.getRequestHeaders().getFirst("Content-Type"));
+            token.set(exchange.getRequestHeaders().getFirst("X-Draft-Token"));
+            body.set(new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.ISO_8859_1));
+            respond(exchange, 200, "application/json", response);
+        });
+        Path file = Files.createTempFile("한글 image,semi; ", ".PNG");
+        byte[] bytes = new byte[]{(byte) 0x89, 0x50, 0x4e, 0x47, 0, 1, 2, (byte) 0xff};
+        try {
+            Files.write(file, bytes);
+            CliResult result = runCli("memo", "draft-upload", file.toString());
+            assertThat(result.exitCode()).isZero();
+            assertThat(result.stdout()).isEqualTo(response);
+            assertThat(token.get()).isEqualTo("test-draft-token");
+            assertThat(type.get()).startsWith("multipart/form-data; boundary=");
+            assertThat(body.get()).contains("name=\"file\"; filename=\"image.png\"", "Content-Type: image/png",
+                    new String(bytes, StandardCharsets.ISO_8859_1));
+            assertThat(runCliConfigured(websiteUrl, null, false, "memo", "draft-upload", file.toString()).exitCode()).isEqualTo(2);
+        } finally {
+            Files.deleteIfExists(file);
+        }
+    }
+
+    @Test
+    void uploadRejectsUnsupportedMissingAndEmptyFilesBeforeNetwork() throws Exception {
+        Path text = Files.createTempFile("unsupported", ".txt");
+        Path empty = Files.createTempFile("empty", ".png");
+        try {
+            Files.writeString(text, "text");
+            for (String path : new String[]{text.toString(), empty.toString(), "/missing-image.png"}) {
+                assertThat(runCli("memo", "draft-upload", path).exitCode()).isEqualTo(2);
+            }
+            assertThat(runCli("memo", "draft-upload").exitCode()).isEqualTo(2);
+        } finally {
+            Files.deleteIfExists(text);
+            Files.deleteIfExists(empty);
+        }
+    }
+
+    @Test
+    void renameConflictExitsNonZeroWithoutSuccessOutput() throws Exception {
+        server.createContext("/api/agent/drafts/rename", exchange ->
+                respond(exchange, 409, "text/plain", "conflict".getBytes(StandardCharsets.UTF_8)));
+        CliResult result = runCli("memo", "draft-rename", "old", "new");
+        assertThat(result.exitCode()).isEqualTo(1);
+        assertThat(result.stdout()).isEmpty();
+        assertThat(new String(result.stderr(), StandardCharsets.UTF_8)).contains("HTTP 409");
     }
 
     private static Map<String, String> parseQuery(HttpExchange exchange) {

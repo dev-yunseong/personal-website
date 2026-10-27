@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.ResponseEntity;
 
 import java.util.Map;
 
@@ -40,5 +43,17 @@ public class AgentMemoDraftController {
         Memo draft = drafts.submit(target, content);
         return Map.of("id", draft.getId(), "name", draft.getName(),
                 "reviewUrl", "/admin/console/drafts/" + draft.getId());
+    }
+
+    @PostMapping(value = "/api/agent/drafts/rename", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
+    public Map<String, Object> rename(@RequestParam String source, @RequestParam String target) {
+        Memo draft = drafts.rename(source, target);
+        return Map.of("id", draft.getId(), "name", draft.getName(),
+                "reviewUrl", "/admin/console/drafts/" + draft.getId());
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, String>> conflict() {
+        return ResponseEntity.status(409).body(Map.of("message", "대상 경로가 변경되었습니다. 다시 확인하세요."));
     }
 }
