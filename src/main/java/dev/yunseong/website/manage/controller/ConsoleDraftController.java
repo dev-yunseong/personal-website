@@ -35,6 +35,13 @@ public class ConsoleDraftController {
         return Map.of("url", "/public/memos/" + drafts.approve(id, approval.revision()));
     }
 
+    @DeleteMapping("/{id}")
+    @ResponseBody
+    public Map<String, String> reject(@PathVariable long id, @RequestBody Rejection rejection) {
+        drafts.reject(id, rejection.revision());
+        return Map.of("url", "/admin/console/drafts");
+    }
+
     @ExceptionHandler(DataIntegrityViolationException.class)
     @ResponseBody
     public ResponseEntity<Map<String, String>> conflict() {
@@ -43,4 +50,5 @@ public class ConsoleDraftController {
     }
 
     public record Approval(String revision) {}
+    public record Rejection(String revision) {}
 }

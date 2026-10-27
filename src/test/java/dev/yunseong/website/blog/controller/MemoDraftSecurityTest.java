@@ -83,6 +83,21 @@ class MemoDraftSecurityTest {
                 .andExpect(status().isOk()).andExpect(jsonPath("$.url").value("/public/memos/42"));
     }
 
+    @Test
+    void rejectionRequiresSessionAndCsrf() throws Exception {
+        mvc.perform(delete("/admin/console/drafts/1").with(csrf()).header("X-Draft-Token", "draft-secret")
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"revision\":\"r\"}"))
+                .andExpect(status().is3xxRedirection());
+        mvc.perform(delete("/admin/console/drafts/1").with(user("admin"))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"revision\":\"r\"}"))
+                .andExpect(status().isForbidden());
+        verifyNoInteractions(drafts);
+        mvc.perform(delete("/admin/console/drafts/1").with(user("admin")).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"revision\":\"r\"}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.url").value("/admin/console/drafts"));
+        verify(drafts).reject(1, "r");
+    }
+
     @Configuration
     @EnableWebMvc
     @Import({WebSecurityConfig.class, AgentApiSecurityConfig.class, DraftApiSecurityConfig.class,
