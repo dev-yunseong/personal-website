@@ -53,7 +53,7 @@ test('충돌하면 이동하지 않고 오류와 재시도 버튼을 표시한�
     const page = setup(true, {ok: false, status: 409});
     await page.send();
     assert.deepEqual(page.destinations, []);
-    assert.match(page.status.textContent, /다시 검토/);
+    assert.match(page.status.textContent, /새로고침/);
     assert.ok(page.buttons.every(button => !button.disabled));
 });
 
