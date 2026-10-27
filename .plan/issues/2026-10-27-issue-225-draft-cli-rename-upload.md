@@ -25,7 +25,7 @@
 ## Validation
 - **Commands to run:** `./gradlew test`, `git diff --check`, CLI 업로드 후 반환 URL 및 초안 읽기 검증
 - **Expected output:** 전체 테스트 통과, 초안만 변경, 비공개 문서 접근 거부, 58개 이미지의 자체 저장소 URL 확인
-- **Results:** 관련 테스트 51개 통과. Linux 임시 복사본의 Java 21 환경에서 전체 테스트 729개 통과. Windows Git Bash의 한글 경로와 PNG 바이너리 업로드 검증 통과. Windows 체크아웃의 기존 `bin/briefing` CRLF는 Linux 검증 복사본에서만 LF로 정상화했다.
+- **Results:** 관련 테스트 51개 통과. 최신 main의 초안 삭제 기능을 병합한 뒤 Linux 임시 복사본의 Java 21 환경에서 전체 테스트 734개 통과. Windows Git Bash의 한글 경로와 PNG 바이너리 업로드 검증 통과. Windows 체크아웃의 기존 `bin/briefing` CRLF는 Linux 검증 복사본에서만 LF로 정상화했다.
 
 ## Risks & Rollback
 - **Risks:** 잘못된 경로 이동, 동시 목적지 생성, 이미지 업로드의 공개 URL 및 저장 용량 증가. 기존 업로드 정책에 따라 이미지 긴 변이 512px로 축소될 수 있다.
