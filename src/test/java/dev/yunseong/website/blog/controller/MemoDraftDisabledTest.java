@@ -23,8 +23,10 @@ class MemoDraftDisabledTest {
 
     @Test
     void unconfiguredTokenFailsClosedEvenWithEmptyHeader() throws Exception {
-        MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build()
-                .perform(post("/api/agent/drafts").header("X-Draft-Token", ""))
-                .andExpect(status().isUnauthorized());
+        var mvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
+        for (String path : new String[]{"/api/agent/drafts", "/api/agent/drafts/rename", "/api/agent/drafts/images"}) {
+            mvc.perform(post(path).header("X-Draft-Token", ""))
+                    .andExpect(status().isUnauthorized());
+        }
     }
 }
