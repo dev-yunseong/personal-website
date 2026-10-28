@@ -1,0 +1,17 @@
+body {
+    margin: 0;
+    padding: 1.5rem;
+    background: var(--surface, #fff);
+    color: var(--text-primary, #202020);
+    font-family: var(--font-sans, sans-serif);
+}
+
+.memo-page {
+    min-width: 0;
+}
+
+@media (max-width: 575.98px) {
+    body {
+        padding: 1rem;
+    }
+}

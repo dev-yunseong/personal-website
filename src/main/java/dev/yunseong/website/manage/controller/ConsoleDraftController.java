@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.thymeleaf.context.Context;
+import org.thymeleaf.spring6.SpringTemplateEngine;
 
 import java.util.Map;
 
@@ -16,6 +18,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ConsoleDraftController {
     private final MemoDraftService drafts;
+    private final SpringTemplateEngine templates;
 
     @GetMapping
     public String list(@RequestParam(defaultValue = "0") int page, Model model) {
@@ -25,7 +28,11 @@ public class ConsoleDraftController {
 
     @GetMapping("/{id}")
     public String review(@PathVariable long id, Model model) {
-        model.addAttribute("review", drafts.review(id));
+        MemoDraftService.Review review = drafts.review(id);
+        model.addAttribute("review", review);
+        Context previewContext = new Context();
+        previewContext.setVariable("draft", review.draft());
+        model.addAttribute("previewHtml", templates.process("console/draft_preview", previewContext));
         return "console/draft_review";
     }
 
