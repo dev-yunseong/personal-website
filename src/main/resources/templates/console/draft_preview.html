@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'none'; style-src https: http: 'unsafe-inline'; img-src https: http: data:; font-src https: http: data:; base-uri 'none'; form-action 'none'">
+    <title>초안 미리보기</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.1.0/github-markdown-light.css">
+    <link rel="stylesheet" href="/css/tokens.css">
+    <link rel="stylesheet" href="/css/memo-view.css">
+    <link rel="stylesheet" href="/css/draft-preview.css">
+</head>
+<body>
+    <main class="memo-page">
+        <article class="memo-article__body markdown-body" th:utext="${draft.html}"></article>
+    </main>
+</body>
+</html>

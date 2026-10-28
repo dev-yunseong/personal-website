@@ -3,6 +3,9 @@ package dev.yunseong.website.blog.controller;
 import dev.yunseong.website.blog.domain.Memo;
 import dev.yunseong.website.blog.service.MemoDraftService;
 import dev.yunseong.website.blog.service.MemoNavigationService;
+import dev.yunseong.website.blog.service.MemoLineDiff;
+import org.thymeleaf.spring6.SpringTemplateEngine;
+import org.thymeleaf.context.IContext;
 import dev.yunseong.website.blog.service.S3StorageService;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -40,12 +43,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class MemoDraftSecurityTest {
     @Autowired WebApplicationContext context;
     @Autowired MemoDraftService drafts;
+    @Autowired SpringTemplateEngine templates;
     @Autowired S3StorageService storage;
     MockMvc mvc;
 
     @BeforeEach
     void setup() {
-        reset(drafts, storage);
+        reset(drafts, templates, storage);
         mvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
     }
 
@@ -190,6 +194,23 @@ class MemoDraftSecurityTest {
 
         @Bean MemoDraftService drafts() { return mock(MemoDraftService.class); }
         @Bean MemoNavigationService navigation() { return mock(MemoNavigationService.class); }
+        @Bean SpringTemplateEngine templates() { return mock(SpringTemplateEngine.class); }
         @Bean S3StorageService storage() { return mock(S3StorageService.class); }
+    }
+
+    @Test
+    void authenticatedReviewBuildsPreviewFromSameDraftWithoutWriting() throws Exception {
+        Memo draft = new Memo(2L, "/private/draft/notes/a", "# 초안", null, null);
+        var review = new MemoDraftService.Review(draft, "/notes/a", null, "revision",
+                MemoLineDiff.compare("", draft.getContent()));
+        when(drafts.review(2)).thenReturn(review);
+        when(templates.process(eq("console/draft_preview"), any(IContext.class))).thenReturn("preview-document");
+        mvc.perform(get("/admin/console/drafts/2").with(user("admin")))
+                .andExpect(status().isOk()).andExpect(view().name("console/draft_review"))
+                .andExpect(model().attribute("review", review))
+                .andExpect(model().attribute("previewHtml", "preview-document"));
+        verify(drafts).review(2);
+        verifyNoMoreInteractions(drafts);
+        verify(templates).process(eq("console/draft_preview"), argThat(c -> c.getVariable("draft") == draft));
     }
 }

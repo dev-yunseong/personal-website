@@ -1,6 +1,7 @@
 package dev.yunseong.website.manage;
 
 import dev.yunseong.website.global.repository.LoginTokenRepository;
+import dev.yunseong.website.blog.service.MemoDraftService;
 import dev.yunseong.website.manage.domain.ProjectReport;
 import dev.yunseong.website.manage.repository.ProjectReportRepository;
 import jakarta.servlet.http.Cookie;
@@ -47,8 +48,22 @@ class ConsoleIntegrationTest {
     @Autowired ProjectReportRepository reports;
     @Autowired LoginTokenRepository tokens;
     @Autowired JdbcTemplate jdbc;
+    @Autowired MemoDraftService drafts;
 
     private String report;
+
+    @Test
+    void draftReviewIncludesIsolatedPreviewInFullAdminLayout() throws Exception {
+        var draft = drafts.submit("preview/integration", "# 미리보기\n\n| 항목 | 값 |\n| --- | --- |\n| 링크 | 확인 |\n");
+        mvc.perform(get("/admin/console/drafts/" + draft.getId()).with(user("admin")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("초안 보기 방식")))
+                .andExpect(content().string(containsString("title=\"초안 미리보기\"")))
+                .andExpect(content().string(containsString("sandbox=\"\"")))
+                .andExpect(content().string(containsString("&lt;table&gt;")))
+                .andExpect(content().string(containsString("bootstrap.bundle.min.js")))
+                .andExpect(content().string(containsString("/admin/console/drafts/" + draft.getId() + "/approval")));
+    }
 
     @BeforeEach
     void setup() throws Exception {
