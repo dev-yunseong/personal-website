@@ -36,6 +36,19 @@ public class MemoDraftService {
         return repository.saveAndFlush(draft);
     }
 
+    public Memo rename(String source, String target) {
+        String sourceName = PREFIX + normalizeTarget(source);
+        String normalizedTarget = normalizeTarget(target);
+        String targetName = PREFIX + normalizedTarget;
+        Memo draft = repository.findByNameForUpdate(sourceName).orElseThrow(MemoNotFoundException::new);
+        if (sourceName.equals(targetName)) return draft;
+        if (repository.findByName(targetName).isPresent() || repository.findByName(normalizedTarget).isPresent()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "대상 경로에 글 또는 초안이 있습니다.");
+        }
+        draft.setName(targetName);
+        return repository.saveAndFlush(draft);
+    }
+
     @Transactional(readOnly = true)
     public Page<Memo> list(int page) {
         if (page < 0) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid page.");

@@ -6,6 +6,9 @@ import dev.yunseong.website.blog.service.MemoNavigationService;
 import dev.yunseong.website.blog.service.MemoLineDiff;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.thymeleaf.context.IContext;
+import dev.yunseong.website.blog.service.S3StorageService;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.dao.DataIntegrityViolationException;
 import dev.yunseong.website.global.config.AgentApiSecurityConfig;
 import dev.yunseong.website.global.config.DraftApiSecurityConfig;
 import dev.yunseong.website.global.config.WebSecurityConfig;
@@ -41,11 +44,12 @@ class MemoDraftSecurityTest {
     @Autowired WebApplicationContext context;
     @Autowired MemoDraftService drafts;
     @Autowired SpringTemplateEngine templates;
+    @Autowired S3StorageService storage;
     MockMvc mvc;
 
     @BeforeEach
     void setup() {
-        reset(drafts, templates);
+        reset(drafts, templates, storage);
         mvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
     }
 
@@ -88,6 +92,75 @@ class MemoDraftSecurityTest {
     }
 
     @Test
+    void renameRequiresTokenAndOnlyPassesPaths() throws Exception {
+        for (String token : new String[]{"", "wrong"}) {
+            mvc.perform(post("/api/agent/drafts/rename").header("X-Draft-Token", token)
+                            .param("source", "notes/a").param("target", "notes/b"))
+                    .andExpect(status().isUnauthorized());
+        }
+        verifyNoInteractions(drafts);
+        when(drafts.rename("notes/a", "notes/b")).thenReturn(new Memo(7L, "/private/draft/notes/b", "body", null, null));
+        mvc.perform(post("/api/agent/drafts/rename").header("X-Draft-Token", "draft-secret")
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .param("source", "notes/a").param("target", "notes/b").param("content", "ignored"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.id").value(7))
+                .andExpect(jsonPath("$.name").value("/private/draft/notes/b"))
+                .andExpect(jsonPath("$.reviewUrl").value("/admin/console/drafts/7"));
+        verify(drafts).rename("notes/a", "notes/b");
+        verifyNoMoreInteractions(drafts);
+    }
+
+    @Test
+    void concurrentDestinationConflictReturns409() throws Exception {
+        when(drafts.rename("notes/a", "notes/b")).thenThrow(new DataIntegrityViolationException("duplicate"));
+        mvc.perform(post("/api/agent/drafts/rename").header("X-Draft-Token", "draft-secret")
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .param("source", "notes/a").param("target", "notes/b"))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void imageUploadRequiresDraftTokenAndReturnsStorageUrl() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "image.png", "image/png", new byte[]{1, 2, 3});
+        for (String token : new String[]{"", "wrong"}) {
+            mvc.perform(multipart("/api/agent/drafts/images").file(file).header("X-Draft-Token", token))
+                    .andExpect(status().isUnauthorized());
+        }
+        verifyNoInteractions(storage);
+        when(storage.uploadFile(any())).thenReturn("https://storage.example/website/image.png");
+        mvc.perform(multipart("/api/agent/drafts/images").file(file).header("X-Draft-Token", "draft-secret"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.url").value("https://storage.example/website/image.png"))
+                .andExpect(jsonPath("$.markdown").value("![image](https://storage.example/website/image.png)"));
+        verify(storage).uploadFile(any());
+        verifyNoInteractions(drafts);
+    }
+
+    @Test
+    void imageUploadRejectsNonImagesEmptyFilesAndMissingFile() throws Exception {
+        for (MockMultipartFile file : new MockMultipartFile[]{
+                new MockMultipartFile("file", "file.txt", "text/plain", new byte[]{1}),
+                new MockMultipartFile("file", "image.svg", "image/svg+xml", new byte[]{1}),
+                new MockMultipartFile("file", "image.png", "image/png", new byte[0]),
+                new MockMultipartFile("file", "image.png", null, new byte[]{1})}) {
+            mvc.perform(multipart("/api/agent/drafts/images").file(file).header("X-Draft-Token", "draft-secret"))
+                    .andExpect(status().isBadRequest());
+        }
+        mvc.perform(multipart("/api/agent/drafts/images").header("X-Draft-Token", "draft-secret"))
+                .andExpect(status().isBadRequest());
+        verifyNoInteractions(storage);
+    }
+
+    @Test
+    void imageValidationFailureDoesNotExposeStorageDetails() throws Exception {
+        when(storage.uploadFile(any())).thenThrow(new java.io.IOException("invalid pixels"));
+        mvc.perform(multipart("/api/agent/drafts/images")
+                        .file(new MockMultipartFile("file", "fake.png", "image/png", new byte[]{1}))
+                        .header("X-Draft-Token", "draft-secret"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void rejectionRequiresSessionAndCsrf() throws Exception {
         mvc.perform(delete("/admin/console/drafts/1").with(csrf()).header("X-Draft-Token", "draft-secret")
                         .contentType(MediaType.APPLICATION_JSON).content("{\"revision\":\"r\"}"))
@@ -105,7 +178,7 @@ class MemoDraftSecurityTest {
     @Configuration
     @EnableWebMvc
     @Import({WebSecurityConfig.class, AgentApiSecurityConfig.class, DraftApiSecurityConfig.class,
-            AgentMemoDraftController.class, ConsoleDraftController.class})
+            AgentMemoDraftController.class, AgentDraftImageController.class, ConsoleDraftController.class})
     static class Config {
         @org.springframework.context.annotation.Bean
         org.springframework.security.core.userdetails.UserDetailsService users() {
@@ -122,6 +195,7 @@ class MemoDraftSecurityTest {
         @Bean MemoDraftService drafts() { return mock(MemoDraftService.class); }
         @Bean MemoNavigationService navigation() { return mock(MemoNavigationService.class); }
         @Bean SpringTemplateEngine templates() { return mock(SpringTemplateEngine.class); }
+        @Bean S3StorageService storage() { return mock(S3StorageService.class); }
     }
 
     @Test

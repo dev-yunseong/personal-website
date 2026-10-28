@@ -119,4 +119,60 @@ class MemoDraftServiceTest {
         assertThatThrownBy(() -> drafts.approve(id, revision)).isInstanceOfSatisfying(
                 ResponseStatusException.class, e -> assertThat(e.getStatusCode().value()).isEqualTo(409));
     }
+
+    @Test
+    void renamePreservesDraftIdentityBodyAndPublishedSource() {
+        Memo published = repository.saveAndFlush(new Memo("/notes/old", "published"));
+        Memo draft = drafts.submit("notes/old", "# 제목\n\n본문\n");
+        String revision = drafts.review(draft.getId()).revision();
+        Memo renamed = drafts.rename("/notes/old", "framework/new");
+        assertThat(renamed.getId()).isEqualTo(draft.getId());
+        assertThat(renamed.getContent()).isEqualTo("# 제목\n\n본문\n");
+        assertThat(renamed.getName()).isEqualTo("/private/draft/framework/new");
+        assertThat(repository.findByName("/private/draft/notes/old")).isEmpty();
+        assertThat(repository.findPublicById(draft.getId())).isEmpty();
+        assertThat(repository.findByName("/framework/new")).isEmpty();
+        assertThat(published.getName()).isEqualTo("/notes/old");
+        assertThat(published.getContent()).isEqualTo("published");
+        assertConflict(draft.getId(), revision);
+    }
+
+    @Test
+    void renameToSameNormalizedPathIsNoOp() {
+        Memo draft = drafts.submit("notes/a", "body");
+        String revision = drafts.review(draft.getId()).revision();
+        assertThat(drafts.rename("notes/a", "/notes/a").getId()).isEqualTo(draft.getId());
+        assertThat(drafts.review(draft.getId()).revision()).isEqualTo(revision);
+    }
+
+    @Test
+    void renameRefusesOccupiedDestinationsWithoutChangingEitherMemo() {
+        Memo source = drafts.submit("notes/a", "source");
+        Memo pending = drafts.submit("notes/b", "pending");
+        Memo published = repository.saveAndFlush(new Memo("/notes/c", "published"));
+        for (String target : new String[]{"notes/b", "notes/c"}) {
+            assertThatThrownBy(() -> drafts.rename("notes/a", target)).isInstanceOfSatisfying(
+                    ResponseStatusException.class, e -> assertThat(e.getStatusCode().value()).isEqualTo(409));
+        }
+        assertThat(source.getName()).isEqualTo("/private/draft/notes/a");
+        assertThat(pending.getContent()).isEqualTo("pending");
+        assertThat(published.getContent()).isEqualTo("published");
+    }
+
+    @Test
+    void renameCannotMoveOrdinaryMemoOrMissingDraft() {
+        Memo published = repository.saveAndFlush(new Memo("/notes/a", "published"));
+        assertThatThrownBy(() -> drafts.rename("notes/a", "notes/b")).isInstanceOf(MemoNotFoundException.class);
+        assertThatThrownBy(() -> drafts.rename("missing", "notes/b")).isInstanceOf(MemoNotFoundException.class);
+        assertThat(published.getName()).isEqualTo("/notes/a");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/private/profile", "/private/draft/x", "/", "a//b", "a/../b", "a/", "a\\b", "a\nb", ""})
+    void renameValidatesBothPaths(String path) {
+        Memo draft = drafts.submit("notes/a", "body");
+        assertThatThrownBy(() -> drafts.rename(path, "notes/b")).isInstanceOf(ResponseStatusException.class);
+        assertThatThrownBy(() -> drafts.rename("notes/a", path)).isInstanceOf(ResponseStatusException.class);
+        assertThat(draft.getName()).isEqualTo("/private/draft/notes/a");
+    }
 }
