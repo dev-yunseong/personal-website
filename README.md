@@ -32,6 +32,22 @@ API, so an empty value fails startup at `openAiApi` — and with
 every page working; only the curator itself fails, and the chat UI renders
 that as an error. Put a real key in when you need the curator.
 
+The curator talks to any OpenAI-compatible endpoint. `OPENAI_BASE_URL` and
+`OPENAI_CHAT_MODEL` move the chat model off OpenAI — for DeepSeek:
+
+```sh
+OPENAI_BASE_URL=https://api.deepseek.com
+OPENAI_CHAT_MODEL=deepseek-chat
+OPENAI_API_KEY=<your DeepSeek key>
+```
+
+Embeddings are a separate connection, because DeepSeek serves no
+`/v1/embeddings`. Set `EMBEDDING_BASE_URL` and `EMBEDDING_API_KEY` to keep RAG
+on OpenAI while the chat runs on DeepSeek. Leave them unset and embeddings
+follow the chat provider: retrieval then fails on every request, the curator
+logs a `WARN` and answers without the blog context instead of erroring out, and
+the daily RAG sync logs its failure and retries the next day.
+
 `TAVILY_API_KEY` and the GeoLite2 database are optional — a missing GeoIP file
 only leaves the geo fields null.
 

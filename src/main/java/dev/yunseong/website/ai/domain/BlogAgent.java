@@ -16,6 +16,7 @@ import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
 import org.springframework.ai.rag.generation.augmentation.ContextualQueryAugmenter;
 import org.springframework.ai.rag.preretrieval.query.expansion.MultiQueryExpander;
 import org.springframework.ai.rag.preretrieval.query.transformation.RewriteQueryTransformer;
+import org.springframework.ai.rag.retrieval.search.DocumentRetriever;
 import org.springframework.ai.rag.retrieval.search.VectorStoreDocumentRetriever;
 import org.springframework.ai.tool.ToolCallbackProvider;
 import org.springframework.ai.vectorstore.VectorStore;
@@ -23,8 +24,10 @@ import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
 import dev.yunseong.website.ai.tool.DateTimeTools;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 
+@Slf4j
 @Component
 public class BlogAgent {
 
@@ -80,11 +83,11 @@ public class BlogAgent {
                                         .chatClientBuilder(pureChatClient.mutate())
                                         .includeOriginal(false)
                                         .build())
-                                .documentRetriever(VectorStoreDocumentRetriever.builder()
+                                .documentRetriever(failSoft(VectorStoreDocumentRetriever.builder()
                                         .similarityThreshold(0.7)
                                         .topK(6)
                                         .vectorStore(vectorStore)
-                                        .build())
+                                        .build()))
                                 .queryAugmenter(ContextualQueryAugmenter.builder()
                                         .allowEmptyContext(true)
                                         .build())
@@ -98,6 +101,22 @@ public class BlogAgent {
         }
 
         chatClient = chatClientBuilder.build();
+    }
+
+    /**
+     * Retrieval needs an embedding endpoint, and a chat provider may not have one
+     * (DeepSeek does not). Losing the blog context is not worth losing the answer,
+     * so a failed retrieval degrades to an empty context instead of killing the stream.
+     */
+    static DocumentRetriever failSoft(DocumentRetriever delegate) {
+        return query -> {
+            try {
+                return delegate.retrieve(query);
+            } catch (RuntimeException e) {
+                log.warn("RAG retrieval failed, answering without blog context", e);
+                return List.of();
+            }
+        };
     }
 
     private String buildSystemPrompt() {

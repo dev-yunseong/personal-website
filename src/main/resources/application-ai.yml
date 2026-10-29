@@ -7,6 +7,9 @@ spring:
             initialize-schema: always
     openai:
       api-key: ${OPENAI_API_KEY:}
+      # Any OpenAI-compatible provider works here; the path stays /v1/....
+      # DeepSeek: OPENAI_BASE_URL=https://api.deepseek.com, OPENAI_CHAT_MODEL=deepseek-chat
+      base-url: ${OPENAI_BASE_URL:https://api.openai.com}
       chat:
         options:
           model: ${OPENAI_CHAT_MODEL:gpt-5.4-mini}
@@ -17,8 +20,15 @@ spring:
           temperature: 1.0
 
       embedding:
+        # Embeddings keep their own connection because a chat provider may not
+        # serve /v1/embeddings at all (DeepSeek does not). Point these at OpenAI
+        # to keep RAG alive while the chat model lives elsewhere; leave them
+        # unset and embeddings follow the chat connection, failing soft if that
+        # provider has no embedding endpoint.
+        base-url: ${EMBEDDING_BASE_URL:${OPENAI_BASE_URL:https://api.openai.com}}
+        api-key: ${EMBEDDING_API_KEY:${OPENAI_API_KEY:}}
         options:
-          model: text-embedding-3-small
+          model: ${EMBEDDING_MODEL:text-embedding-3-small}
     vectorstore:
       pgvector:
         index-type: HNSW
