@@ -34,4 +34,3 @@ Spring AI 1.1.2와 기존 Chat Completions 구조를 유지한다. GPT-6 Luna의
 
 ## Open Questions
 - 없음.
-
