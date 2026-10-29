@@ -13,11 +13,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.web.client.RestClientResponseException;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
+import java.nio.charset.StandardCharsets;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
@@ -107,6 +112,50 @@ class ChatServiceTest {
                     assertThat(event.getLevel()).isEqualTo(Level.WARN);
                     assertThat(event.getFormattedMessage()).contains("partial");
                 });
+    }
+
+    @Test
+    void getChatResponse_ShouldLogApiDetailsAndPreserveWrappedError() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("x-request-id", "req-test");
+        headers.set("Authorization", "Bearer hidden-token");
+        String body = """
+                {"error":{"message":"Unsupported parameter: temperature\\ncheck options",
+                "type":"invalid_request_error","param":"temperature","code":"unsupported_parameter"},
+                "private":"hidden-body"}
+                """;
+        var response = WebClientResponseException.create(400, "Bad Request", headers,
+                body.getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8);
+        var failure = new IllegalStateException("Stream processing failed", response);
+        when(blogAgent.prompt(MESSAGE, IP)).thenReturn(Flux.error(failure));
+
+        assertThatThrownBy(() -> chatService.getChatResponse(MESSAGE, IP).collectList().block())
+                .isSameAs(failure);
+
+        assertThat(logAppender.list).anySatisfy(event -> {
+            assertThat(event.getLevel()).isEqualTo(Level.ERROR);
+            assertThat(event.getFormattedMessage())
+                    .contains("status=400", "req-test", "Unsupported parameter: temperature",
+                            "invalid_request_error", "param=\"temperature\"", "unsupported_parameter")
+                    .doesNotContain("\n", "hidden-token", "hidden-body", MESSAGE);
+        });
+        verify(chatConversationService).save(IP, MESSAGE, "", null);
+    }
+
+    @Test
+    void getChatResponse_ShouldLogStatusWithoutRawBody_WhenApiReturnsNonJson() {
+        var failure = new RestClientResponseException("Bad Gateway", 502, "Bad Gateway", null,
+                "<html>hidden-body</html>".getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8);
+        when(blogAgent.prompt(MESSAGE, IP)).thenReturn(Flux.error(failure));
+
+        assertThatThrownBy(() -> chatService.getChatResponse(MESSAGE, IP).collectList().block())
+                .isSameAs(failure);
+
+        assertThat(logAppender.list).anySatisfy(event -> {
+            assertThat(event.getLevel()).isEqualTo(Level.ERROR);
+            assertThat(event.getFormattedMessage()).contains("status=502", "message=null")
+                    .doesNotContain("hidden-body");
+        });
     }
 
     @Test

@@ -9,7 +9,9 @@ spring:
       api-key: ${OPENAI_API_KEY:}
       chat:
         options:
-          model: ${OPENAI_CHAT_MODEL:gpt-5.4-mini}
+          model: ${OPENAI_CHAT_MODEL:gpt-6-luna}
+          # GPT-6 Luna의 Chat Completions 도구 호출에는 none이 필요하다.
+          reasoning-effort: none
           # Spring AI's OpenAiChatProperties defaults this to 0.7, and reasoning
           # models reject anything but 1, so leaving it unset is a 400 on every
           # request. 1 is also OpenAI's own default for the older models, so it
