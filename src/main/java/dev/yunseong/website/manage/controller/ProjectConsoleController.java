@@ -1,5 +1,6 @@
 package dev.yunseong.website.manage.controller;
 
+import dev.yunseong.website.manage.service.OperationActionService;
 import dev.yunseong.website.manage.service.ProjectReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -10,10 +11,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 @Controller
 @RequiredArgsConstructor
 public class ProjectConsoleController {
     private final ProjectReportService reports;
+    private final OperationActionService actions;
 
     @GetMapping("/admin/console")
     public String overview(Model model, @RequestParam(required = false) String tab) {
@@ -37,6 +42,10 @@ public class ProjectConsoleController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         model.addAttribute("pageTitle", project.content().name() + " · Console");
         model.addAttribute("project", project);
+        model.addAttribute("actions", actions.recent(slug));
+        model.addAttribute("actionCatalog", project.content().actions().stream().collect(
+                Collectors.toMap(dev.yunseong.website.manage.domain.ProjectReportContent.Action::key,
+                        Function.identity())));
         model.addAttribute("adminSection", "overview");
         return "console/project";
     }

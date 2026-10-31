@@ -25,6 +25,10 @@ bin/
 /bin/*
 !/bin/briefing
 !/bin/website
+!/bin/operations-runner.py
+
+__pycache__/
+*.py[cod]
 
 ### IntelliJ IDEA ###
 .idea

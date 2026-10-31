@@ -3,6 +3,7 @@ package dev.yunseong.website.manage;
 import dev.yunseong.website.global.repository.LoginTokenRepository;
 import dev.yunseong.website.blog.service.MemoDraftService;
 import dev.yunseong.website.manage.domain.ProjectReport;
+import dev.yunseong.website.manage.repository.OperationActionRepository;
 import dev.yunseong.website.manage.repository.ProjectReportRepository;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,7 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ActiveProfiles("test")
 @SpringBootTest(properties = {
-        "spring.config.import=", "app.briefing.token=console-test-token",
+        "spring.config.import=", "app.briefing.token=console-test-token", "app.runner.token=runner-test-token",
         "spring.datasource.url=jdbc:h2:mem:consoletest;DB_CLOSE_DELAY=-1;MODE=PostgreSQL",
         "s3.access-key=test", "s3.secret-key=test", "s3.bucket-name=test"
 })
@@ -46,6 +47,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class ConsoleIntegrationTest {
     @Autowired MockMvc mvc;
     @Autowired ProjectReportRepository reports;
+    @Autowired OperationActionRepository operationActions;
     @Autowired LoginTokenRepository tokens;
     @Autowired JdbcTemplate jdbc;
     @Autowired MemoDraftService drafts;
@@ -67,6 +69,7 @@ class ConsoleIntegrationTest {
 
     @BeforeEach
     void setup() throws Exception {
+        operationActions.deleteAll();
         reports.deleteAll();
         tokens.removeUserTokens("admin");
         report = Files.readString(Path.of("docs/examples/project-report.json"));
@@ -213,6 +216,88 @@ class ConsoleIntegrationTest {
         }
         publish("-invalid", report).andExpect(status().isBadRequest());
         assertThat(reports.findById("website").orElseThrow().getPayload()).contains("Personal website");
+    }
+
+    @Test
+    void runnerApiRequiresItsOwnTokenAndDoesNotAuthoriseAgentOrAdminRoutes() throws Exception {
+        mvc.perform(put("/api/runner/projects/website/report").contentType(MediaType.APPLICATION_JSON).content(report))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(put("/api/runner/projects/website/report").header("X-Briefing-Token", "console-test-token")
+                        .contentType(MediaType.APPLICATION_JSON).content(report))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(put("/api/agent/projects/website").header("X-Runner-Token", "runner-test-token")
+                        .contentType(MediaType.APPLICATION_JSON).content(report))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(get("/admin/console").header("X-Runner-Token", "runner-test-token"))
+                .andExpect(status().is3xxRedirection());
+        mvc.perform(put("/api/runner/projects/website/report").header("X-Runner-Token", "runner-test-token")
+                        .contentType(MediaType.APPLICATION_JSON).content(report))
+                .andExpect(status().isNoContent());
+        mvc.perform(post("/api/runner/projects/website/actions/claim").header("X-Runner-Token", "runner-test-token"))
+                .andExpect(status().isNoContent());
+    }
+
+
+    @Test
+    void operationsDashboardQueuesClaimsAndEscapesActionResult() throws Exception {
+        String operationsReport = """
+                {
+                  "name": "Home operations",
+                  "agent": "operations-runner",
+                  "status": "RUNNING",
+                  "summary": "Host status",
+                  "staleAfterMinutes": 10,
+                  "widgets": [],
+                  "sections": [{
+                    "key": "games",
+                    "title": "Game servers",
+                    "widgets": [{"type": "METRIC", "title": "Palworld", "value": "Stopped"}],
+                    "links": [{"label": "Project", "url": "/admin/console/projects/home-operations"}],
+                    "actionKeys": ["palworld-start"]
+                  }],
+                  "actions": [{
+                    "key": "palworld-start",
+                    "label": "Start Palworld",
+                    "description": "Start the game server.",
+                    "requiresConfirmation": true
+                  }]
+                }
+                """;
+
+        mvc.perform(put("/api/runner/projects/home-operations/report")
+                        .header("X-Runner-Token", "runner-test-token")
+                        .contentType(MediaType.APPLICATION_JSON).content(operationsReport))
+                .andExpect(status().isNoContent());
+        mvc.perform(get("/admin/console/projects/home-operations").with(user("admin")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Game servers")))
+                .andExpect(content().string(containsString("Start Palworld")))
+                .andExpect(content().string(containsString("name=\"_csrf\"")));
+        mvc.perform(post("/admin/console/projects/home-operations/actions/palworld-start")
+                        .with(user("admin")).param("confirmed", "true"))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/admin/console/projects/home-operations/actions/palworld-start")
+                        .with(user("admin")).with(csrf()).param("confirmed", "true"))
+                .andExpect(redirectedUrl("/admin/console/projects/home-operations"));
+
+        mvc.perform(post("/api/runner/projects/home-operations/actions/claim")
+                        .header("X-Runner-Token", "runner-test-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.projectSlug").value("home-operations"))
+                .andExpect(jsonPath("$.actionKey").value("palworld-start"));
+        String actionId = operationActions.findTop20ByProjectSlugOrderByRequestedAtDesc("home-operations")
+                .getFirst().getId();
+        mvc.perform(put("/api/runner/projects/home-operations/actions/" + actionId + "/result")
+                        .header("X-Runner-Token", "runner-test-token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"state\":\"SUCCESS\",\"output\":\"<script>alert(1)</script>\"}"))
+                .andExpect(status().isNoContent());
+
+        mvc.perform(get("/admin/console/projects/home-operations").with(user("admin")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("SUCCESS")))
+                .andExpect(content().string(containsString("&lt;script&gt;alert(1)&lt;/script&gt;")))
+                .andExpect(content().string(not(containsString("<script>alert(1)</script>"))));
     }
 
     private org.springframework.test.web.servlet.ResultActions publish(String slug, String payload) throws Exception {
