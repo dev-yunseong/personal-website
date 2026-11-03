@@ -27,7 +27,7 @@ public class ProjectConsoleController {
             return "forward:/admin/console/traffic";
         }
         var projects = reports.findAll();
-        model.addAttribute("pageTitle", "프로젝트 개요 · Console");
+        model.addAttribute("pageTitle", "대시보드 · Console");
         model.addAttribute("projects", projects);
         model.addAttribute("staleCount", projects.stream().filter(project -> project.stale()).count());
         model.addAttribute("blockedCount", projects.stream()

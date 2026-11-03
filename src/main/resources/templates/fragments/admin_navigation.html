@@ -10,7 +10,7 @@
 <aside th:fragment="sidebar" class="admin-sidebar">
     <nav aria-label="관리자 메뉴">
         <p class="admin-nav-label">WORKSPACE</p>
-        <a href="/admin/console" th:attr="aria-current=${adminSection == 'overview' ? 'page' : null}">프로젝트 개요</a>
+        <a href="/admin/console" th:attr="aria-current=${adminSection == 'overview' ? 'page' : null}">대시보드</a>
         <a href="/admin/console/traffic" th:attr="aria-current=${adminSection == 'traffic' ? 'page' : null}">사이트 운영</a>
         <a href="/admin/chat" th:attr="aria-current=${adminSection == 'chat' ? 'page' : null}">대화 기록</a>
         <p class="admin-nav-label">PUBLISHING</p>

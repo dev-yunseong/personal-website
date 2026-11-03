@@ -157,7 +157,7 @@ class ConsoleIntegrationTest {
     @Test
     void consoleUsesAdminNavigationAndKeepsTrafficAndOldBookmarks() throws Exception {
         mvc.perform(get("/admin/console").with(user("admin")))
-                .andExpect(status().isOk()).andExpect(content().string(containsString("등록된 프로젝트가 없습니다.")))
+                .andExpect(status().isOk()).andExpect(content().string(containsString("등록된 대시보드가 없습니다.")))
                 .andExpect(content().string(containsString("aria-label=\"관리자 메뉴\"")));
         mvc.perform(get("/admin/console/traffic").with(user("admin")))
                 .andExpect(status().isOk()).andExpect(content().string(containsString("id=\"consoleTabs\"")));
