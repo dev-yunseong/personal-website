@@ -1,14 +1,18 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
-<head><title th:text="${project.content.name} + ' · Console'">프로젝트 · Console</title></head>
+<head><title th:text="${project.content.name} + ' · Console'">대시보드 · Console</title></head>
 <body><div layout:fragment="content">
-    <a href="/admin/console" class="admin-text-link">← 프로젝트 개요</a>
+    <a href="/admin/console" class="admin-text-link">← 대시보드</a>
     <header class="workspace-heading project-detail-heading">
         <div><h1 th:text="${project.content.name}"></h1><p class="project-summary" th:text="${project.content.summary}"></p></div>
         <span class="project-status" th:attr="data-status=${project.content.status}" th:text="${project.content.status.label}"></span>
     </header>
     <div class="project-detail-meta"><span th:text="${project.content.agent}"></span><span>마지막 보고 <time th:datetime="${project.updatedAt}" th:text="${#temporals.format(project.updatedAt.atZone(T(java.time.ZoneId).of('Asia/Seoul')), 'yyyy-MM-dd HH:mm')} + ' KST'"></time></span></div>
     <p th:if="${project.stale}" class="project-stale-notice" role="status">갱신이 지연되고 있습니다. 위 상태는 마지막 보고 당시의 상태입니다.</p>
+
+    <p th:if="${actionMessage}" class="operation-feedback operation-feedback-success" role="status" th:text="${actionMessage}"></p>
+    <p th:if="${actionError}" class="operation-feedback operation-feedback-error" role="alert" th:text="${actionError}"></p>
+
     <div class="widget-grid" th:unless="${project.content.widgets.empty}">
         <section class="project-widget" th:each="widget, loop : ${project.content.widgets}" th:classappend="${widget.type.name() != 'METRIC' ? 'project-widget-wide' : ''}" th:attr="aria-labelledby='widget-title-' + ${loop.index}">
             <h2 th:id="'widget-title-' + ${loop.index}" th:text="${widget.title}"></h2>
@@ -23,7 +27,60 @@
             </div>
         </section>
     </div>
-    <p class="workspace-empty" th:if="${project.content.widgets.empty}">이 보고서에는 위젯이 없습니다.</p>
+
+    <section class="operation-section" th:each="section, sectionLoop : ${project.content.sections}" th:attr="aria-labelledby='operation-section-' + ${sectionLoop.index}">
+        <header class="operation-section-heading">
+            <h2 th:id="'operation-section-' + ${sectionLoop.index}" th:text="${section.title}"></h2>
+            <nav class="operation-links" th:unless="${section.links.empty}" th:attr="aria-label=${section.title} + ' 링크'">
+                <a th:each="link : ${section.links}" th:href="${link.url}" th:text="${link.label}"></a>
+            </nav>
+        </header>
+        <div class="widget-grid" th:unless="${section.widgets.empty}">
+            <section class="project-widget" th:each="widget, widgetLoop : ${section.widgets}" th:classappend="${widget.type.name() != 'METRIC' ? 'project-widget-wide' : ''}" th:attr="aria-labelledby='section-widget-title-' + ${sectionLoop.index} + '-' + ${widgetLoop.index}">
+                <h3 th:id="'section-widget-title-' + ${sectionLoop.index} + '-' + ${widgetLoop.index}" th:text="${widget.title}"></h3>
+                <p class="widget-metric" th:if="${widget.type.name() == 'METRIC'}" th:text="${widget.value}"></p>
+                <div class="table-responsive" th:if="${widget.type.name() == 'TABLE'}">
+                    <table class="table widget-table"><caption class="visually-hidden" th:text="${widget.title}"></caption><thead><tr><th scope="col" th:each="column : ${widget.columns}" th:text="${column}"></th></tr></thead><tbody><tr th:each="row : ${widget.rows}"><td th:each="cell : ${row}" th:text="${cell}"></td></tr></tbody></table>
+                    <p class="admin-muted" th:if="${widget.rows.empty}">등록된 항목이 없습니다.</p>
+                </div>
+                <div th:if="${widget.type.name() == 'LINE'}" data-project-chart>
+                    <svg class="project-chart" viewBox="0 0 600 200" role="img" th:attr="aria-label=${widget.title}" hidden></svg>
+                    <details open><summary>그래프 데이터</summary><div class="table-responsive"><table class="table widget-table"><thead><tr><th scope="col">시점</th><th scope="col">값</th></tr></thead><tbody><tr th:each="point : ${widget.points}"><th scope="row" th:text="${point.label}"></th><td th:text="${point.value}"></td></tr></tbody></table></div></details>
+                </div>
+            </section>
+        </div>
+        <div class="operation-actions" th:unless="${section.actionKeys.empty}">
+            <article class="operation-action" th:each="actionKey : ${section.actionKeys}" th:with="action=${actionCatalog.get(actionKey)}">
+                <div class="operation-action-copy"><h3 th:text="${action.label}"></h3><p th:text="${action.description}"></p></div>
+                <details th:if="${action.requiresConfirmation}" class="operation-confirmation">
+                    <summary>실행 준비</summary>
+                    <form method="post" data-operation-form th:action="@{/admin/console/projects/{slug}/actions/{key}(slug=${project.slug},key=${action.key})}">
+                        <label><input type="checkbox" name="confirmed" value="true"> 이 action을 실행합니다.</label>
+                        <button type="submit" class="operation-button operation-button-danger" data-requires-confirmation="true" th:text="${action.label}"></button>
+                        <span class="operation-result" role="status" aria-live="polite"></span>
+                    </form>
+                </details>
+                <form th:unless="${action.requiresConfirmation}" method="post" data-operation-form th:action="@{/admin/console/projects/{slug}/actions/{key}(slug=${project.slug},key=${action.key})}">
+                    <input type="hidden" name="confirmed" value="false">
+                    <button type="submit" class="operation-button" data-requires-confirmation="false" th:text="${action.label}"></button>
+                    <span class="operation-result" role="status" aria-live="polite"></span>
+                </form>
+            </article>
+        </div>
+    </section>
+
+    <section class="operation-history" th:unless="${actions.empty}" aria-labelledby="operation-history-title">
+        <header class="operation-section-heading"><h2 id="operation-history-title">최근 실행</h2></header>
+        <ol class="operation-history-list">
+            <li th:each="action : ${actions}">
+                <div class="operation-history-heading"><strong th:text="${action.actionKey}"></strong><span class="operation-state" th:attr="data-state=${action.state}" th:text="${action.state}"></span></div>
+                <p><span th:text="${action.requestedBy}"></span> · <time th:datetime="${action.requestedAt}" th:text="${#temporals.format(action.requestedAt.atZone(T(java.time.ZoneId).of('Asia/Seoul')), 'yyyy-MM-dd HH:mm:ss')} + ' KST'"></time></p>
+                <pre th:if="${action.output != null and !action.output.isBlank()}" th:text="${action.output}"></pre>
+            </li>
+        </ol>
+    </section>
+    <p class="workspace-empty" th:if="${project.content.widgets.empty and project.content.sections.empty}">이 보고서에는 표시할 항목이 없습니다.</p>
     <script defer th:src="@{/js/project-console.js}"></script>
+    <script defer th:src="@{/js/operations-dashboard.js}"></script>
 </div></body>
 </html>

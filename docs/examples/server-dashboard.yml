@@ -1,0 +1,45 @@
+version: 1
+scriptRoot: /home/yunseong/deploy/server-dashboard/scripts
+pollSeconds: 5
+reportIntervalSeconds: 60
+
+project:
+  slug: home-operations
+  name: Home operations
+  agent: operations-runner
+  summary: Docker Compose services and maintenance actions on this host.
+  staleAfterMinutes: 10
+
+sections:
+  - id: games
+    title: Game servers
+    links:
+      - label: Operations dashboard
+        url: /admin/console/projects/home-operations
+    widgets:
+      - id: palworld-status
+        title: Palworld
+        type: METRIC
+        check:
+          script: palworld-status.sh
+          intervalSeconds: 30
+          timeoutSeconds: 15
+    actions:
+      - palworld-start
+      - palworld-stop
+
+actions:
+  - key: palworld-start
+    label: Start Palworld
+    description: Start the Palworld Docker Compose service.
+    requiresConfirmation: true
+    script:
+      script: palworld-start.sh
+      timeoutSeconds: 180
+  - key: palworld-stop
+    label: Stop Palworld
+    description: Stop the Palworld service while preserving its data.
+    requiresConfirmation: true
+    script:
+      script: palworld-stop.sh
+      timeoutSeconds: 180

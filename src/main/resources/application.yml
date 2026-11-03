@@ -35,3 +35,5 @@ app:
     # Shared secret the briefing agent sends as X-Briefing-Token. Unset means the
     # intake API answers 401 to everything; it never falls open.
     token: ${BRIEFING_TOKEN:}
+  runner:
+    token: ${RUNNER_TOKEN:}
