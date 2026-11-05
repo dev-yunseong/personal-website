@@ -90,3 +90,16 @@ tasks.named('test') {
     useJUnitPlatform()
     systemProperty 'spring.flyway.enabled', 'false'
 }
+
+// 다운로드 파일을 저장소의 원본과 동일하게 유지한다.
+tasks.named('processResources') {
+    from('bin/website') {
+        into 'static/cli'
+    }
+    from('skills/website-project-report/SKILL.md') {
+        into 'static/cli/website-project-report'
+    }
+    from('docs/examples/project-report.json') {
+        into 'static/cli'
+    }
+}

@@ -1,0 +1,68 @@
+.website-install {
+  border-bottom: 1px solid var(--hairline);
+  color: var(--text-secondary);
+  font-size: var(--fs-body-sm);
+  margin-bottom: var(--sp-4);
+  padding-bottom: var(--sp-3);
+}
+
+.website-install > summary {
+  color: var(--text-primary);
+  cursor: pointer;
+  font-weight: 600;
+  padding: var(--sp-1) 0;
+}
+
+.website-install__summary-note {
+  color: var(--text-tertiary);
+  display: inline-block;
+  font-size: var(--fs-meta);
+  font-weight: 400;
+  margin-left: var(--sp-2);
+}
+
+.website-install__body {
+  padding-top: var(--sp-3);
+}
+
+.website-install__body p {
+  line-height: var(--lh-body);
+  margin: 0 0 var(--sp-2);
+}
+
+.website-install__body p:last-child {
+  margin-bottom: 0;
+}
+
+.website-install__command-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.website-install__command {
+  background: var(--sunken);
+  border: 1px solid var(--hairline);
+  color: var(--text-primary);
+  flex: 1 1 28rem;
+  font-family: var(--font-mono);
+  font-size: var(--fs-meta);
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  padding: var(--sp-3);
+  white-space: pre-wrap;
+}
+
+.website-install__command code {
+  color: inherit;
+  user-select: text;
+}
+
+.website-install__feedback {
+  color: var(--text-secondary);
+  font-size: var(--fs-meta);
+  min-height: 1.5em;
+  padding-top: var(--sp-1);
+}

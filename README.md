@@ -77,6 +77,44 @@ The default paths are `/app/geoip/GeoLite2-City.mmdb` and
 error: geo fields stay null, the datacenter signal stays off, and the startup
 log says which path it looked at.
 
+## website installation
+
+Install using `sh` and `curl` on macOS, Linux, Windows Subsystem for Linux, or Git Bash:
+
+```sh
+curl -fsSL https://yunseong.dev/cli/install.sh | sh
+```
+
+The installer downloads the command to `~/.local/bin/website`. Run the same
+command again to update it. If `website` is not found, add the installation
+directory to `PATH` in the current shell and in your shell startup file:
+
+```sh
+export PATH="$HOME/.local/bin:$PATH"
+website memo tree
+```
+
+To install or update in a different directory, set `WEBSITE_INSTALL_DIR` for
+the installer process and add that directory to `PATH` instead:
+
+```sh
+curl -fsSL https://yunseong.dev/cli/install.sh | WEBSITE_INSTALL_DIR="$HOME/bin" sh
+```
+
+The public downloads are `/cli/install.sh` (installer) and `/cli/website`
+(command), both served from `https://yunseong.dev`. The repository's
+`bin/website` remains available for local development.
+
+The installer also places the project reporting skill and its example in
+`~/.local/bin/.website` so `website skills install` works without a repository
+checkout. With `WEBSITE_INSTALL_DIR`, these files live in `.website` under that
+directory. All downloads must finish before the current installation is replaced.
+
+Installation does not include or configure `DRAFT_TOKEN`. Public memo reads
+work without authentication; configure draft authentication separately as
+described below. The admin console also offers the installation command with
+a copy button.
+
 ## Public memo automation
 
 `bin/website` exposes public memos to scheduled tools without scraping rendered

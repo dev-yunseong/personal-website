@@ -7,7 +7,8 @@ build/
 *.iml
 *.ipr
 out/
-bin/
+bin/*
+!bin/website
 .env
 .vscode
 .DS_Store

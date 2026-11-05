@@ -55,6 +55,16 @@ class ConsoleIntegrationTest {
     private String report;
 
     @Test
+    void overviewIncludesWebsiteInstallationAndCopyControls() throws Exception {
+        mvc.perform(get("/admin/console").with(user("admin")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("curl -fsSL https://yunseong.dev/cli/install.sh | sh")))
+                .andExpect(content().string(containsString("id=\"website-install-copy\"")))
+                .andExpect(content().string(containsString("/js/website-install.js")))
+                .andExpect(content().string(containsString("/css/website-install.css")));
+    }
+
+    @Test
     void draftReviewIncludesIsolatedPreviewInFullAdminLayout() throws Exception {
         var draft = drafts.submit("preview/integration", "# 미리보기\n\n| 항목 | 값 |\n| --- | --- |\n| 링크 | 확인 |\n");
         mvc.perform(get("/admin/console/drafts/" + draft.getId()).with(user("admin")))

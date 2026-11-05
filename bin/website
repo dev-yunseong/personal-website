@@ -95,6 +95,10 @@ install_project_skill() {
         skill_source="$script_directory/../SKILL.md"
         example_source="$script_directory/../assets/project-report.json"
     fi
+    if [ ! -r "$skill_source" ] || [ ! -r "$example_source" ]; then
+        skill_source="$script_directory/.website/SKILL.md"
+        example_source="$script_directory/.website/project-report.json"
+    fi
     [ -r "$skill_source" ] && [ -r "$example_source" ] || {
         printf 'Skill source files are missing\n' >&2
         exit 1

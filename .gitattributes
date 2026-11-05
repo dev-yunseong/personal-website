@@ -1,4 +1,5 @@
 /gradlew text eol=lf
 /bin/website text eol=lf
+/src/main/resources/static/cli/install.sh text eol=lf
 *.bat text eol=crlf
 *.jar binary

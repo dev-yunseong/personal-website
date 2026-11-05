@@ -13,6 +13,9 @@ RUN --mount=type=secret,id=GITHUB_USERNAME \
 
 # Copy source and build
 COPY src/ src/
+COPY bin/website bin/website
+COPY skills/website-project-report/SKILL.md skills/website-project-report/SKILL.md
+COPY docs/examples/project-report.json docs/examples/project-report.json
 RUN --mount=type=secret,id=GITHUB_USERNAME \
     --mount=type=secret,id=GITHUB_TOKEN \
     GITHUB_USERNAME=$(cat /run/secrets/GITHUB_USERNAME) \
