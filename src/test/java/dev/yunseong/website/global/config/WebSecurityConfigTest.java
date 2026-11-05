@@ -90,6 +90,7 @@ class WebSecurityConfigTest {
     @ParameterizedTest
     @ValueSource(strings = {
             "/admin/console",
+            "/admin/console/install",
             "/admin/chat",
             "/admin/memos",
             "/admin/memos/new",

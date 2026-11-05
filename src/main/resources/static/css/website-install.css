@@ -1,24 +1,16 @@
 .website-install {
-  border-bottom: 1px solid var(--hairline);
+  border-top: 1px solid var(--border-strong);
   color: var(--text-secondary);
   font-size: var(--fs-body-sm);
-  margin-bottom: var(--sp-4);
-  padding-bottom: var(--sp-3);
+  max-width: 58rem;
+  padding-top: var(--sp-6);
 }
 
-.website-install > summary {
+.website-install h2 {
   color: var(--text-primary);
-  cursor: pointer;
+  font-size: var(--fs-h3);
   font-weight: 600;
-  padding: var(--sp-1) 0;
-}
-
-.website-install__summary-note {
-  color: var(--text-tertiary);
-  display: inline-block;
-  font-size: var(--fs-meta);
-  font-weight: 400;
-  margin-left: var(--sp-2);
+  margin: 0;
 }
 
 .website-install__body {
@@ -32,6 +24,18 @@
 
 .website-install__body p:last-child {
   margin-bottom: 0;
+}
+
+.website-install__path {
+  margin-top: var(--sp-4);
+}
+
+.website-install__path > summary {
+  cursor: pointer;
+}
+
+.website-install__path[open] > summary {
+  margin-bottom: var(--sp-2);
 }
 
 .website-install__command-row {

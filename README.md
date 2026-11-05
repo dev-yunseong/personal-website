@@ -112,8 +112,8 @@ directory. All downloads must finish before the current installation is replaced
 
 Installation does not include or configure `DRAFT_TOKEN`. Public memo reads
 work without authentication; configure draft authentication separately as
-described below. The admin console also offers the installation command with
-a copy button.
+described below. Open Installation at the bottom of the admin sidebar to
+copy the command from `/admin/console/install`.
 
 ## Public memo automation
 
