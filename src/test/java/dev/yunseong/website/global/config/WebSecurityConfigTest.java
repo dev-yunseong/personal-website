@@ -70,6 +70,10 @@ class WebSecurityConfigTest {
             "/robots.txt",
             "/error",
             "/login",
+            "/cli/install.sh",
+            "/cli/website",
+            "/cli/website-project-report/SKILL.md",
+            "/cli/project-report.json",
             "/favicon.ico",
             "/apple-touch-icon.png",
             "/css/site.css",
@@ -86,6 +90,7 @@ class WebSecurityConfigTest {
     @ParameterizedTest
     @ValueSource(strings = {
             "/admin/console",
+            "/admin/console/install",
             "/admin/chat",
             "/admin/memos",
             "/admin/memos/new",
@@ -125,7 +130,12 @@ class WebSecurityConfigTest {
             "/api/admins/typo",
             "/admins/console",
             "/whatever/new/endpoint",
-            "/actuator/health"
+            "/actuator/health",
+            "/cli/other",
+            "/cli/install.sh/extra",
+            "/cli/website/extra",
+            "/cli/website-project-report/other",
+            "/cli/project-report.json/extra"
     })
     void unlistedPaths_defaultToAuthenticated(String path) throws Exception {
         mockMvc.perform(get(path))

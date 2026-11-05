@@ -13,6 +13,7 @@ public class AdminLayoutAdvice {
             return null;
         }
         if (path.startsWith("/admin/console/drafts")) return "drafts";
+        if (path.equals("/admin/console/install")) return "install";
         if (path.startsWith("/admin/console/traffic") || path.startsWith("/admin/console/requests")) return "traffic";
         if (path.startsWith("/admin/chat")) return "chat";
         if (path.startsWith("/admin/memos")) return "memo";

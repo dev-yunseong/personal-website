@@ -55,6 +55,40 @@ class ConsoleIntegrationTest {
     private String report;
 
     @Test
+    void overviewLinksToInstallationWithoutLoadingInstallationControls() throws Exception {
+        mvc.perform(get("/admin/console").with(user("admin")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("href=\"/admin/console/install\"")))
+                .andExpect(content().string(not(containsString("curl -fsSL https://yunseong.dev/cli/install.sh | sh"))))
+                .andExpect(content().string(not(containsString("id=\"website-install-copy\""))))
+                .andExpect(content().string(not(containsString("/js/website-install.js"))))
+                .andExpect(content().string(not(containsString("/css/website-install.css"))));
+    }
+
+    @Test
+    void installationPageIncludesCommandCopyControlsAndCurrentNavigation() throws Exception {
+        MvcResult result = mvc.perform(get("/admin/console/install").with(user("admin")))
+                .andExpect(status().isOk())
+                .andExpect(view().name("console/install"))
+                .andExpect(model().attribute("pageTitle", "설치 · Console"))
+                .andExpect(model().attribute("adminSection", "install"))
+                .andExpect(content().string(containsString("curl -fsSL https://yunseong.dev/cli/install.sh | sh")))
+                .andExpect(content().string(containsString("id=\"website-install-copy\"")))
+                .andExpect(content().string(containsString("/js/website-install.js")))
+                .andExpect(content().string(containsString("/css/website-install.css")))
+                .andReturn();
+        assertThat(result.getResponse().getContentAsString(StandardCharsets.UTF_8))
+                .containsPattern("<a\\b(?=[^>]*\\bhref=\"/admin/console/install\")(?=[^>]*\\baria-current=\"page\")[^>]*>");
+    }
+
+    @Test
+    void installationPageRedirectsAnonymousVisitorsToLogin() throws Exception {
+        mvc.perform(get("/admin/console/install"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrlPattern("**/login"));
+    }
+
+    @Test
     void draftReviewIncludesIsolatedPreviewInFullAdminLayout() throws Exception {
         var draft = drafts.submit("preview/integration", "# 미리보기\n\n| 항목 | 값 |\n| --- | --- |\n| 링크 | 확인 |\n");
         mvc.perform(get("/admin/console/drafts/" + draft.getId()).with(user("admin")))

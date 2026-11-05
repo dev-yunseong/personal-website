@@ -12,6 +12,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 @RequiredArgsConstructor
 public class ConsoleController {
 
+    @GetMapping("/install")
+    public String install(Model model) {
+        model.addAttribute("pageTitle", "설치 · Console");
+        model.addAttribute("adminSection", "install");
+        return "console/install";
+    }
+
     @GetMapping("/traffic")
     public String console(Model model,
                           @RequestParam(defaultValue = "7") int days,

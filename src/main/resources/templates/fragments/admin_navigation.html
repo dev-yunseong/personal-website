@@ -18,5 +18,8 @@
         <a href="/admin/console/drafts" th:attr="aria-current=${adminSection == 'drafts' ? 'page' : null}">초안 검토</a>
         <a href="/admin/miniapps" th:attr="aria-current=${adminSection == 'apps' ? 'page' : null}">미니앱 관리</a>
     </nav>
+    <nav class="admin-sidebar-footer" aria-label="설치 메뉴">
+        <a href="/admin/console/install" th:attr="aria-current=${adminSection == 'install' ? 'page' : null}">설치</a>
+    </nav>
 </aside>
 </html>

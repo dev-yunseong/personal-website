@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layout}">
+<head>
+    <title>설치 · Console</title>
+    <th:block layout:fragment="css">
+        <link rel="stylesheet" th:href="@{/css/website-install.css}">
+    </th:block>
+    <th:block layout:fragment="script">
+        <script th:src="@{/js/website-install.js}" defer></script>
+    </th:block>
+</head>
+<body><div layout:fragment="content">
+    <header class="workspace-heading">
+        <div><h1>설치</h1></div>
+    </header>
+    <section class="website-install" aria-labelledby="website-install-title">
+        <h2 id="website-install-title">website</h2>
+        <div class="website-install__body">
+            <p><code>sh</code>와 <code>curl</code>이 필요합니다.</p>
+            <div class="website-install__command-row">
+                <pre class="website-install__command"><code id="website-install-command" tabindex="0" aria-label="website 설치 명령">curl -fsSL https://yunseong.dev/cli/install.sh | sh</code></pre>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="website-install-copy" aria-describedby="website-install-feedback">명령 복사</button>
+            </div>
+            <p id="website-install-feedback" class="website-install__feedback" role="status" aria-live="polite" aria-atomic="true"></p>
+            <p><code>~/.local/bin/website</code>에 설치됩니다. 같은 명령으로 업데이트할 수 있습니다.</p>
+            <p><code>website memo tree</code>로 공개 메모를 확인하세요.</p>
+            <details class="website-install__path">
+                <summary>명령을 찾을 수 없을 때</summary>
+                <p><code>export PATH="$HOME/.local/bin:$PATH"</code>를 실행하고, 사용 중인 shell 설정 파일에도 추가하세요.</p>
+            </details>
+        </div>
+    </section>
+</div></body>
+</html>

@@ -30,6 +30,10 @@ public class WebSecurityConfig {
             "/sitemap.xml",
             "/robots.txt",
             // static resources under src/main/resources/static
+            "/cli/install.sh",
+            "/cli/website",
+            "/cli/website-project-report/SKILL.md",
+            "/cli/project-report.json",
             "/favicon.ico",
             "/apple-touch-icon.png",
             "/css/**",
