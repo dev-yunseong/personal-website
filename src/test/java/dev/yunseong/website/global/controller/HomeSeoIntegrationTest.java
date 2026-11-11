@@ -1,10 +1,13 @@
 package dev.yunseong.website.global.controller;
 
 import dev.yunseong.website.ai.tool.BlogTools;
+import dev.yunseong.website.blog.domain.Memo;
+import dev.yunseong.website.blog.repository.MemoRepository;
 import dev.yunseong.website.blog.service.S3StorageService;
 import dev.yunseong.website.global.domain.Profile;
 import dev.yunseong.website.global.domain.ProfileLoadResult;
 import dev.yunseong.website.global.service.ProfileService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -53,6 +56,14 @@ class HomeSeoIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Autowired
+    private MemoRepository memoRepository;
+
+    @BeforeEach
+    void clearMemos() {
+        memoRepository.deleteAll();
+    }
+
     @Test
     void home_RendersTitleCanonicalShareImageAndJsonLd() throws Exception {
         when(profileService.getProfile()).thenReturn(ProfileLoadResult.available(profile()));
@@ -83,6 +94,27 @@ class HomeSeoIntegrationTest {
         mockMvc.perform(get("/public/memos"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("rel=\"canonical\"")))
+                .andExpect(content().string(containsString("href=\"https://yunseong.dev/public/memos\"")));
+    }
+
+    @Test
+    void memoList_KeepsPageAndSizeInCanonicalAfterFirstPage() throws Exception {
+        memoRepository.saveAndFlush(new Memo("/notes/seo-first", "first body"));
+        memoRepository.saveAndFlush(new Memo("/notes/seo-second", "second body"));
+
+        mockMvc.perform(get("/public/memos").param("page", "1").param("size", "1"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString(
+                        "href=\"https://yunseong.dev/public/memos?page=1&amp;size=1\"")));
+    }
+
+    @Test
+    void memoList_DropsPageFromCanonicalOnFirstPage() throws Exception {
+        memoRepository.saveAndFlush(new Memo("/notes/seo-first", "first body"));
+        memoRepository.saveAndFlush(new Memo("/notes/seo-second", "second body"));
+
+        mockMvc.perform(get("/public/memos").param("page", "0").param("size", "1"))
+                .andExpect(status().isOk())
                 .andExpect(content().string(containsString("href=\"https://yunseong.dev/public/memos\"")));
     }
 

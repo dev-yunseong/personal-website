@@ -22,6 +22,7 @@
 - `layout.html` 은 `pageUrl` 이 없으면 `og:url` 을 `app.base-url` 로 출력합니다. canonical 까지 같은 방식으로 내면 `pageUrl` 을 지정하지 않은 페이지가 모두 홈을 대표 URL 로 가리키게 됩니다. 그래서 canonical 은 `pageUrl` 이 있을 때만 출력합니다.
 - 프로필은 private profile memo 에서 읽으므로 JSON-LD 를 template 에 고정 문자열로 둘 수 없습니다.
 - JSON-LD 는 `<script>` 안에 escape 없이 들어가므로 `<` 를 `<` 로 바꿔 `</script>` 가 본문에 섞여도 script 가 끊기지 않게 합니다.
+- `/public/memos` 는 page 마다 목록이 다릅니다. 2번째 page 부터는 `pageUrl` 에 `page`, `size` 를 넣어 canonical 이 첫 page 를 가리키지 않게 합니다.
 - `robots.txt`, `sitemap.xml`, `<html lang="ko">` 는 이미 있습니다.
 
 ## Approach (Checklist)
