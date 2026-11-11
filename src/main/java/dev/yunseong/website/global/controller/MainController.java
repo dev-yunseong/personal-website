@@ -2,6 +2,7 @@ package dev.yunseong.website.global.controller;
 
 import dev.yunseong.website.blog.service.MemoService;
 import dev.yunseong.website.global.domain.ProfileLoadResult;
+import dev.yunseong.website.global.service.ProfileJsonLdService;
 import dev.yunseong.website.global.service.ProfileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,6 +19,7 @@ public class MainController {
     private static final int RECENT_MEMO_LIMIT = 3;
 
     private final ProfileService profileService;
+    private final ProfileJsonLdService profileJsonLdService;
     private final MemoService memoService;
 
     @Value("${app.profile-image-url:}")
@@ -29,6 +31,9 @@ public class MainController {
         ProfileLoadResult profileResult = profileService.getProfile();
         model.addAttribute("profile", profileResult.profile());
         model.addAttribute("profileStatus", profileResult.status());
+        model.addAttribute("profileJsonLd", profileResult.available()
+                ? profileJsonLdService.toJsonLd(profileResult.profile(), profileImageUrl)
+                : null);
         model.addAttribute("recentMemos", memoService.getRecentMemos(RECENT_MEMO_LIMIT));
         return "index";
     }

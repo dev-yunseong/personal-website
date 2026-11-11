@@ -3,6 +3,7 @@ package dev.yunseong.website.global.controller;
 import dev.yunseong.website.blog.service.MemoService;
 import dev.yunseong.website.global.domain.Profile;
 import dev.yunseong.website.global.domain.ProfileLoadResult;
+import dev.yunseong.website.global.service.ProfileJsonLdService;
 import dev.yunseong.website.global.service.ProfileService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,6 +23,9 @@ class MainControllerTest {
     private ProfileService profileService;
 
     @Mock
+    private ProfileJsonLdService profileJsonLdService;
+
+    @Mock
     private MemoService memoService;
 
     @Mock
@@ -35,6 +39,7 @@ class MainControllerTest {
         // Given
         Profile profile = profile();
         when(profileService.getProfile()).thenReturn(ProfileLoadResult.available(profile));
+        when(profileJsonLdService.toJsonLd(profile, null)).thenReturn("{}");
         when(memoService.getRecentMemos(3)).thenReturn(List.of());
 
         // When
@@ -44,6 +49,7 @@ class MainControllerTest {
         assertEquals("index", result);
         verify(model).addAttribute("profile", profile);
         verify(model).addAttribute("profileStatus", ProfileLoadResult.Status.AVAILABLE);
+        verify(model).addAttribute("profileJsonLd", "{}");
         verify(model).addAttribute("recentMemos", List.of());
     }
 
@@ -60,6 +66,7 @@ class MainControllerTest {
         assertEquals("index", result);
         verify(model).addAttribute("profile", null);
         verify(model).addAttribute("profileStatus", ProfileLoadResult.Status.MISSING);
+        verify(model).addAttribute("profileJsonLd", null);
         verify(model).addAttribute("recentMemos", List.of());
     }
 
@@ -73,6 +80,7 @@ class MainControllerTest {
         assertEquals("index", result);
         verify(model).addAttribute("profile", null);
         verify(model).addAttribute("profileStatus", ProfileLoadResult.Status.INVALID);
+        verify(model).addAttribute("profileJsonLd", null);
         verify(model).addAttribute("recentMemos", List.of());
     }
 

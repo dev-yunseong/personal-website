@@ -3,8 +3,8 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout}"
       th:with="
-        pageTitle='Yunseong - Personal Website',
-        pageDescription='Yunseong의 개인 웹사이트입니다. 개발, 기술 블로그, 그리고 다양한 프로젝트를 공유합니다.',
+        pageTitle='정윤성 (Yunseong Jeong) | Software Engineer',
+        pageDescription='Software Engineer 정윤성(Yunseong Jeong)의 개인 웹사이트입니다. AI agent, 실시간 게임 서버, 백엔드 프로젝트와 기술 글을 공유합니다.',
         pageKeywords='개발, 블로그, Yunseong, 프로그래밍, 기술, 웹개발',
         pageUrl=''">
 
@@ -14,6 +14,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism-themes/1.9.0/prism-ghcolors.min.css">
     <link rel="stylesheet" th:href="@{/css/memo-view.css}">
     <link rel="stylesheet" th:href="@{/css/home.css}">
+</th:block>
+
+<th:block layout:fragment="script">
+    <script type="application/ld+json" th:if="${profileJsonLd != null}" th:utext="${profileJsonLd}"></script>
 </th:block>
 
 <body>
