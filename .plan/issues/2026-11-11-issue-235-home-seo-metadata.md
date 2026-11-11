@@ -46,4 +46,4 @@
 - **Rollback steps:** `git revert` 로 되돌립니다.
 
 ## Open Questions
-- 홈 title 의 직무 표기를 `Backend Developer` 로 둘지, 프로필 `headline` 과 같은 `Software Engineer` 로 맞출지 정해야 합니다.
+- 없음. 홈 title 의 직무 표기는 프로필 `headline` 과 같은 `Software Engineer` 로 정했습니다.

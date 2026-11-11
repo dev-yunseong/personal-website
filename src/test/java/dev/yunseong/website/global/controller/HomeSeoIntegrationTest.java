@@ -70,7 +70,7 @@ class HomeSeoIntegrationTest {
 
         mockMvc.perform(get("/"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("(Yunseong Jeong) | Backend Developer</title>")))
+                .andExpect(content().string(containsString("(Yunseong Jeong) | Software Engineer</title>")))
                 .andExpect(content().string(containsString("rel=\"canonical\"")))
                 .andExpect(content().string(containsString("href=\"https://yunseong.dev\"")))
                 .andExpect(content().string(containsString("content=\"https://yunseong.dev/images/og-default.png\"")))
